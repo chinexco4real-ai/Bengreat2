@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deriv AI Trading Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .account-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .session-timer {
+            font-size: 12px;
+            color: #94a3b8;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 5px 10px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444; 
+        }
+
+        .status-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .login-inline {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .login-inline input {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            min-width: 250px;
+        }
+
+        .account-badge {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-demo {
+            background: #f59e0b;
+            color: #0f172a;
+        }
+
+        .badge-real {
+            background: #10b981;
+            color: #ffffff;
+        }
+
+        .currency-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+
+        .balance {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .card-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .ai-scanner {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .scanner-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pulse {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .signal-display {
+            text-align: center;
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .signal-text {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .signal-buy {
+            color: #10b981;
+        }
+
+        .signal-sell {
+            color: #ef4444;
+        }
+
+        .signal-undecided {
+            color: #f59e0b;
+        }
+
+        .timer-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+        }
+
+        .timer-control input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            max-width: 100px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+        }
+
+        .trade-mode {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .trade-mode button {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            background: rgba(15, 23, 42, 0.3);
+            color: #94a3b8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .trade-mode button.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .trade-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .history-card {
+            margin-top: 20px;
+        }
+
+        .history-table-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .history-table th {
+            position: sticky;
+            top: 0;
+            background: #1e293b;
+            text-align: left;
+            padding: 8px;
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .history-table td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+        }
+
+        .result-won { color: #10b981; font-weight: bold; }
+        .result-lost { color: #ef4444; font-weight: bold; }
+        .result-pending { color: #f59e0b; }
+
+        .hidden { display: none; }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: flex-start; }
+            .login-inline { flex-direction: column; width: 100%; }
+            .login-inline input { width: 100%; min-width: auto; }
+            .trade-actions { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🤖 AI Trading Platform</div>
+            <div class="account-section">
+                <div id="sessionDisplay" class="session-timer hidden">Session: 00:00:00</div>
+                <div class="connection-status">
+                    <div class="status-dot" id="wsStatusDot"></div>
+                    <span id="wsStatusText">Offline</span>
+                </div>
+                
+                <div id="loginArea" class="login-inline">
+                    <input type="text" id="apiToken" placeholder="Enter Deriv API Token" />
+                    <button class="btn btn-primary" onclick="login()">Connect</button>
+                </div>
+                <div id="accountArea" class="hidden">
+                    <div class="balance">
+                        <span id="accountBadge" class="account-badge"></span>
+                        <span id="currencyBadge" class="currency-badge">--</span>
+                        Balance: <span id="accountBalance">0.00</span>
+                    </div>
+                    <button class="btn btn-danger" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <div>
+                <div class="ai-scanner">
+                    <div class="scanner-status">
+                        <div>
+                            <h2 style="margin-bottom: 5px;">
+                                AI Market Scanner - <span id="scannerMarket" style="color: #3b82f6;">R_50</span>
+                                (<span id="scannerPrice" style="color: #10b981;">--</span>)
+                            </h2>
+                            <p style="font-size: 12px; color: #94a3b8;">Advanced Price Action Analysis</p>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="pulse" id="scanPulse"></div>
+                            <span id="scanStatus">Waiting to connect...</span>
+                        </div>
+                    </div>
+
+                    <div class="timer-control">
+                        <label style="color: #94a3b8;">Scan Interval:</label>
+                        <input type="number" id="scanInterval" value="5" min="1" max="60" onchange="updateScanInterval()" />
+                        <span style="color: #94a3b8;">minutes</span>
+                    </div>
+
+                    <div class="signal-display">
+                        <div class="signal-text signal-undecided" id="signalText">Connect to start scanning...</div>
+                        <div style="font-size: 14px; color: #94a3b8;">
+                            Next scan in: <span id="countdown">--:--</span>
+                        </div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 10px;">
+                            Last updated: <span id="lastUpdate">--</span>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 15px;">
+                        <strong>Analysis Strategy:</strong> Price Action (Highs/Lows) + Momentum RSI Filter
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <div class="card-header">Trading Panel</div>
+
+                    <div class="trade-mode">
+                        <button class="active" id="manualBtn" onclick="setTradeMode('manual')">Manual Trade</button>
+                        <button id="autoBtn" onclick="setTradeMode('auto')">Auto Trade</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Market Type</label>
+                        <select id="marketType" onchange="updateMarket()">
+                            <option value="R_10">Volatility 10 Index</option>
+                            <option value="R_25">Volatility 25 Index</option>
+                            <option value="R_50" selected>Volatility 50 Index</option>
+                            <option value="R_75">Volatility 75 Index</option>
+                            <option value="R_100">Volatility 100 Index</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stake Amount ($)</label>
+                        <input type="number" id="tradeAmount" value="10" min="1" step="1" onchange="saveSettings()" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Duration Type</label>
+                        <select id="durationType" onchange="saveSettings()">
+                            <option value="t">Ticks</option>
+                            <option value="s">Seconds</option>
+                            <option value="m" selected>Minutes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Duration Value</label>
+                        <input type="number" id="durationValue" value="5" min="1" onchange="saveSettings()" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stop Loss ($)</label>
+                        <input type="number" id="stopLoss" value="5" min="0" step="0.1" onchange="saveSettings()" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Take Profit ($)</label>
+                        <input type="number" id="takeProfit" value="10" min="0" step="0.1" onchange="saveSettings()" />
+                    </div>
+
+                    <div class="trade-actions">
+                        <button class="btn btn-success" onclick="placeTrade('CALL')">
+                            📈 BUY / CALL
+                        </button>
+                        <button class="btn btn-danger" onclick="placeTrade('PUT')">
+                            📉 SELL / PUT
+                        </button>
+                    </div>
+
+                    <div id="autoTradeInfo" class="hidden" style="margin-top: 20px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                        <strong>🤖 Auto Trade Active</strong>
+                        <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">
+                            Trades will execute automatically based on AI signals
+                        </p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Trades</div>
+                            <div class="stat-value" id="statTrades">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Win/Loss</div>
+                            <div class="stat-value"><span id="statWins" style="color:#10b981">0</span>/<span id="statLoss" style="color:#ef4444">0</span></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">P/L</div>
+                            <div class="stat-value" id="statPL">$0.00</div>
+                        </div>
+                    </div>
+
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size: 14px; font-weight: 600; color: #94a3b8;">Trade History</div>
+                            <button onclick="clearHistory()" style="background:none; border:none; color:#ef4444; font-size:10px; cursor:pointer;">Clear</button>
+                        </div>
+                        <div class="history-table-container">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Market</th>
+                                        <th>Type</th>
+                                        <th>Stake</th>
+                                        <th>Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isLoggedIn = false;
+        let currentMarket = 'R_50';
+        let scanIntervalMinutes = 5;
+        let scanTimer = null;
+        let countdownTimer = null;
+        let remainingSeconds = 0;
+        let tradeMode = 'manual';
+        let priceHistory = [];
+        let isManuallyLoggedOut = false;
+        
+        let sessionStartTime = null;
+        let sessionInterval = null;
+
+        // Stats Variables
+        let totalTrades = 0;
+        let totalWins = 0;
+        let totalLoss = 0;
+        let netPL = 0;
+        let tradeHistory = [];
+
+        window.addEventListener('load', () => {
+            loadPersistentData();
+            const storedToken = localStorage.getItem('deriv_api_token');
+            if (storedToken) {
+                document.getElementById('apiToken').value = storedToken;
+                login(storedToken);
+            }
+        });
+
+        function saveSettings() {
+            const settings = {
+                market: document.getElementById('marketType').value,
+                stake: document.getElementById('tradeAmount').value,
+                durationType: document.getElementById('durationType').value,
+                durationValue: document.getElementById('durationValue').value,
+                stopLoss: document.getElementById('stopLoss').value,
+                takeProfit: document.getElementById('takeProfit').value,
+                scanInterval: document.getElementById('scanInterval').value,
+                tradeMode: tradeMode
+            };
+            localStorage.setItem('trade_settings', JSON.stringify(settings));
+        }
+
+        function loadPersistentData() {
+            // Load Settings
+            const savedSettings = localStorage.getItem('trade_settings');
+            if (savedSettings) {
+                const s = JSON.parse(savedSettings);
+                document.getElementById('marketType').value = s.market || 'R_50';
+                currentMarket = s.market || 'R_50';
+                document.getElementById('tradeAmount').value = s.stake || 10;
+                document.getElementById('durationType').value = s.durationType || 'm';
+                document.getElementById('durationValue').value = s.durationValue || 5;
+                document.getElementById('stopLoss').value = s.stopLoss || 5;
+                document.getElementById('takeProfit').value = s.takeProfit || 10;
+                document.getElementById('scanInterval').value = s.scanInterval || 5;
+                scanIntervalMinutes = parseInt(s.scanInterval) || 5;
+                setTradeMode(s.tradeMode || 'manual');
+            }
+
+            // Load Stats
+            totalTrades = parseInt(localStorage.getItem('totalTrades')) || 0;
+            totalWins = parseInt(localStorage.getItem('totalWins')) || 0;
+            totalLoss = parseInt(localStorage.getItem('totalLoss')) || 0;
+            netPL = parseFloat(localStorage.getItem('netPL')) || 0;
+            updateStatsDisplay();
+
+            // Load History
+            const savedHistory = localStorage.getItem('tradeHistory');
+            if (savedHistory) {
+                tradeHistory = JSON.parse(savedHistory);
+                renderHistory();
+            }
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('statTrades').textContent = totalTrades;
+            document.getElementById('statWins').textContent = totalWins;
+            document.getElementById('statLoss').textContent = totalLoss;
+            const plElement = document.getElementById('statPL');
+            plElement.textContent = (netPL >= 0 ? '$' : '-$') + Math.abs(netPL).toFixed(2);
+            plElement.style.color = netPL >= 0 ? '#10b981' : '#ef4444';
+            
+            localStorage.setItem('totalTrades', totalTrades);
+            localStorage.setItem('totalWins', totalWins);
+            localStorage.setItem('totalLoss', totalLoss);
+            localStorage.setItem('netPL', netPL);
+        }
+
+        function updateStatusBadge(status) {
+            const dot = document.getElementById('wsStatusDot');
+            const text = document.getElementById('wsStatusText');
+            if (status === 'online') {
+                dot.classList.add('online');
+                text.textContent = 'Online';
+            } else if (status === 'connecting') {
+                dot.classList.remove('online');
+                text.textContent = 'Connecting...';
+            } else {
+                dot.classList.remove('online');
+                text.textContent = 'Offline';
+            }
+        }
+
+        function startSessionTimer() {
+            if (sessionInterval) clearInterval(sessionInterval);
+            sessionStartTime = Date.now();
+            document.getElementById('sessionDisplay').classList.remove('hidden');
+            
+            sessionInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStartTime;
+                const hrs = Math.floor(elapsed / 3600000).toString().padStart(2, '0');
+                const mins = Math.floor((elapsed % 3600000) / 60000).toString().padStart(2, '0');
+                const secs = Math.floor((elapsed % 60000) / 1000).toString().padStart(2, '0');
+                document.getElementById('sessionDisplay').textContent = `Session: ${hrs}:${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function login(tokenParam = null) {
+            const apiToken = tokenParam || document.getElementById('apiToken').value.trim();
+            if (!apiToken) return;
+
+            isManuallyLoggedOut = false;
+            updateStatusBadge('connecting');
+            
+            ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
+            
+            ws.onopen = function() {
+                ws.send(JSON.stringify({ authorize: apiToken }));
+            };
+
+            ws.onmessage = function(msg) {
+                const data = JSON.parse(msg.data);
+                
+                if (data.error) {
+                    updateStatusBadge('offline');
+                    localStorage.removeItem('deriv_api_token');
+                    return;
+                }
+
+                if (data.authorize) {
+                    isLoggedIn = true;
+                    localStorage.setItem('deriv_api_token', apiToken);
+                    updateStatusBadge('online');
+                    document.getElementById('loginArea').classList.add('hidden');
+                    document.getElementById('accountArea').classList.remove('hidden');
+                    document.getElementById('accountBalance').textContent = parseFloat(data.authorize.balance).toFixed(2);
+                    document.getElementById('currencyBadge').textContent = data.authorize.currency || 'N/A';
+                    
+                    const badge = document.getElementById('accountBadge');
+                    const isDemo = data.authorize.is_virtual === 1;
+                    badge.textContent = isDemo ? 'Demo' : 'Real';
+                    badge.className = isDemo ? 'account-badge badge-demo' : 'account-badge badge-real';
+
+                    ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+                    subscribeToMarket(currentMarket);
+                    startScanner();
+                    startSessionTimer();
+                }
+
+                if (data.tick && data.tick.symbol === currentMarket) {
+                    updatePrice(data.tick.quote);
+                }
+
+                if (data.msg_type === 'balance') {
+                    document.getElementById('accountBalance').textContent = parseFloat(data.balance.balance).toFixed(2);
+                }
+
+                if (data.msg_type === 'buy') {
+                    totalTrades++;
+                    updateStatsDisplay();
+                    const contractId = data.buy.contract_id;
+                    const type = document.getElementById('signalText').textContent.includes('BUY') ? 'CALL' : 'PUT';
+                    addTradeToHistory(contractId, data.buy.buy_price, type);
+                    ws.send(JSON.stringify({ proposal_open_contract: 1, contract_id: contractId, subscribe: 1 }));
+                }
+
+                if (data.msg_type === 'proposal_open_contract') {
+                    const contract = data.proposal_open_contract;
+                    if (contract.is_sold) {
+                        updateFinishedTrade(contract);
+                    }
+                }
+            };
+
+            ws.onclose = function() {
+                updateStatusBadge('offline');
+                isLoggedIn = false;
+                if (!isManuallyLoggedOut) setTimeout(() => {
+                    const token = localStorage.getItem('deriv_api_token');
+                    if (token) login(token);
+                }, 5000);
+            };
+        }
+
+        function logout() {
+            isManuallyLoggedOut = true;
+            localStorage.removeItem('deriv_api_token');
+            if (ws) ws.close();
+            clearInterval(scanTimer);
+            clearInterval(countdownTimer);
+            isLoggedIn = false;
+            document.getElementById('loginArea').classList.remove('hidden');
+            document.getElementById('accountArea').classList.add('hidden');
+            document.getElementById('sessionDisplay').classList.add('hidden');
+            updateStatusBadge('offline');
+        }
+
+        function updatePrice(price) {
+            const formattedPrice = price.toFixed(5);
+            document.getElementById('scannerPrice').textContent = formattedPrice;
+            priceHistory.push(price);
+            if (priceHistory.length > 200) priceHistory.shift();
+        }
+
+        function addTradeToHistory(id, stake, type) {
+            const entry = {
+                id: id,
+                time: new Date().toLocaleTimeString(),
+                market: currentMarket,
+                type: type,
+                stake: stake,
+                result: 'Pending'
+            };
+            tradeHistory.unshift(entry);
+            if (tradeHistory.length > 50) tradeHistory.pop();
+            localStorage.setItem('tradeHistory', JSON.stringify(tradeHistory));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const table = document.getElementById('historyBody');
+            table.innerHTML = '';
+            tradeHistory.forEach(trade => {
+                const row = table.insertRow();
+                let resClass = 'result-pending';
+                if (trade.result === 'WON') resClass = 'result-won';
+                if (trade.result === 'LOST') resClass = 'result-lost';
+                
+                row.innerHTML = `
+                    <td>${trade.time}</td>
+                    <td>${trade.market}</td>
+                    <td>${trade.type}</td>
+                    <td>$${trade.stake}</td>
+                    <td class="${resClass}">${trade.result}</td>
+                `;
+            });
+        }
+
+        function clearHistory() {
+            tradeHistory = [];
+            localStorage.removeItem('tradeHistory');
+            totalTrades = 0; totalWins = 0; totalLoss = 0; netPL = 0;
+            updateStatsDisplay();
+            renderHistory();
+        }
+
+        function updateFinishedTrade(contract) {
+            const trade = tradeHistory.find(t => t.id === contract.contract_id);
+            if (trade && trade.result === 'Pending') {
+                const profit = parseFloat(contract.profit);
+                netPL += profit;
+                if (profit > 0) {
+                    totalWins++;
+                    trade.result = 'WON';
+                } else {
+                    totalLoss++;
+                    trade.result = 'LOST';
+                }
+                localStorage.setItem('tradeHistory', JSON.stringify(tradeHistory));
+                updateStatsDisplay();
+                renderHistory();
+            }
+        }
+
+        function subscribeToMarket(market) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ ticks: market, subscribe: 1 }));
+            }
+        }
+
+        function updateMarket() {
+            currentMarket = document.getElementById('marketType').value;
+            document.getElementById('scannerMarket').textContent = currentMarket;
+            document.getElementById('scannerPrice').textContent = "--";
+            priceHistory = [];
+            saveSettings();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ forget_all: "ticks" }));
+                subscribeToMarket(currentMarket);
+            }
+        }
+
+        function startScanner() {
+            document.getElementById('scanStatus').textContent = 'Active';
+            remainingSeconds = scanIntervalMinutes * 60;
+            generateSignal();
+            scanTimer = setInterval(generateSignal, scanIntervalMinutes * 60 * 1000);
+            startCountdown();
+        }
+
+        function calculateRSI(prices, periods = 14) {
+            if (prices.length < periods + 1) return 50;
+            let gains = 0, losses = 0;
+            for (let i = prices.length - periods; i < prices.length; i++) {
+                let diff = prices[i] - prices[i - 1];
+                if (diff >= 0) gains += diff;
+                else losses -= diff;
+            }
+            let avgGain = gains / periods;
+            let avgLoss = losses / periods;
+            if (avgLoss === 0) return 100;
+            let rs = avgGain / avgLoss;
+            return 100 - (100 / (1 + rs));
+        }
+
+        function generateSignal() {
+            if (priceHistory.length < 20) {
+                document.getElementById('signalText').textContent = 'ANALYZING...';
+                document.getElementById('signalText').className = 'signal-text signal-undecided';
+                return;
+            }
+
+            const rsi = calculateRSI(priceHistory);
+            const recent = priceHistory.slice(-5);
+            const isUptrend = recent[4] > recent[0];
+            
+            // Advanced Price Action Logic: RSI Overbought/Oversold + Momentum
+            if (rsi < 40 && isUptrend) {
+                document.getElementById('signalText').textContent = '🚀 BUY SIGNAL';
+                document.getElementById('signalText').className = 'signal-text signal-buy';
+                if (tradeMode === 'auto') setTimeout(() => placeTrade('CALL'), 1000);
+            } else if (rsi > 60 && !isUptrend) {
+                document.getElementById('signalText').textContent = '📉 SELL SIGNAL';
+                document.getElementById('signalText').className = 'signal-text signal-sell';
+                if (tradeMode === 'auto') setTimeout(() => placeTrade('PUT'), 1000);
+            } else {
+                document.getElementById('signalText').textContent = 'WAITING...';
+                document.getElementById('signalText').className = 'signal-text signal-undecided';
+            }
+            
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            remainingSeconds = scanIntervalMinutes * 60;
+        }
+
+        function startCountdown() {
+            if (countdownTimer) clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                remainingSeconds--;
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                document.getElementById('countdown').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                if (remainingSeconds <= 0) remainingSeconds = scanIntervalMinutes * 60;
+            }, 1000);
+        }
+
+        function updateScanInterval() {
+            const val = parseInt(document.getElementById('scanInterval').value);
+            if (val >= 1 && val <= 60) {
+                scanIntervalMinutes = val;
+                saveSettings();
+                if (isLoggedIn) {
+                    clearInterval(scanTimer);
+                    startScanner();
+                }
+            }
+        }
+
+        function setTradeMode(mode) {
+            tradeMode = mode;
+            document.getElementById('manualBtn').classList.toggle('active', mode === 'manual');
+            document.getElementById('autoBtn').classList.toggle('active', mode === 'auto');
+            document.getElementById('autoTradeInfo').classList.toggle('hidden', mode === 'manual');
+            saveSettings();
+        }
+
+        function placeTrade(type) {
+            if (!isLoggedIn) return;
+            const amount = document.getElementById('tradeAmount').value;
+            const duration = document.getElementById('durationValue').value;
+            const unit = document.getElementById('durationType').value;
+            
+            ws.send(JSON.stringify({
+                buy: "1",
+                price: parseFloat(amount),
+                parameters: {
+                    amount: parseFloat(amount),
+                    basis: "stake",
+                    contract_type: type,
+                    currency: document.getElementById('currencyBadge').textContent,
+                    duration: parseInt(duration),
+                    duration_unit: unit,
+                    symbol: currentMarket
+                }
+            }));
+        }
+    </script>
+</body>
+</html>
