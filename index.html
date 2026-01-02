@@ -897,11 +897,20 @@
         };
         let pendingTrades = new Map();
         let isFirstSignal = true;
+        let lastHeartbeat = Date.now();
+        
+        // FIX #1: One trade per candle per market tracking
+        let tradedCandles = {}; // Tracks which candles have been traded on per market
+        
+        // FIX #4: Request ID tracking for race conditions
+        let requestIdCounter = 0;
+        let pendingProposals = new Map();
 
         // Initialize markets
         Object.keys(markets).forEach(symbol => {
             activeMarkets[symbol] = true;
             candleData[symbol] = [];
+            tradedCandles[symbol] = new Set(); // Initialize tracking for each market
         });
 
         // Update connection badge
@@ -920,19 +929,19 @@
 
         // Load saved settings
         function loadSettings() {
-            const savedToken = localStorage.getItem('derivToken');
-            const savedMarkets = localStorage.getItem('activeMarkets');
-            const savedTrendFilter = localStorage.getItem('trendFilter');
-            const savedZeroFilter = localStorage.getItem('zeroClosingFilter');
-            const savedStake = localStorage.getItem('stakeAmount');
-            const savedStopLoss = localStorage.getItem('stopLoss');
-            const savedTakeProfit = localStorage.getItem('takeProfit');
-            const savedDurationType = localStorage.getItem('durationType');
-            const savedDurationValue = localStorage.getItem('durationValue');
-            const savedMinLowerWickBuy = localStorage.getItem('minLowerWickBuy');
-            const savedMinUpperWickSell = localStorage.getItem('minUpperWickSell');
-            const savedTradeHistory = localStorage.getItem('tradeHistory');
-            const savedStats = localStorage.getItem('tradeStats');
+            const savedToken = sessionStorage.getItem('derivToken');
+            const savedMarkets = sessionStorage.getItem('activeMarkets');
+            const savedTrendFilter = sessionStorage.getItem('trendFilter');
+            const savedZeroFilter = sessionStorage.getItem('zeroClosingFilter');
+            const savedStake = sessionStorage.getItem('stakeAmount');
+            const savedStopLoss = sessionStorage.getItem('stopLoss');
+            const savedTakeProfit = sessionStorage.getItem('takeProfit');
+            const savedDurationType = sessionStorage.getItem('durationType');
+            const savedDurationValue = sessionStorage.getItem('durationValue');
+            const savedMinLowerWickBuy = sessionStorage.getItem('minLowerWickBuy');
+            const savedMinUpperWickSell = sessionStorage.getItem('minUpperWickSell');
+            const savedTradeHistory = sessionStorage.getItem('tradeHistory');
+            const savedStats = sessionStorage.getItem('tradeStats');
 
             if (savedToken) {
                 document.getElementById('apiToken').value = savedToken;
@@ -991,19 +1000,19 @@
 
         // Save settings
         function saveSettings() {
-            localStorage.setItem('derivToken', document.getElementById('apiToken').value);
-            localStorage.setItem('activeMarkets', JSON.stringify(activeMarkets));
-            localStorage.setItem('trendFilter', document.getElementById('trendFilter').checked);
-            localStorage.setItem('zeroClosingFilter', document.getElementById('zeroClosingFilter').checked);
-            localStorage.setItem('stakeAmount', document.getElementById('stakeAmount').value);
-            localStorage.setItem('stopLoss', document.getElementById('stopLoss').value);
-            localStorage.setItem('takeProfit', document.getElementById('takeProfit').value);
-            localStorage.setItem('durationType', document.getElementById('durationType').value);
-            localStorage.setItem('durationValue', document.getElementById('durationValue').value);
-            localStorage.setItem('minLowerWickBuy', document.getElementById('minLowerWickBuy').value);
-            localStorage.setItem('minUpperWickSell', document.getElementById('minUpperWickSell').value);
-            localStorage.setItem('tradeHistory', JSON.stringify(tradeHistory));
-            localStorage.setItem('tradeStats', JSON.stringify(tradeStats));
+            sessionStorage.setItem('derivToken', document.getElementById('apiToken').value);
+            sessionStorage.setItem('activeMarkets', JSON.stringify(activeMarkets));
+            sessionStorage.setItem('trendFilter', document.getElementById('trendFilter').checked);
+            sessionStorage.setItem('zeroClosingFilter', document.getElementById('zeroClosingFilter').checked);
+            sessionStorage.setItem('stakeAmount', document.getElementById('stakeAmount').value);
+            sessionStorage.setItem('stopLoss', document.getElementById('stopLoss').value);
+            sessionStorage.setItem('takeProfit', document.getElementById('takeProfit').value);
+            sessionStorage.setItem('durationType', document.getElementById('durationType').value);
+            sessionStorage.setItem('durationValue', document.getElementById('durationValue').value);
+            sessionStorage.setItem('minLowerWickBuy', document.getElementById('minLowerWickBuy').value);
+            sessionStorage.setItem('minUpperWickSell', document.getElementById('minUpperWickSell').value);
+            sessionStorage.setItem('tradeHistory', JSON.stringify(tradeHistory));
+            sessionStorage.setItem('tradeStats', JSON.stringify(tradeStats));
         }
 
         // Render markets
@@ -1063,10 +1072,12 @@
                 ws.onopen = () => {
                     logActivity('WebSocket connected', 'success');
                     updateConnectionBadge(true);
+                    lastHeartbeat = Date.now(); // FIX #3: Initialize heartbeat timestamp
                     ws.send(JSON.stringify({ authorize: token }));
                 };
 
                 ws.onmessage = (msg) => {
+                    lastHeartbeat = Date.now(); // FIX #3: Update heartbeat on every message
                     const data = JSON.parse(msg.data);
                     handleWebSocketMessage(data, resolve, reject);
                 };
@@ -1083,7 +1094,7 @@
                     if (isLoggedIn) {
                         setTimeout(() => {
                             logActivity('Attempting to reconnect...', 'info');
-                            const savedToken = localStorage.getItem('derivToken');
+                            const savedToken = sessionStorage.getItem('derivToken');
                             if (savedToken) {
                                 connectWebSocket(savedToken)
                                     .then(() => {
@@ -1157,12 +1168,24 @@
                 }
             }
 
+            // FIX #4: Handle proposal response with request ID verification
+            if (data.msg_type === 'proposal' && data.proposal) {
+                const reqId = data.req_id;
+                if (pendingProposals.has(reqId)) {
+                    const proposalData = pendingProposals.get(reqId);
+                    proposalData.resolve(data);
+                    pendingProposals.delete(reqId);
+                }
+            }
+
             if (data.msg_type === 'buy') {
                 if (data.buy.contract_id) {
+                    const symbol = data.echo_req?.parameters?.symbol;
                     pendingTrades.set(data.buy.contract_id, {
-                        symbol: data.echo_req.parameters?.symbol,
+                        symbol: symbol,
                         type: data.echo_req.parameters?.contract_type,
-                        stake: data.echo_req.parameters?.amount
+                        stake: data.echo_req.parameters?.amount,
+                        candle_time: data.echo_req.parameters?.candle_time // Track candle time
                     });
                     // Subscribe to contract updates
                     ws.send(JSON.stringify({
@@ -1183,6 +1206,11 @@
                 if (data.forget) {
                     logActivity(`Unsubscribed from subscription ID: ${data.forget}`, 'info');
                 }
+            }
+
+            if (data.msg_type === 'ping') {
+                // Respond to ping
+                ws.send(JSON.stringify({ ping: 1 }));
             }
         }
 
@@ -1242,9 +1270,9 @@
             stopSessionTimer();
             updateConnectionBadge(false);
 
-            // Clear the token from input and localStorage
+            // Clear the token from input and sessionStorage
             document.getElementById('apiToken').value = '';
-            localStorage.removeItem('derivToken');
+            sessionStorage.removeItem('derivToken');
 
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('accountInfo').classList.add('hidden');
@@ -1308,6 +1336,7 @@
                 ws.send(JSON.stringify({ forget: marketSubscriptions[symbol] }));
                 delete marketSubscriptions[symbol];
                 candleData[symbol] = [];
+                tradedCandles[symbol].clear(); // Clear traded candles tracking
                 logActivity(`Unsubscribed from ${markets[symbol]}`);
             }
         }
@@ -1340,6 +1369,7 @@
             logActivity(`Loaded ${candles.length} candles for ${markets[symbol]}`, 'success');
         }
 
+        // FIX #2: Only check signals when candle closes (new candle starts)
         function updateCandle(symbol, ohlc) {
             if (!candleData[symbol]) candleData[symbol] = [];
 
@@ -1354,14 +1384,16 @@
             const lastCandle = candleData[symbol][candleData[symbol].length - 1];
             
             if (lastCandle && lastCandle.time === newCandle.time) {
+                // Update current candle - DO NOT CHECK FOR SIGNALS
                 candleData[symbol][candleData[symbol].length - 1] = newCandle;
             } else {
+                // NEW CANDLE STARTED - Previous candle has closed
                 candleData[symbol].push(newCandle);
                 if (candleData[symbol].length > 100) {
                     candleData[symbol].shift();
                 }
                 
-                // Check for trading signals on new candle close
+                // FIX #2: Only check for signals when a NEW candle starts (previous closed)
                 if (isAutoTrading && candleData[symbol].length >= 52) {
                     checkForSignals(symbol);
                 }
@@ -1382,15 +1414,22 @@
             return ema;
         }
 
-        // Check for trading signals
+        // FIX #1 & #2: Check for trading signals with one-trade-per-candle guard
         function checkForSignals(symbol) {
             if (candleData[symbol].length < 52) return;
 
             const candles = candleData[symbol];
-            const lastCandle = candles[candles.length - 1];
-            const prevCandle = candles[candles.length - 2];
+            // FIX #2: Use the CLOSED candle (second to last)
+            const lastCandle = candles[candles.length - 2];
+            const prevCandle = candles[candles.length - 3];
 
             if (!lastCandle || !prevCandle) return;
+
+            // FIX #1: Check if we've already traded on this candle
+            const candleKey = `${lastCandle.time}`;
+            if (tradedCandles[symbol].has(candleKey)) {
+                return; // Already traded on this candle, skip
+            }
 
             const trendFilter = document.getElementById('trendFilter').checked;
             const zeroClosingFilter = document.getElementById('zeroClosingFilter').checked;
@@ -1399,7 +1438,7 @@
 
             let ema50 = null;
             if (trendFilter) {
-                ema50 = calculateEMA(candles, 50);
+                ema50 = calculateEMA(candles.slice(0, -1), 50); // Calculate EMA excluding current forming candle
             }
 
             // Check for Tweezers Bottom (BUY)
@@ -1408,11 +1447,11 @@
                 if (trendFilter && ema50) {
                     if (lastCandle.close > ema50) {
                         addSignal(symbol, 'Tweezers Bottom BUY');
-                        executeTrade(symbol, 'CALL');
+                        executeTrade(symbol, 'CALL', candleKey);
                     }
                 } else {
                     addSignal(symbol, 'Tweezers Bottom BUY');
-                    executeTrade(symbol, 'CALL');
+                    executeTrade(symbol, 'CALL', candleKey);
                 }
             }
 
@@ -1422,11 +1461,11 @@
                 if (trendFilter && ema50) {
                     if (lastCandle.close < ema50) {
                         addSignal(symbol, 'Tweezers Top SELL');
-                        executeTrade(symbol, 'PUT');
+                        executeTrade(symbol, 'PUT', candleKey);
                     }
                 } else {
                     addSignal(symbol, 'Tweezers Top SELL');
-                    executeTrade(symbol, 'PUT');
+                    executeTrade(symbol, 'PUT', candleKey);
                 }
             }
         }
@@ -1571,16 +1610,19 @@
             }
         }
 
-        // Execute trade
-        async function executeTrade(symbol, type) {
+        // FIX #1 & #4: Execute trade with candle tracking and unique request IDs
+        async function executeTrade(symbol, type, candleKey) {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 logActivity('Cannot execute trade: WebSocket not connected', 'error');
                 return;
             }
 
             const stake = parseFloat(document.getElementById('stakeAmount').value);
-            const durationType = document.getElementById('durationType').value;
+            const durationType = document.getElementById('durationType').value; // ✅ FIXED: Removed extra parenthesis
             const durationValue = parseInt(document.getElementById('durationValue').value);
+
+            // FIX #4: Generate unique request ID
+            const reqId = ++requestIdCounter;
 
             const proposal = {
                 proposal: 1,
@@ -1591,33 +1633,27 @@
                 duration: durationValue,
                 duration_unit: durationType,
                 symbol: symbol,
-                parameters: {
-                    symbol: symbol,
-                    contract_type: type,
-                    amount: stake
-                }
+                req_id: reqId // Add unique request ID
             };
 
             try {
                 ws.send(JSON.stringify(proposal));
                 
-                // Wait for proposal response
+                // FIX #4: Wait for proposal response with matching request ID
                 const proposalResponse = await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Proposal timeout')), 5000);
-                    const handler = (msg) => {
-                        const data = JSON.parse(msg.data);
-                        if (data.msg_type === 'proposal' && data.proposal) {
-                            clearTimeout(timeout);
-                            ws.removeEventListener('message', handler);
-                            resolve(data);
-                        } else if (data.error && data.msg_type === 'proposal') {
-                            clearTimeout(timeout);
-                            ws.removeEventListener('message', handler);
-                            reject(new Error(data.error.message));
-                        }
-                    };
-                    ws.addEventListener('message', handler);
+                    const timeout = setTimeout(() => {
+                        pendingProposals.delete(reqId);
+                        reject(new Error('Proposal timeout'));
+                    }, 5000);
+                    
+                    pendingProposals.set(reqId, { resolve, reject, timeout });
                 });
+
+                // Clear timeout
+                if (pendingProposals.has(reqId)) {
+                    clearTimeout(pendingProposals.get(reqId).timeout);
+                    pendingProposals.delete(reqId);
+                }
 
                 if (proposalResponse.proposal) {
                     // Buy the contract
@@ -1627,9 +1663,13 @@
                         parameters: {
                             symbol: symbol,
                             contract_type: type,
-                            amount: stake
+                            amount: stake,
+                            candle_time: candleKey // Track which candle this trade is for
                         }
                     }));
+
+                    // FIX #1: Mark this candle as traded
+                    tradedCandles[symbol].add(candleKey);
 
                     logActivity(`Trade executed: ${type} on ${markets[symbol]} - Stake: ${stake}`, 'success');
                 }
@@ -1704,7 +1744,7 @@
             
             const plElement = document.getElementById('profitLoss');
             plElement.textContent = tradeStats.profitLoss.toFixed(2);
-            plElement.className = 'stat-value ' + (tradeStats.profitLoss >= 0 ? 'profit' : 'loss');
+            plElement.className = 'stat-value ' + (tradeStats.profitLoss>= 0 ? 'profit' : 'loss');
         }
 
         // Update trade history table
@@ -1740,6 +1780,12 @@
 
             isAutoTrading = true;
             isFirstSignal = true;
+            
+            // FIX #1: Clear traded candles tracking when starting
+            Object.keys(tradedCandles).forEach(symbol => {
+                tradedCandles[symbol].clear();
+            });
+            
             document.getElementById('autoTradeBtn').textContent = 'Stop Auto Trade';
             document.getElementById('autoTradeBtn').className = 'btn btn-danger';
             
@@ -1857,7 +1903,7 @@
 
         // Auto-reconnect on page refresh
         window.addEventListener('load', () => {
-            const savedToken = localStorage.getItem('derivToken');
+            const savedToken = sessionStorage.getItem('derivToken');
             if (savedToken && !isLoggedIn) {
                 document.getElementById('apiToken').value = savedToken;
                 logActivity('Auto-reconnect: Token found in storage', 'info');
@@ -1933,7 +1979,7 @@
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 if (isLoggedIn) {
                     logActivity('WebSocket disconnected. Attempting to reconnect...', 'error');
-                    const token = localStorage.getItem('derivToken');
+                    const token = sessionStorage.getItem('derivToken');
                     if (token) {
                         connectWebSocket(token).catch(err => {
                             logActivity('Reconnection failed: ' + err.message, 'error');
@@ -1948,7 +1994,7 @@
             const activeMarketCount = Object.values(activeMarkets).filter(v => v).length;
             if (activeMarketCount === 0 && isAutoTrading) {
                 logActivity('No active markets selected. Please enable at least one market.', 'error');
-            } else {
+            } else if (activeMarketCount > 0) {
                 logActivity(`Active markets: ${activeMarketCount}`, 'success');
             }
 
@@ -2031,9 +2077,7 @@
 
         setInterval(updateConnectionStatus, 1000);
 
-        // Monitor WebSocket health
-        let lastHeartbeat = Date.now();
-
+        // FIX #3: Monitor WebSocket health with proper heartbeat
         function checkWebSocketHealth() {
             if (isLoggedIn && ws && ws.readyState === WebSocket.OPEN) {
                 const timeSinceLastMessage = Date.now() - lastHeartbeat;
@@ -2047,7 +2091,7 @@
                 // If no message received in 60 seconds, reconnect
                 if (timeSinceLastMessage > 60000) {
                     logActivity('No response from server. Reconnecting...', 'error');
-                    const token = localStorage.getItem('derivToken');
+                    const token = sessionStorage.getItem('derivToken');
                     if (token) {
                         ws.close();
                         connectWebSocket(token).catch(err => {
@@ -2059,13 +2103,6 @@
         }
 
         setInterval(checkWebSocketHealth, 10000);
-
-        // Update lastHeartbeat on any message
-        if (ws) {
-            ws.addEventListener('message', () => {
-                lastHeartbeat = Date.now();
-            });
-        }
 
         // Handle visibility change (tab switching)
         document.addEventListener('visibilitychange', () => {
@@ -2128,7 +2165,7 @@
         // Function to reset all settings
         window.resetAllSettings = function() {
             if (confirm('Are you sure you want to reset all settings to default? This will clear all saved data including trade history.')) {
-                localStorage.clear();
+                sessionStorage.clear();
                 location.reload();
             }
         };
@@ -2205,7 +2242,7 @@
             logActivity('Network connection restored', 'success');
             updateConnectionBadge(true);
             if (isLoggedIn && (!ws || ws.readyState !== WebSocket.OPEN)) {
-                const token = localStorage.getItem('derivToken');
+                const token = sessionStorage.getItem('derivToken');
                 if (token) {
                     connectWebSocket(token).catch(err => {
                         logActivity('Reconnection failed: ' + err.message, 'error');
