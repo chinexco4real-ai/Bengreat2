@@ -1134,7 +1134,7 @@ function handleTradeResult(contract) {
   if (isMarketCycleActive && stats.profit >= tp) {
       if (currentMarketIndex < marketSequence.length - 1) {
           currentMarketIndex++;
-          constnextMarket = marketSequence[currentMarketIndex];
+          const nextMarket = marketSequence[currentMarketIndex];
           addLog(`Target reached! Switching Market: ${marketSequence[currentMarketIndex-1]} -> ${nextMarket}...`, "success");
           resetStats(); 
           currentMarketValue = nextMarket;
