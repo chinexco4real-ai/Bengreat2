@@ -84,6 +84,19 @@ tbody tr:hover { background: #1e293b; }
 .ml-active { background: #22c55e; color: #020617; }
 .advanced-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 10px; }
 .advanced-stats > div { background: #020617; padding: 5px; border-radius: 4px; text-align: center; }
+
+/* Radio Button Styles */
+.radio-group { margin: 10px 0; }
+.radio-option { display: flex; align-items: center; padding: 8px; margin: 5px 0; background: #1e293b; border-radius: 6px; cursor: pointer; border: 2px solid #334155; transition: all 0.2s; }
+.radio-option:hover { border-color: #22c55e; background: #1e3a2b; }
+.radio-option input[type="radio"] { margin-right: 10px; cursor: pointer; width: auto; }
+.radio-option.selected { border-color: #22c55e; background: #1e3a2b; }
+.radio-option label { cursor: pointer; margin: 0; opacity: 1; font-size: 13px; font-weight: 600; width: 100%; }
+
+/* Pattern Mode UI */
+.pattern-target-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+.pattern-target-grid input { text-align: center; padding: 8px; margin: 0; background: #0f172a; border: 2px solid #8b5cf6; }
+.pattern-mode-active { background: #8b5cf6; padding: 8px; border-radius: 6px; text-align: center; margin: 10px 0; font-weight: 700; color: white; }
 </style>
 </head>
 <body>
@@ -179,11 +192,24 @@ tbody tr:hover { background: #1e293b; }
   </div>
 
   <label>Confidence Selection Mode</label>
-  <select id="confidenceMode" class="save-setting" onchange="toggleConfidenceUI()">
-      <option value="range">Mode 1: Range (Min-Max)</option>
-      <option value="specific">Mode 2: Specific Numbers (Pick 5)</option>
-      <option value="sequence">Mode 3: Sequence Pattern (3 Slots)</option>
-  </select>
+  <div class="radio-group" id="confidenceModeRadios">
+      <div class="radio-option" onclick="selectConfidenceMode('range')">
+          <input type="radio" name="confidenceMode" value="range" id="modeRange" checked>
+          <label for="modeRange">Mode 1: Range (Min-Max)</label>
+      </div>
+      <div class="radio-option" onclick="selectConfidenceMode('specific')">
+          <input type="radio" name="confidenceMode" value="specific" id="modeSpecific">
+          <label for="modeSpecific">Mode 2: Specific Numbers (Pick 5)</label>
+      </div>
+      <div class="radio-option" onclick="selectConfidenceMode('sequence')">
+          <input type="radio" name="confidenceMode" value="sequence" id="modeSequence">
+          <label for="modeSequence">Mode 3: Sequence Pattern (3 Slots)</label>
+      </div>
+      <div class="radio-option" onclick="selectConfidenceMode('pattern')">
+          <input type="radio" name="confidenceMode" value="pattern" id="modePattern">
+          <label for="modePattern">Mode 4: Pattern Detection (Next Likely Digit)</label>
+      </div>
+  </div>
 
   <div id="rangeUI">
       <label>Confidence Range (Min - Max %)</label>
@@ -235,14 +261,44 @@ tbody tr:hover { background: #1e293b; }
       </div>
   </div>
 
+  <div id="patternUI" style="display:none;">
+      <div class="pattern-mode-active">🎯 Pattern Detection Mode Active</div>
+      <label>Target Digits for Pattern Match (0-9)</label>
+      <div class="pattern-target-grid">
+          <input id="pattern1" class="save-setting" type="number" value="0" min="0" max="9" placeholder="Digit 1">
+          <input id="pattern2" class="save-setting" type="number" value="1" min="0" max="9" placeholder="Digit 2">
+          <input id="pattern3" class="save-setting" type="number" value="6" min="0" max="9" placeholder="Digit 3">
+          <input id="pattern4" class="save-setting" type="number" value="7" min="0" max="9" placeholder="Digit 4">
+          <input id="pattern5" class="save-setting" type="number" value="8" min="0" max="9" placeholder="Digit 5">
+      </div>
+      <div style="font-size: 11px; opacity: 0.7; margin-top: 8px; text-align: center;">
+          Bot will trade when pattern's "Next Likely" digit matches any of the above targets
+      </div>
+  </div>
+
   <label>Market</label>
-  <select id="market" class="save-setting">
-    <option value="R_10">R_10</option>
-    <option value="R_25">R_25</option>
-    <option value="R_50">R_50</option>
-    <option value="R_75">R_75</option>
-    <option value="R_100">R_100</option>
-  </select>
+  <div class="radio-group" id="marketRadios">
+      <div class="radio-option" onclick="selectMarket('R_10')">
+          <input type="radio" name="market" value="R_10" id="marketR10" checked>
+          <label for="marketR10">R_10</label>
+      </div>
+      <div class="radio-option" onclick="selectMarket('R_25')">
+          <input type="radio" name="market" value="R_25" id="marketR25">
+          <label for="marketR25">R_25</label>
+      </div>
+      <div class="radio-option" onclick="selectMarket('R_50')">
+          <input type="radio" name="market" value="R_50" id="marketR50">
+          <label for="marketR50">R_50</label>
+      </div>
+      <div class="radio-option" onclick="selectMarket('R_75')">
+          <input type="radio" name="market" value="R_75" id="marketR75">
+          <label for="marketR75">R_75</label>
+      </div>
+      <div class="radio-option" onclick="selectMarket('R_100')">
+          <input type="radio" name="market" value="R_100" id="marketR100">
+          <label for="marketR100">R_100</label>
+      </div>
+  </div>
 </div>
 
 <div class="card">
@@ -310,6 +366,8 @@ let previousPredictionConfidence = 0;
 let lastPredictionType = '-';
 let lastTradeTime = 0;
 let lastRequestTime = 0; 
+let currentConfidenceMode = 'range';
+let currentMarketValue = 'R_10';
 
 let isMarketCycleActive = false;
 let isCooldownLoopActive = false;
@@ -328,6 +386,7 @@ let recentWinRates = []; // For adaptive thresholds
 let extendedHistory = []; // Store up to 1000 digits
 let patternCache = {}; // Cache for pattern recognition
 let volatilityWindow = []; // For volatility calculation
+let detectedPattern = null; // Store current pattern detection
 
 // ============ UTILITY FUNCTIONS ============
 function addLog(msg, type = 'info') {
@@ -361,7 +420,7 @@ function updateSignalWindowTimer() {
         }
     } else {
         isSignalWindowOpen = false;
-        const nextWindowIn = (60 - closeWindowSize) - sec;
+        const nextWindowIn = (60 -closeWindowSize) - sec;
         if (timerEl) {
             timerEl.style.color = "#f59e0b";
             timerEl.style.borderColor = "#334155";
@@ -371,16 +430,46 @@ function updateSignalWindowTimer() {
     }
 }
 
+function selectConfidenceMode(mode) {
+    currentConfidenceMode = mode;
+    document.querySelectorAll('#confidenceModeRadios .radio-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    const selectedOption = document.querySelector(`#confidenceModeRadios .radio-option input[value="${mode}"]`).parentElement;
+    selectedOption.classList.add('selected');
+    document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`).checked = true;
+    
+    toggleConfidenceUI();
+    saveSettings();
+}
+
+function selectMarket(market) {
+    currentMarketValue = market;
+    document.querySelectorAll('#marketRadios .radio-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    const selectedOption = document.querySelector(`#marketRadios .radio-option input[value="${market}"]`).parentElement;
+    selectedOption.classList.add('selected');
+    document.getElementById(`market${market.replace('_', '')}`).checked = true;
+    
+    if (isConnected) subscribeToTicks();
+    saveSettings();
+}
+
 function toggleConfidenceUI() {
-    const mode = document.getElementById('confidenceMode').value;
+    const mode = currentConfidenceMode;
     document.getElementById('rangeUI').style.display = (mode === 'range') ? 'block' : 'none';
     document.getElementById('specificUI').style.display = (mode === 'specific') ? 'block' : 'none';
     document.getElementById('sequenceUI').style.display = (mode === 'sequence') ? 'block' : 'none';
+    document.getElementById('patternUI').style.display = (mode === 'pattern') ? 'block' : 'none';
     addLog(`Confidence Mode: ${mode}`, "info");
 }
 
 function saveSettings() {
-    const settings = {};
+    const settings = {
+        confidenceMode: currentConfidenceMode,
+        market: currentMarketValue
+    };
     document.querySelectorAll('.save-setting').forEach(el => settings[el.id] = el.value);
     localStorage.setItem('bot_settings_v8_ml', JSON.stringify(settings));
 }
@@ -392,6 +481,18 @@ function loadSettings() {
         for (const id in settings) {
             const el = document.getElementById(id);
             if (el) el.value = settings[id];
+        }
+        
+        // Restore confidence mode
+        if (settings.confidenceMode) {
+            currentConfidenceMode = settings.confidenceMode;
+            selectConfidenceMode(currentConfidenceMode);
+        }
+        
+        // Restore market
+        if (settings.market) {
+            currentMarketValue = settings.market;
+            selectMarket(currentMarketValue);
         }
     }
     toggleConfidenceUI();
@@ -466,7 +567,7 @@ function handleMessage(data) {
     const accTypeEl = document.getElementById('accountType');
     const isVirtual = data.authorize.is_virtual === 1 || data.authorize.loginid.includes('VRTC');
     accTypeEl.textContent = isVirtual ? 'Demo Account' : 'Live Account';
-    accTypeEl.className = 'account-type' + (isVirtual ? 'demo-badge' : 'live-badge');
+    accTypeEl.className = 'account-type ' + (isVirtual ? 'demo-badge' : 'live-badge');
     accTypeEl.style.display = 'block';
     addLog(`Authorized: ${data.authorize.email}`, "success");
     sendAPIRequest({ balance: 1, subscribe: 1 });
@@ -678,13 +779,39 @@ function addDigitToAnalyzer(digit) {
 
 function checkAndAutoTrade() {
     if (currentContractId !== null) return;
+    
+    // Mode 4: Pattern Detection Mode - No window restriction
+    if (currentConfidenceMode === 'pattern') {
+        const now = Date.now();
+        const cooldownMs = parseInt(document.getElementById('cooldown').value) * 1000;
+        if (now - lastTradeTime < Math.max(cooldownMs, 1000)) return;
+        
+        if (detectedPattern && detectedPattern.nextDigit !== null && detectedPattern.nextDigit !== undefined) {
+            const targetDigits = [
+                parseInt(document.getElementById('pattern1').value),
+                parseInt(document.getElementById('pattern2').value),
+                parseInt(document.getElementById('pattern3').value),
+                parseInt(document.getElementById('pattern4').value),
+                parseInt(document.getElementById('pattern5').value)
+            ];
+            
+            if (targetDigits.includes(detectedPattern.nextDigit)) {
+                addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} - Trading NOW!`, "success");
+                lastTradeTime = now;
+                placeTrade();
+            }
+        }
+        return;
+    }
+    
+    // For other modes, require signal window
     if (!isSignalWindowOpen) return;
 
     const now = Date.now();
     const cooldownMs = parseInt(document.getElementById('cooldown').value) * 1000;
     if (now - lastTradeTime < Math.max(cooldownMs, 1000)) return;
 
-    const mode = document.getElementById('confidenceMode').value;
+    const mode = currentConfidenceMode;
     let isConfidenceMet = false;
     const currentConf = Math.round(lastPredictionConfidence);
     const prevConf = Math.round(previousPredictionConfidence);
@@ -757,6 +884,7 @@ function updateAnalyzerDisplay() {
 function predictNextDigit() {
   if (digitHistory.length < 20) {
     document.getElementById('patternMatch').textContent = 'Collecting data... need 20+ ticks';
+    detectedPattern = null;
     return;
   }
   
@@ -855,8 +983,10 @@ function predictNextDigit() {
   document.getElementById('freqScore').textContent = weightedFreq.toFixed(0) + '%';
   document.getElementById('cycleScore').textContent = overGap;
   
-  // Pattern detection display
+  // ===== PATTERN DETECTION =====
   const pattern = detectPatterns();
+  detectedPattern = pattern; // Store for Mode 4
+  
   if (pattern) {
       document.getElementById('patternMatch').textContent = `Pattern detected: [${pattern.pattern}] → Next likely: ${pattern.nextDigit}`;
   } else {
@@ -869,10 +999,17 @@ function placeTrade() {
   if (!isConnected || isCycleCooldown) return;
   const stakeValue = parseFloat(document.getElementById('stake').value);
   const tickValue = parseInt(document.getElementById('duration').value);
-  const marketValue = document.getElementById('market').value;
+  const marketValue = currentMarketValue;
   const type = isReverseTradeActive ? 'DIGITUNDER' : 'DIGITOVER';
   
-  addLog(`Executing ${type} trade with ${lastPredictionConfidence.toFixed(0)}% confidence`, "info");
+  let confidenceMsg = '';
+  if (currentConfidenceMode === 'pattern' && detectedPattern) {
+      confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit}`;
+  } else {
+      confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence`;
+  }
+  
+  addLog(`Executing ${type} trade with ${confidenceMsg}`, "info");
   
   sendAPIRequest({
     buy: 1, 
@@ -918,7 +1055,7 @@ function toggleMarketCycle() {
     const btn = document.getElementById('cycleBtn');
     if (isMarketCycleActive) {
         btn.classList.add('active');
-        currentMarketIndex = marketSequence.indexOf(document.getElementById('market').value);
+        currentMarketIndex = marketSequence.indexOf(currentMarketValue);
         if(currentMarketIndex === -1) currentMarketIndex = 0;
         btn.textContent = `Auto Market Cycle: ON (${marketSequence[currentMarketIndex]})`;
         addLog(`Market Cycle Sequence Started at ${marketSequence[currentMarketIndex]}.`, "info");
@@ -964,7 +1101,8 @@ function startCycleCooldown() {
             timerDisplay.style.display = 'none';
             currentMarketIndex = 0;
             const nextMarket = marketSequence[currentMarketIndex];
-            document.getElementById('market').value = nextMarket;
+            currentMarketValue = nextMarket;
+            selectMarket(nextMarket);
             document.getElementById('cycleBtn').textContent = `Auto Market Cycle: ON (${nextMarket})`;
             addLog(`Cooldown finished. Restarting Cycle at ${nextMarket}.`, "success");
             subscribeToTicks();
@@ -996,10 +1134,11 @@ function handleTradeResult(contract) {
   if (isMarketCycleActive && stats.profit >= tp) {
       if (currentMarketIndex < marketSequence.length - 1) {
           currentMarketIndex++;
-          const nextMarket = marketSequence[currentMarketIndex];
+          constnextMarket = marketSequence[currentMarketIndex];
           addLog(`Target reached! Switching Market: ${marketSequence[currentMarketIndex-1]} -> ${nextMarket}...`, "success");
           resetStats(); 
-          document.getElementById('market').value = nextMarket;
+          currentMarketValue = nextMarket;
+          selectMarket(nextMarket);
           document.getElementById('cycleBtn').textContent = `Auto Market Cycle: ON (${nextMarket})`;
           subscribeToTicks();
           return; 
@@ -1049,17 +1188,13 @@ function sendAPIRequest(data) {
 }
 
 function subscribeToTicks() {
-  const market = document.getElementById('market').value;
+  const market = currentMarketValue;
   sendAPIRequest({ forget_all: "ticks" });
   digitHistory = [];
   document.getElementById('digitDisplay').innerHTML = '';
   addLog(`Watching ${market}...`, "info");
   sendAPIRequest({ ticks: market, subscribe: 1 });
 }
-
-document.getElementById('market').addEventListener('change', function() { 
-    if (isConnected) subscribeToTicks(); 
-});
 
 // ============ UI UPDATE FUNCTIONS ============
 function updateStatus(text, className) { 
