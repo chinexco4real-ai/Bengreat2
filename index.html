@@ -97,6 +97,9 @@ tbody tr:hover { background: #1e293b; }
 .pattern-target-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
 .pattern-target-grid input { text-align: center; padding: 8px; margin: 0; background: #0f172a; border: 2px solid #8b5cf6; }
 .pattern-mode-active { background: #8b5cf6; padding: 8px; border-radius: 6px; text-align: center; margin: 10px 0; font-weight: 700; color: white; }
+.ensemble-filter-box { background: #0f172a; border: 2px solid #f59e0b; border-radius: 6px; padding: 10px; margin-top: 10px; }
+.ensemble-filter-box label { color: #f59e0b; font-weight: 700; font-size: 12px; }
+.ensemble-status { text-align: center; font-size: 11px; margin-top: 5px; padding: 5px; border-radius: 4px; background: #1e293b; }
 </style>
 </head>
 <body>
@@ -274,6 +277,21 @@ tbody tr:hover { background: #1e293b; }
       <div style="font-size: 11px; opacity: 0.7; margin-top: 8px; text-align: center;">
           Bot will trade when pattern's "Next Likely" digit matches any of the above targets
       </div>
+      
+      <div class="ensemble-filter-box">
+          <label>⚡ Ensemble % Filter (Trade if ≤ this value)</label>
+          <input id="patternEnsembleMax" class="save-setting" type="number" value="0" min="0" max="100" placeholder="0 = Disabled">
+          <div class="ensemble-status" id="ensembleFilterStatus">
+              Set to 0 to disable ensemble filtering
+          </div>
+          <div style="font-size: 10px; opacity: 0.6; margin-top: 8px; line-height: 1.4;">
+              📌 <strong>How it works:</strong><br>
+              • <strong>0</strong> = Ignore ensemble % completely<br>
+              • <strong>50</strong> = Only trade if ensemble ≤ 50%<br>
+              • <strong>70</strong> = Only trade if ensemble ≤ 70%<br>
+              Use this to filter out high-confidence ensemble predictions
+          </div>
+      </div>
   </div>
 
   <label>Market</label>
@@ -420,7 +438,7 @@ function updateSignalWindowTimer() {
         }
     } else {
         isSignalWindowOpen = false;
-        const nextWindowIn = (60 -closeWindowSize) - sec;
+        const nextWindowIn = (60 - closeWindowSize) - sec;
         if (timerEl) {
             timerEl.style.color = "#f59e0b";
             timerEl.style.borderColor = "#334155";
@@ -456,12 +474,30 @@ function selectMarket(market) {
     saveSettings();
 }
 
+function updateEnsembleFilterStatus() {
+    const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
+    const statusEl = document.getElementById('ensembleFilterStatus');
+    
+    if (maxEnsemble === 0) {
+        statusEl.textContent = '🔓 Ensemble filter DISABLED - Will trade on pattern match only';
+        statusEl.style.color = '#22c55e';
+    } else {
+        statusEl.textContent = `🔒 Active: Only trade if Ensemble ≤ ${maxEnsemble}%`;
+        statusEl.style.color = '#f59e0b';
+    }
+}
+
 function toggleConfidenceUI() {
     const mode = currentConfidenceMode;
     document.getElementById('rangeUI').style.display = (mode === 'range') ? 'block' : 'none';
     document.getElementById('specificUI').style.display = (mode === 'specific') ? 'block' : 'none';
     document.getElementById('sequenceUI').style.display = (mode === 'sequence') ? 'block' : 'none';
     document.getElementById('patternUI').style.display = (mode === 'pattern') ? 'block' : 'none';
+    
+    if (mode === 'pattern') {
+        updateEnsembleFilterStatus();
+    }
+    
     addLog(`Confidence Mode: ${mode}`, "info");
 }
 
@@ -526,6 +562,15 @@ function loadSettings() {
 document.querySelectorAll('.save-setting').forEach(el => {
     el.addEventListener('input', saveSettings);
     el.addEventListener('change', saveSettings);
+});
+
+// Special listener for ensemble filter
+document.addEventListener('DOMContentLoaded', function() {
+    const ensembleInput = document.getElementById('patternEnsembleMax');
+    if (ensembleInput) {
+        ensembleInput.addEventListener('input', updateEnsembleFilterStatus);
+        ensembleInput.addEventListener('change', updateEnsembleFilterStatus);
+    }
 });
 
 // ============ WEBSOCKET CONNECTION ============
@@ -780,7 +825,7 @@ function addDigitToAnalyzer(digit) {
 function checkAndAutoTrade() {
     if (currentContractId !== null) return;
     
-    // Mode 4: Pattern Detection Mode - No window restriction
+    // Mode 4: Pattern Detection Mode - Enhanced with Ensemble Filter
     if (currentConfidenceMode === 'pattern') {
         const now = Date.now();
         const cooldownMs = parseInt(document.getElementById('cooldown').value) * 1000;
@@ -795,10 +840,27 @@ function checkAndAutoTrade() {
                 parseInt(document.getElementById('pattern5').value)
             ];
             
+            // Check if pattern's next digit matches targets
             if (targetDigits.includes(detectedPattern.nextDigit)) {
-                addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} - Trading NOW!`, "success");
-                lastTradeTime = now;
-                placeTrade();
+                const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
+                const currentEnsemble = Math.round(lastPredictionConfidence);
+                
+                // Ensemble filter logic
+                if (maxEnsemble === 0) {
+                    // Ensemble filter disabled - trade immediately
+                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble Filter: DISABLED - Trading NOW!`, "success");
+                    lastTradeTime = now;
+                    placeTrade();
+                } else {
+                    // Ensemble filter enabled - check condition
+                    if (currentEnsemble <= maxEnsemble) {
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% ≤ ${maxEnsemble}% ✓ - Trading NOW!`, "success");
+                        lastTradeTime = now;
+                        placeTrade();
+                    } else {
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% > ${maxEnsemble}% ✗ - SKIPPED`, "warn");
+                    }
+                }
             }
         }
         return;
@@ -1004,7 +1066,12 @@ function placeTrade() {
   
   let confidenceMsg = '';
   if (currentConfidenceMode === 'pattern' && detectedPattern) {
-      confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit}`;
+      const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
+      if (maxEnsemble === 0) {
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ensemble Filter: OFF`;
+      } else {
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ensemble: ${lastPredictionConfidence.toFixed(0)}% ≤ ${maxEnsemble}%`;
+      }
   } else {
       confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence`;
   }
@@ -1292,6 +1359,15 @@ function manualTrade() {
 window.onload = () => {
   addLog("Initializing ML Enhanced Trading Bot...", "info");
   loadSettings();
+  
+  // Setup ensemble filter listener
+  const ensembleInput = document.getElementById('patternEnsembleMax');
+  if (ensembleInput) {
+      ensembleInput.addEventListener('input', updateEnsembleFilterStatus);
+      ensembleInput.addEventListener('change', updateEnsembleFilterStatus);
+      updateEnsembleFilterStatus();
+  }
+  
   const savedToken = sessionStorage.getItem('derivToken');
   if (savedToken) { 
       document.getElementById('token').value = savedToken; 
