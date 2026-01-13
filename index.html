@@ -100,6 +100,8 @@ tbody tr:hover { background: #1e293b; }
 .ensemble-filter-box { background: #0f172a; border: 2px solid #f59e0b; border-radius: 6px; padding: 10px; margin-top: 10px; }
 .ensemble-filter-box label { color: #f59e0b; font-weight: 700; font-size: 12px; }
 .ensemble-status { text-align: center; font-size: 11px; margin-top: 5px; padding: 5px; border-radius: 4px; background: #1e293b; }
+.ensemble-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.filter-warning { background: #ef4444; color: white; padding: 6px; border-radius: 4px; text-align: center; font-size: 10px; font-weight: 700; margin-top: 5px; display: none; }
 </style>
 </head>
 <body>
@@ -279,17 +281,30 @@ tbody tr:hover { background: #1e293b; }
       </div>
       
       <div class="ensemble-filter-box">
-          <label>⚡ Ensemble % Filter (Trade if ≤ this value)</label>
-          <input id="patternEnsembleMax" class="save-setting" type="number" value="0" min="0" max="100" placeholder="0 = Disabled">
+          <label>⚡ Ensemble % Filter (Use ONE at a time)</label>
+          <div class="ensemble-filter-grid">
+              <div>
+                  <span style="font-size: 10px; opacity: 0.7; display: block; margin-bottom: 3px;">Trade if ≤ (Less/Equal)</span>
+                  <input id="patternEnsembleMax" class="save-setting ensemble-filter-input" type="number" value="0" min="0" max="100" placeholder="0 = OFF">
+              </div>
+              <div>
+                  <span style="font-size: 10px; opacity: 0.7; display: block; margin-bottom: 3px;">Trade if ≥ (Greater/Equal)</span>
+                  <input id="patternEnsembleMin" class="save-setting ensemble-filter-input" type="number" value="0" min="0" max="100" placeholder="0 = OFF">
+              </div>
+          </div>
+          <div class="filter-warning" id="filterWarning">
+              ⚠️ Cannot use both filters! One must be set to 0
+          </div>
           <div class="ensemble-status" id="ensembleFilterStatus">
-              Set to 0 to disable ensemble filtering
+              Both set to 0 - Ensemble filtering disabled
           </div>
           <div style="font-size: 10px; opacity: 0.6; margin-top: 8px; line-height: 1.4;">
               📌 <strong>How it works:</strong><br>
-              • <strong>0</strong> = Ignore ensemble % completely<br>
-              • <strong>50</strong> = Only trade if ensemble ≤ 50%<br>
-              • <strong>70</strong> = Only trade if ensemble ≤ 70%<br>
-              Use this to filter out high-confidence ensemble predictions
+              <strong>≤ (Max) Filter:</strong> Trade when ensemble is LOW<br>
+              • 0 = OFF | 50 = Trade if ≤50% | 70 = Trade if ≤70%<br>
+              <strong>≥ (Min) Filter:</strong> Trade when ensemble is HIGH<br>
+              • 0 = OFF | 50 = Trade if ≥50% | 70 = Trade if ≥70%<br>
+              <strong>⚠️ Only ONE can be active (set other to 0)</strong>
           </div>
       </div>
   </div>
@@ -397,14 +412,14 @@ let cycleTimerId = null;
 let isSignalWindowOpen = false;
 
 // ============ ML ENHANCEMENT VARIABLES ============
-let bayesianAlpha = 1; // Prior for over-5
-let bayesianBeta = 1;  // Prior for under-5
-let markovTransitionMatrix = {}; // State transitions
-let recentWinRates = []; // For adaptive thresholds
-let extendedHistory = []; // Store up to 1000 digits
-let patternCache = {}; // Cache for pattern recognition
-let volatilityWindow = []; // For volatility calculation
-let detectedPattern = null; // Store current pattern detection
+let bayesianAlpha = 1;
+let bayesianBeta = 1;
+let markovTransitionMatrix = {};
+let recentWinRates = [];
+let extendedHistory = [];
+let patternCache = {};
+let volatilityWindow = [];
+let detectedPattern = null;
 
 // ============ UTILITY FUNCTIONS ============
 function addLog(msg, type = 'info') {
@@ -476,14 +491,38 @@ function selectMarket(market) {
 
 function updateEnsembleFilterStatus() {
     const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
+    const minEnsemble = parseInt(document.getElementById('patternEnsembleMin').value) || 0;
     const statusEl = document.getElementById('ensembleFilterStatus');
+    const warningEl = document.getElementById('filterWarning');
     
-    if (maxEnsemble === 0) {
+    // Check if both are set (conflict)
+    if (maxEnsemble > 0 && minEnsemble > 0) {
+        warningEl.style.display = 'block';
+        statusEl.textContent = '⚠️ CONFLICT! Both filters active - Please set one to 0';
+        statusEl.style.color = '#ef4444';
+        statusEl.style.background = 'rgba(239, 68, 68, 0.1)';
+        statusEl.style.border = '1px solid #ef4444';
+        return;
+    }
+    
+    warningEl.style.display = 'none';
+    statusEl.style.background = '#1e293b';
+    statusEl.style.border = 'none';
+    
+    // Both are 0 - completely disabled
+    if (maxEnsemble === 0 && minEnsemble === 0) {
         statusEl.textContent = '🔓 Ensemble filter DISABLED - Will trade on pattern match only';
         statusEl.style.color = '#22c55e';
-    } else {
-        statusEl.textContent = `🔒 Active: Only trade if Ensemble ≤ ${maxEnsemble}%`;
+    }
+    // Only Max filter active (≤)
+    else if (maxEnsemble > 0 && minEnsemble === 0) {
+        statusEl.textContent = `🔒 Active: Trade if Ensemble ≤ ${maxEnsemble}% (LOW ensemble)`;
         statusEl.style.color = '#f59e0b';
+    }
+    // Only Min filter active (≥)
+    else if (minEnsemble > 0 && maxEnsemble === 0) {
+        statusEl.textContent = `🔒 Active: Trade if Ensemble ≥ ${minEnsemble}% (HIGH ensemble)`;
+        statusEl.style.color = '#3b82f6';
     }
 }
 
@@ -519,13 +558,11 @@ function loadSettings() {
             if (el) el.value = settings[id];
         }
         
-        // Restore confidence mode
         if (settings.confidenceMode) {
             currentConfidenceMode = settings.confidenceMode;
             selectConfidenceMode(currentConfidenceMode);
         }
         
-        // Restore market
         if (settings.market) {
             currentMarketValue = settings.market;
             selectMarket(currentMarketValue);
@@ -533,14 +570,12 @@ function loadSettings() {
     }
     toggleConfidenceUI();
     
-    // Load extended history
     const savedExtHistory = localStorage.getItem('extended_history_v8');
     if(savedExtHistory) {
         extendedHistory = JSON.parse(savedExtHistory);
         addLog(`Loaded ${extendedHistory.length} historical ticks for ML`, "success");
     }
     
-    // Restore trade history
     const savedHistory = localStorage.getItem('trade_history_v8');
     if(savedHistory) document.getElementById('history').innerHTML = savedHistory;
     
@@ -550,7 +585,6 @@ function loadSettings() {
         updateStats(); 
     }
     
-    // Load ML parameters
     const savedBayesian = localStorage.getItem('bayesian_params_v8');
     if(savedBayesian) {
         const params = JSON.parse(savedBayesian);
@@ -562,15 +596,6 @@ function loadSettings() {
 document.querySelectorAll('.save-setting').forEach(el => {
     el.addEventListener('input', saveSettings);
     el.addEventListener('change', saveSettings);
-});
-
-// Special listener for ensemble filter
-document.addEventListener('DOMContentLoaded', function() {
-    const ensembleInput = document.getElementById('patternEnsembleMax');
-    if (ensembleInput) {
-        ensembleInput.addEventListener('input', updateEnsembleFilterStatus);
-        ensembleInput.addEventListener('change', updateEnsembleFilterStatus);
-    }
 });
 
 // ============ WEBSOCKET CONNECTION ============
@@ -673,20 +698,17 @@ function calculateVolatility(data, windowSize = 50) {
 }
 
 function updateBayesianModel(isOver5) {
-    // Bayesian updating with Beta distribution
     if (isOver5) {
         bayesianAlpha += 1;
     } else {
         bayesianBeta += 1;
     }
     
-    // Save parameters
     localStorage.setItem('bayesian_params_v8', JSON.stringify({
         alpha: bayesianAlpha,
         beta: bayesianBeta
     }));
     
-    // Calculate posterior mean
     const posteriorMean = bayesianAlpha / (bayesianAlpha + bayesianBeta);
     return posteriorMean * 100;
 }
@@ -705,7 +727,7 @@ function updateMarkovModel(currentDigit) {
 
 function calculateMarkovPrediction() {
     if (digitHistory.length < 1 || !markovTransitionMatrix[digitHistory[0]]) {
-        return 50; // Default neutral probability
+        return 50;
     }
     
     const transitions = markovTransitionMatrix[digitHistory[0]];
@@ -713,7 +735,6 @@ function calculateMarkovPrediction() {
     
     if (totalTransitions === 0) return 50;
     
-    // Calculate probability of over-5 based on transitions
     const over5Transitions = transitions.slice(6, 10).reduce((a, b) => a + b, 0);
     return (over5Transitions / totalTransitions) * 100;
 }
@@ -721,7 +742,6 @@ function calculateMarkovPrediction() {
 function detectPatterns() {
     if (digitHistory.length < 10) return null;
     
-    // Look for repeating patterns (length 3-5)
     for (let len = 3; len <= 5; len++) {
         const pattern = digitHistory.slice(0, len).join(',');
         const cacheKey = `pattern_${len}_${pattern}`;
@@ -733,11 +753,9 @@ function detectPatterns() {
             patternCache[cacheKey] = { count: 1, lastSeen: Date.now() };
         }
         
-        // Check if pattern repeats in history
         for (let i = len; i <= digitHistory.length - len; i++) {
             const comparePattern = digitHistory.slice(i, i + len).join(',');
             if (comparePattern === pattern) {
-                // Pattern found - check what came next
                 if (i + len < digitHistory.length) {
                     const nextDigit = digitHistory[i + len];
                     return {
@@ -757,17 +775,15 @@ function calculateAdaptiveThreshold() {
     
     const recentAvg = recentWinRates.slice(-10).reduce((a, b) => a + b, 0) / Math.min(10, recentWinRates.length);
     
-    // If win rate is low, increase threshold (be more conservative)
     if (recentAvg < 0.45) {
-        return 10; // Increase confidence requirement by 10%
+        return 10;
     } else if (recentAvg > 0.60) {
-        return -5; // Can be slightly more aggressive
+        return -5;
     }
     return 0;
 }
 
 function calculateEnsemblePrediction(heuristicConf, bayesianProb, markovProb, volatility) {
-    // Weight different models based on their historical performance
     let weights = {
         heuristic: 0.40,
         bayesian: 0.25,
@@ -775,9 +791,7 @@ function calculateEnsemblePrediction(heuristicConf, bayesianProb, markovProb, vo
         pattern: 0.10
     };
     
-    // Adjust weights based on volatility
     if (volatility > 2.5) {
-        // High volatility - trust Bayesian more
         weights.bayesian += 0.10;
         weights.heuristic -= 0.10;
     }
@@ -800,21 +814,17 @@ function addDigitToAnalyzer(digit) {
   digitHistory.unshift(digit);
   if (digitHistory.length > 50) digitHistory.pop();
   
-  // Extended history for ML (up to 1000)
   extendedHistory.unshift(digit);
   if (extendedHistory.length > 1000) extendedHistory.pop();
   
-  // Save extended history periodically
   if (extendedHistory.length % 50 === 0) {
     localStorage.setItem('extended_history_v8', JSON.stringify(extendedHistory));
   }
   
-  // Update ML models
   const isOver5 = digit > 5;
   updateBayesianModel(isOver5);
   updateMarkovModel(digit);
   
-  // Update volatility window
   volatilityWindow.unshift(digit);
   if (volatilityWindow.length > 100) volatilityWindow.pop();
   
@@ -825,7 +835,7 @@ function addDigitToAnalyzer(digit) {
 function checkAndAutoTrade() {
     if (currentContractId !== null) return;
     
-    // Mode 4: Pattern Detection Mode - Enhanced with Ensemble Filter
+    // Mode 4: Pattern Detection Mode - Enhanced with DUAL Ensemble Filters
     if (currentConfidenceMode === 'pattern') {
         const now = Date.now();
         const cooldownMs = parseInt(document.getElementById('cooldown').value) * 1000;
@@ -843,23 +853,45 @@ function checkAndAutoTrade() {
             // Check if pattern's next digit matches targets
             if (targetDigits.includes(detectedPattern.nextDigit)) {
                 const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
+                const minEnsemble = parseInt(document.getElementById('patternEnsembleMin').value) || 0;
                 const currentEnsemble = Math.round(lastPredictionConfidence);
                 
-                // Ensemble filter logic
-                if (maxEnsemble === 0) {
-                    // Ensemble filter disabled - trade immediately
-                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble Filter: DISABLED - Trading NOW!`, "success");
+                // Conflict check - both filters active
+                if (maxEnsemble > 0 && minEnsemble > 0) {
+                    addLog(`Pattern Match! But CONFLICT: Both filters active. Set one to 0!`, "error");
+                    return;
+                }
+                
+                // Both filters disabled (both = 0)
+                if (maxEnsemble === 0 && minEnsemble === 0) {
+                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble Filters: DISABLED - Trading NOW!`, "success");
                     lastTradeTime = now;
                     placeTrade();
-                } else {
-                    // Ensemble filter enabled - check condition
+                    return;
+                }
+                
+                // Max filter active (≤ condition - LOW ensemble)
+                if (maxEnsemble > 0 && minEnsemble === 0) {
                     if (currentEnsemble <= maxEnsemble) {
                         addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% ≤ ${maxEnsemble}% ✓ - Trading NOW!`, "success");
                         lastTradeTime = now;
                         placeTrade();
                     } else {
-                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% > ${maxEnsemble}% ✗ - SKIPPED`, "warn");
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% > ${maxEnsemble}% ✗ - SKIPPED (too high)`, "warn");
                     }
+                    return;
+                }
+                
+                // Min filter active (≥ condition - HIGH ensemble)
+                if (minEnsemble > 0 && maxEnsemble === 0) {
+                    if (currentEnsemble >= minEnsemble) {
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% ≥ ${minEnsemble}% ✓ - Trading NOW!`, "success");
+                        lastTradeTime = now;
+                        placeTrade();
+                    } else {
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% < ${minEnsemble}% ✗ - SKIPPED (too low)`, "warn");
+                    }
+                    return;
                 }
             }
         }
@@ -882,7 +914,6 @@ function checkAndAutoTrade() {
         let minConf = parseFloat(document.getElementById('minConfidence').value);
         let maxConf = parseFloat(document.getElementById('maxConfidence').value);
         
-        // Apply adaptive threshold adjustment
         const adjustment = calculateAdaptiveThreshold();
         minConf += adjustment;
         
@@ -899,7 +930,6 @@ function checkAndAutoTrade() {
         if (targets.includes(currentConf)) isConfidenceMet = true;
     }
     else if (mode === 'sequence') {
-        // Mode 3 Sequence Logic
         const s1_p1 = parseInt(document.getElementById('s1_p1_min').value);
         const s1_p2_min = parseInt(document.getElementById('s1_p2_min').value);
         const s1_p2_max = parseInt(document.getElementById('s1_p2_max').value);
@@ -950,10 +980,8 @@ function predictNextDigit() {
     return;
   }
   
-  // Store previous before calculating new one
   previousPredictionConfidence = lastPredictionConfidence;
 
-  // ===== HEURISTIC MODEL (Original Enhanced) =====
   const last20 = digitHistory.slice(0, 20);
   let weightedUnderScore = 0;
   last20.forEach((digit, index) => {
@@ -962,14 +990,12 @@ function predictNextDigit() {
   });
   const weightedFreq = (weightedUnderScore / 10.5) * 100;
   
-  // Gap analysis
   let overGap = 0;
   for (let d of digitHistory) {
       if (d <= 5) overGap++;
       else break;
   }
   
-  // Volatility calculation
   const volatility = calculateVolatility(volatilityWindow, 50);
   let volatilityLabel = 'Low';
   let volatilityPenalty = 0;
@@ -987,7 +1013,6 @@ function predictNextDigit() {
   
   document.getElementById('volatilityScore').textContent = volatilityLabel;
   
-  // Trend analysis (gravity)
   let gravityBonus = 0;
   let trendLabel = 'Stable';
   if (digitHistory.length >= 3) {
@@ -1000,15 +1025,12 @@ function predictNextDigit() {
       }
   }
   
-  // ===== BAYESIAN MODEL =====
   const bayesianProb = updateBayesianModel(digitHistory[0] > 5);
   document.getElementById('bayesianProb').textContent = bayesianProb.toFixed(0) + '%';
   
-  // ===== MARKOV MODEL =====
   const markovProb = calculateMarkovPrediction();
   document.getElementById('markovProb').textContent = markovProb.toFixed(0) + '%';
   
-  // ===== HEURISTIC CONFIDENCE =====
   let heuristicConf = 0;
   let predText = 'WAIT';
   
@@ -1020,7 +1042,6 @@ function predictNextDigit() {
       heuristicConf = 45 + (weightedFreq - 70) + gravityBonus + volatilityPenalty;
   }
   
-  // ===== ENSEMBLE PREDICTION =====
   const ensembleScore = calculateEnsemblePrediction(
       Math.max(0, heuristicConf), 
       bayesianProb, 
@@ -1030,24 +1051,20 @@ function predictNextDigit() {
   
   document.getElementById('ensembleScore').textContent = ensembleScore.toFixed(0) + '%';
   
-  // Use ensemble as final confidence
   lastPredictionConfidence = Math.min(98, Math.max(0, ensembleScore));
   lastPredictionType = predText;
   
-  // Adaptive threshold adjustment display
   const confAdj = calculateAdaptiveThreshold();
   document.getElementById('confAdj').textContent = (confAdj >= 0 ? '+' : '') + confAdj + '%';
   
-  // Update UI
   document.getElementById('nextDigitPrediction').textContent = predText;
   document.getElementById('nextDigitPrediction').style.color = predText === 'OVER 5' ? '#22c55e' : '#f59e0b';
   document.getElementById('predictionConfidence').textContent = `${lastPredictionConfidence.toFixed(0)}% (Ensemble)`;
   document.getElementById('freqScore').textContent = weightedFreq.toFixed(0) + '%';
   document.getElementById('cycleScore').textContent = overGap;
   
-  // ===== PATTERN DETECTION =====
   const pattern = detectPatterns();
-  detectedPattern = pattern; // Store for Mode 4
+  detectedPattern = pattern;
   
   if (pattern) {
       document.getElementById('patternMatch').textContent = `Pattern detected: [${pattern.pattern}] → Next likely: ${pattern.nextDigit}`;
@@ -1067,10 +1084,14 @@ function placeTrade() {
   let confidenceMsg = '';
   if (currentConfidenceMode === 'pattern' && detectedPattern) {
       const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
-      if (maxEnsemble === 0) {
-          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ensemble Filter: OFF`;
-      } else {
-          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ensemble: ${lastPredictionConfidence.toFixed(0)}% ≤ ${maxEnsemble}%`;
+      const minEnsemble = parseInt(document.getElementById('patternEnsembleMin').value) || 0;
+      
+      if (maxEnsemble === 0 && minEnsemble === 0) {
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Filters: OFF`;
+      } else if (maxEnsemble > 0) {
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ens: ${lastPredictionConfidence.toFixed(0)}% ≤ ${maxEnsemble}%`;
+      } else if (minEnsemble > 0) {
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ens: ${lastPredictionConfidence.toFixed(0)}% ≥ ${minEnsemble}%`;
       }
   } else {
       confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence`;
@@ -1186,13 +1207,11 @@ function handleTradeResult(contract) {
   if (isWin) stats.wins++; else stats.losses++; 
   stats.profit += profitLoss;
   
-  // Update win rate tracking for adaptive thresholds
   recentWinRates.push(isWin ? 1 : 0);
   if (recentWinRates.length > 20) recentWinRates.shift();
   
   updateStats();
   
-  // Persistence for history
   addToHistory(stats.trades, isWin ? 'Win' : 'Loss', profitLoss, contract.display_name || 'Market');
   localStorage.setItem('trade_stats_v8', JSON.stringify(stats));
   localStorage.setItem('trade_history_v8', document.getElementById('history').innerHTML);
@@ -1360,13 +1379,21 @@ window.onload = () => {
   addLog("Initializing ML Enhanced Trading Bot...", "info");
   loadSettings();
   
-  // Setup ensemble filter listener
-  const ensembleInput = document.getElementById('patternEnsembleMax');
-  if (ensembleInput) {
-      ensembleInput.addEventListener('input', updateEnsembleFilterStatus);
-      ensembleInput.addEventListener('change', updateEnsembleFilterStatus);
-      updateEnsembleFilterStatus();
+  // Setup ensemble filter listeners
+  const ensembleMaxInput = document.getElementById('patternEnsembleMax');
+  const ensembleMinInput = document.getElementById('patternEnsembleMin');
+  
+  if (ensembleMaxInput) {
+      ensembleMaxInput.addEventListener('input', updateEnsembleFilterStatus);
+      ensembleMaxInput.addEventListener('change', updateEnsembleFilterStatus);
   }
+  
+  if (ensembleMinInput) {
+      ensembleMinInput.addEventListener('input', updateEnsembleFilterStatus);
+      ensembleMinInput.addEventListener('change', updateEnsembleFilterStatus);
+  }
+  
+  updateEnsembleFilterStatus();
   
   const savedToken = sessionStorage.getItem('derivToken');
   if (savedToken) { 
