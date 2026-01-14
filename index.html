@@ -102,6 +102,22 @@ tbody tr:hover { background: #1e293b; }
 .ensemble-status { text-align: center; font-size: 11px; margin-top: 5px; padding: 5px; border-radius: 4px; background: #1e293b; }
 .ensemble-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .filter-warning { background: #ef4444; color: white; padding: 6px; border-radius: 4px; text-align: center; font-size: 10px; font-weight: 700; margin-top: 5px; display: none; }
+
+/* Toggle Switch Styles */
+.toggle-container { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #1e293b; border-radius: 6px; margin: 10px 0; border: 2px solid #334155; }
+.toggle-label { font-size: 13px; font-weight: 700; color: #e5e7eb; }
+.toggle-switch { position: relative; width: 50px; height: 26px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 34px; transition: .4s; }
+.toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }
+.toggle-switch input:checked + .toggle-slider { background-color: #22c55e; }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
+
+/* Specific Ensemble Percentages */
+.specific-ensemble-section { background: #0f172a; border: 2px solid #8b5cf6; border-radius: 6px; padding: 10px; margin-top: 10px; display: none; }
+.specific-ensemble-section.active { display: block; }
+.specific-ensemble-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 8px; }
+.specific-ensemble-grid input { text-align: center; padding: 8px; margin: 0; background: #1e293b; border: 2px solid #8b5cf6; }
 </style>
 </head>
 <body>
@@ -293,18 +309,44 @@ tbody tr:hover { background: #1e293b; }
               </div>
           </div>
           <div class="filter-warning" id="filterWarning">
-              ⚠️ Cannot use both filters! One must be set to 0
+              ⚠️ Cannot use multiple filters! Only ONE can be active
           </div>
           <div class="ensemble-status" id="ensembleFilterStatus">
-              Both set to 0 - Ensemble filtering disabled
+              All filters disabled - Trading on pattern match only
           </div>
           <div style="font-size: 10px; opacity: 0.6; margin-top: 8px; line-height: 1.4;">
-              📌 <strong>How it works:</strong><br>
-              <strong>≤ (Max) Filter:</strong> Trade when ensemble is LOW<br>
-              • 0 = OFF | 50 = Trade if ≤50% | 70 = Trade if ≤70%<br>
-              <strong>≥ (Min) Filter:</strong> Trade when ensemble is HIGH<br>
-              • 0 = OFF | 50 = Trade if ≥50% | 70 = Trade if ≥70%<br>
-              <strong>⚠️ Only ONE can be active (set other to 0)</strong>
+              📌 <strong>Quick Guide:</strong><br>
+              <strong>≤ (Max):</strong> Trade when ensemble is LOW (0 = OFF)<br>
+              <strong>≥ (Min):</strong> Trade when ensemble is HIGH (0 = OFF)<br>
+              <strong>⚠️ Only ONE filter active at a time</strong>
+          </div>
+      </div>
+      
+      <!-- Specific Ensemble Percentages Toggle -->
+      <div class="toggle-container">
+          <span class="toggle-label">📊 Specific Ensemble % Filter</span>
+          <label class="toggle-switch">
+              <input type="checkbox" id="specificEnsembleToggle" onchange="toggleSpecificEnsemble()">
+              <span class="toggle-slider"></span>
+          </label>
+      </div>
+      
+      <div class="specific-ensemble-section" id="specificEnsembleSection">
+          <label style="color: #8b5cf6; font-weight: 700; font-size: 12px; margin-bottom: 8px; display: block;">
+              🎯 Specific Ensemble Percentages (Pick up to 5)
+          </label>
+          <div class="specific-ensemble-grid">
+              <input id="specEns1" class="save-setting" type="number" value="25" min="0" max="100" placeholder="%1">
+              <input id="specEns2" class="save-setting" type="number" value="50" min="0" max="100" placeholder="%2">
+              <input id="specEns3" class="save-setting" type="number" value="65" min="0" max="100" placeholder="%3">
+              <input id="specEns4" class="save-setting" type="number" value="75" min="0" max="100" placeholder="%4">
+              <input id="specEns5" class="save-setting" type="number" value="85" min="0" max="100" placeholder="%5">
+          </div>
+          <div style="text-align: center; font-size: 11px; margin-top: 8px; padding: 6px; background: #1e293b; border-radius: 4px;" id="specificEnsembleStatus">
+              Trade only when Ensemble matches these specific %
+          </div>
+          <div style="font-size: 10px; opacity: 0.6; margin-top: 8px; line-height: 1.4;">
+              💡 Example: If you set 25, 50, 75 - bot will ONLY trade when ensemble is exactly 25%, 50%, or 75%
           </div>
       </div>
   </div>
@@ -401,6 +443,7 @@ let lastTradeTime = 0;
 let lastRequestTime = 0; 
 let currentConfidenceMode = 'range';
 let currentMarketValue = 'R_10';
+let isSpecificEnsembleActive = false;
 
 let isMarketCycleActive = false;
 let isCooldownLoopActive = false;
@@ -489,16 +532,41 @@ function selectMarket(market) {
     saveSettings();
 }
 
+function toggleSpecificEnsemble() {
+    isSpecificEnsembleActive = document.getElementById('specificEnsembleToggle').checked;
+    const section = document.getElementById('specificEnsembleSection');
+    
+    if (isSpecificEnsembleActive) {
+        section.classList.add('active');
+        // Auto-disable other filters
+        document.getElementById('patternEnsembleMax').value = 0;
+        document.getElementById('patternEnsembleMin').value = 0;
+        addLog("Specific Ensemble % Filter ENABLED", "info");
+    } else {
+        section.classList.remove('active');
+        addLog("Specific Ensemble % Filter DISABLED", "warn");
+    }
+    
+    updateEnsembleFilterStatus();
+    saveSettings();
+}
+
 function updateEnsembleFilterStatus() {
     const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
     const minEnsemble = parseInt(document.getElementById('patternEnsembleMin').value) || 0;
     const statusEl = document.getElementById('ensembleFilterStatus');
     const warningEl = document.getElementById('filterWarning');
     
-    // Check if both are set (conflict)
-    if (maxEnsemble > 0 && minEnsemble > 0) {
+    // Count active filters
+    let activeCount = 0;
+    if (maxEnsemble > 0) activeCount++;
+    if (minEnsemble > 0) activeCount++;
+    if (isSpecificEnsembleActive) activeCount++;
+    
+    // Check for conflicts (more than one filter active)
+    if (activeCount > 1) {
         warningEl.style.display = 'block';
-        statusEl.textContent = '⚠️ CONFLICT! Both filters active - Please set one to 0';
+        statusEl.textContent = '⚠️ CONFLICT! Multiple filters active - Only ONE allowed';
         statusEl.style.color = '#ef4444';
         statusEl.style.background = 'rgba(239, 68, 68, 0.1)';
         statusEl.style.border = '1px solid #ef4444';
@@ -509,20 +577,32 @@ function updateEnsembleFilterStatus() {
     statusEl.style.background = '#1e293b';
     statusEl.style.border = 'none';
     
-    // Both are 0 - completely disabled
-    if (maxEnsemble === 0 && minEnsemble === 0) {
-        statusEl.textContent = '🔓 Ensemble filter DISABLED - Will trade on pattern match only';
+    // All filters disabled
+    if (activeCount === 0) {
+        statusEl.textContent = '🔓 All filters DISABLED - Trading on pattern match only';
         statusEl.style.color = '#22c55e';
     }
     // Only Max filter active (≤)
-    else if (maxEnsemble > 0 && minEnsemble === 0) {
+    else if (maxEnsemble > 0) {
         statusEl.textContent = `🔒 Active: Trade if Ensemble ≤ ${maxEnsemble}% (LOW ensemble)`;
         statusEl.style.color = '#f59e0b';
     }
     // Only Min filter active (≥)
-    else if (minEnsemble > 0 && maxEnsemble === 0) {
+    else if (minEnsemble > 0) {
         statusEl.textContent = `🔒 Active: Trade if Ensemble ≥ ${minEnsemble}% (HIGH ensemble)`;
         statusEl.style.color = '#3b82f6';
+    }
+    // Only Specific % filter active
+    else if (isSpecificEnsembleActive) {
+        const specs = [
+            parseInt(document.getElementById('specEns1').value),
+            parseInt(document.getElementById('specEns2').value),
+            parseInt(document.getElementById('specEns3').value),
+            parseInt(document.getElementById('specEns4').value),
+            parseInt(document.getElementById('specEns5').value)
+        ].filter(v => !isNaN(v) && v >= 0 && v <= 100);
+        statusEl.textContent = `🎯 Active: Trade if Ensemble = ${specs.join(', ')}%`;
+        statusEl.style.color = '#8b5cf6';
     }
 }
 
@@ -543,7 +623,8 @@ function toggleConfidenceUI() {
 function saveSettings() {
     const settings = {
         confidenceMode: currentConfidenceMode,
-        market: currentMarketValue
+        market: currentMarketValue,
+        specificEnsembleActive: isSpecificEnsembleActive
     };
     document.querySelectorAll('.save-setting').forEach(el => settings[el.id] = el.value);
     localStorage.setItem('bot_settings_v8_ml', JSON.stringify(settings));
@@ -566,6 +647,14 @@ function loadSettings() {
         if (settings.market) {
             currentMarketValue = settings.market;
             selectMarket(currentMarketValue);
+        }
+        
+        if (settings.specificEnsembleActive) {
+            isSpecificEnsembleActive = settings.specificEnsembleActive;
+            document.getElementById('specificEnsembleToggle').checked = isSpecificEnsembleActive;
+            if (isSpecificEnsembleActive) {
+                document.getElementById('specificEnsembleSection').classList.add('active');
+            }
         }
     }
     toggleConfidenceUI();
@@ -835,7 +924,7 @@ function addDigitToAnalyzer(digit) {
 function checkAndAutoTrade() {
     if (currentContractId !== null) return;
     
-    // Mode 4: Pattern Detection Mode - Enhanced with DUAL Ensemble Filters
+    // Mode 4: Pattern Detection Mode - Enhanced with THREE Ensemble Filters
     if (currentConfidenceMode === 'pattern') {
         const now = Date.now();
         const cooldownMs = parseInt(document.getElementById('cooldown').value) * 1000;
@@ -856,22 +945,28 @@ function checkAndAutoTrade() {
                 const minEnsemble = parseInt(document.getElementById('patternEnsembleMin').value) || 0;
                 const currentEnsemble = Math.round(lastPredictionConfidence);
                 
-                // Conflict check - both filters active
-                if (maxEnsemble > 0 && minEnsemble > 0) {
-                    addLog(`Pattern Match! But CONFLICT: Both filters active. Set one to 0!`, "error");
+                // Count active filters
+                let activeFilters = 0;
+                if (maxEnsemble > 0) activeFilters++;
+                if (minEnsemble > 0) activeFilters++;
+                if (isSpecificEnsembleActive) activeFilters++;
+                
+                // Conflict check - multiple filters active
+                if (activeFilters > 1) {
+                    addLog(`Pattern Match! But CONFLICT: Multiple filters active (${activeFilters}). Only ONE allowed!`, "error");
                     return;
                 }
                 
-                // Both filters disabled (both = 0)
-                if (maxEnsemble === 0 && minEnsemble === 0) {
-                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble Filters: DISABLED - Trading NOW!`, "success");
+                // All filters disabled
+                if (activeFilters === 0) {
+                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | All Filters: DISABLED - Trading NOW!`, "success");
                     lastTradeTime = now;
                     placeTrade();
                     return;
                 }
                 
                 // Max filter active (≤ condition - LOW ensemble)
-                if (maxEnsemble > 0 && minEnsemble === 0) {
+                if (maxEnsemble > 0) {
                     if (currentEnsemble <= maxEnsemble) {
                         addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% ≤ ${maxEnsemble}% ✓ - Trading NOW!`, "success");
                         lastTradeTime = now;
@@ -883,13 +978,33 @@ function checkAndAutoTrade() {
                 }
                 
                 // Min filter active (≥ condition - HIGH ensemble)
-                if (minEnsemble > 0 && maxEnsemble === 0) {
+                if (minEnsemble > 0) {
                     if (currentEnsemble >= minEnsemble) {
                         addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% ≥ ${minEnsemble}% ✓ - Trading NOW!`, "success");
                         lastTradeTime = now;
                         placeTrade();
                     } else {
                         addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% < ${minEnsemble}% ✗ - SKIPPED (too low)`, "warn");
+                    }
+                    return;
+                }
+                
+                // Specific percentages filter active
+                if (isSpecificEnsembleActive) {
+                    const specificTargets = [
+                        parseInt(document.getElementById('specEns1').value),
+                        parseInt(document.getElementById('specEns2').value),
+                        parseInt(document.getElementById('specEns3').value),
+                        parseInt(document.getElementById('specEns4').value),
+                        parseInt(document.getElementById('specEns5').value)
+                    ].filter(v => !isNaN(v) && v >= 0 && v <= 100);
+                    
+                    if (specificTargets.includes(currentEnsemble)) {
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% = Target ✓ - Trading NOW!`, "success");
+                        lastTradeTime = now;
+                        placeTrade();
+                    } else {
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} | Ensemble: ${currentEnsemble}% ≠ Targets [${specificTargets.join(',')}] ✗ - SKIPPED`, "warn");
                     }
                     return;
                 }
@@ -1086,12 +1201,14 @@ function placeTrade() {
       const maxEnsemble = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
       const minEnsemble = parseInt(document.getElementById('patternEnsembleMin').value) || 0;
       
-      if (maxEnsemble === 0 && minEnsemble === 0) {
+      if (maxEnsemble === 0 && minEnsemble === 0 && !isSpecificEnsembleActive) {
           confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Filters: OFF`;
       } else if (maxEnsemble > 0) {
           confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ens: ${lastPredictionConfidence.toFixed(0)}% ≤ ${maxEnsemble}%`;
       } else if (minEnsemble > 0) {
           confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ens: ${lastPredictionConfidence.toFixed(0)}% ≥ ${minEnsemble}%`;
+      } else if (isSpecificEnsembleActive) {
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Ens: ${lastPredictionConfidence.toFixed(0)}% = Target`;
       }
   } else {
       confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence`;
@@ -1382,6 +1499,7 @@ window.onload = () => {
   // Setup ensemble filter listeners
   const ensembleMaxInput = document.getElementById('patternEnsembleMax');
   const ensembleMinInput = document.getElementById('patternEnsembleMin');
+  const specEnsInputs = ['specEns1', 'specEns2', 'specEns3', 'specEns4', 'specEns5'];
   
   if (ensembleMaxInput) {
       ensembleMaxInput.addEventListener('input', updateEnsembleFilterStatus);
@@ -1392,6 +1510,14 @@ window.onload = () => {
       ensembleMinInput.addEventListener('input', updateEnsembleFilterStatus);
       ensembleMinInput.addEventListener('change', updateEnsembleFilterStatus);
   }
+  
+  specEnsInputs.forEach(id => {
+      const input = document.getElementById(id);
+      if (input) {
+          input.addEventListener('input', saveSettings);
+          input.addEventListener('change', saveSettings);
+      }
+  });
   
   updateEnsembleFilterStatus();
   
