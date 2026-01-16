@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deriv Digit Over 5 Pro - Advanced ML Edition v4 (Auto-LSTM)</title>
+<title>Deriv Digit Over 5 Pro - Advanced ML Edition v3</title>
 <style>
 /* --- STYLES PRESERVED --- */
 body { background: #020617; color: #e5e7eb; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
@@ -120,7 +120,7 @@ tbody tr:hover { background: #1e293b; }
 .specific-ensemble-grid input { text-align: center; padding: 8px; margin: 0; background: #1e293b; border: 2px solid #8b5cf6; }
 
 /* Model Performance Indicators */
-.model-performance { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 10px; }
+.model-performance { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 10px; }
 .model-performance > div { background: #1e293b; padding: 5px; border-radius: 4px; text-align: center; border: 1px solid #334155; }
 .model-perf-high { border-color: #22c55e; }
 .model-perf-low { border-color: #ef4444; }
@@ -144,20 +144,12 @@ tbody tr:hover { background: #1e293b; }
 .digit-percentage-grid b { font-size: 14px; display: block; margin-top: 2px; }
 .safe-zone { background: #22c55e; color: #020617; padding: 6px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; margin-top: 8px; }
 .danger-zone { background: #ef4444; color: white; padding: 6px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; margin-top: 8px; }
-
-/* LSTM Training Indicator */
-.lstm-training { background: #8b5cf6; color: white; padding: 8px; border-radius: 6px; text-align: center; font-size: 11px; font-weight: 700; margin-top: 8px; display: none; }
-.lstm-training.active { display: block; }
-
-/* Auto-training status */
-.auto-train-status { background: #ec4899; color: white; padding: 6px; border-radius: 4px; text-align: center; font-size: 10px; font-weight: 700; margin-top: 5px; display: none; }
-.auto-train-status.active { display: block; }
 </style>
 </head>
 <body>
 <div class="app">
 
-<h2>Deriv Digit Over 5 Pro <span class="ml-indicator ml-active">ML v4 (Auto-LSTM)</span></h2>
+<h2>Deriv Digit Over 5 Pro <span class="ml-indicator ml-active">ML Enhanced v3 (Advanced)</span></h2>
 
 <div class="status-container">
     <div id="status" class="status disconnected">Disconnected</div>
@@ -220,7 +212,7 @@ tbody tr:hover { background: #1e293b; }
 </div>
 
 <div class="card">
-  <h3>📊 Advanced ML Analyzer v4 (Auto-LSTM)</h3>
+  <h3>📊 Advanced ML Analyzer v3 (Enhanced Strategies)</h3>
   <div class="analyzer-grid" id="digitDisplay"></div>
   <div class="analyzer-stats">
     <div><span>Over 5</span><b id="overCount" style="color: #22c55e;">0</b></div>
@@ -240,7 +232,7 @@ tbody tr:hover { background: #1e293b; }
   <div id="marketZone" style="display: none;"></div>
   
   <div style="margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 8px; border: 2px solid #22c55e;">
-    <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #22c55e;">🔮 ML Prediction Engine v4 (Auto-LSTM + PSF + DTW)</div>
+    <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #22c55e;">🔮 ML Prediction Engine v3 (Strategy Enhanced)</div>
     
     <div id="signalTimerDisplay" class="window-timer">SYNCING CLOCK...</div>
 
@@ -258,8 +250,6 @@ tbody tr:hover { background: #1e293b; }
     <div class="advanced-stats">
       <div><span style="opacity:0.6">Bayesian Prob</span><b id="bayesianProb" style="color:#8b5cf6">50%</b></div>
       <div><span style="opacity:0.6">Markov Pred</span><b id="markovProb" style="color:#3b82f6">50%</b></div>
-      <div><span style="opacity:0.6">PSF Pred</span><b id="psfProb" style="color:#f59e0b">50%</b></div>
-      <div><span style="opacity:0.6">LSTM Pred</span><b id="lstmProb" style="color:#ec4899">50%</b></div>
       <div><span style="opacity:0.6">Ensemble</span><b id="ensembleScore" style="color:#22c55e">50%</b></div>
       <div><span style="opacity:0.6">Confidence Adj</span><b id="confAdj" style="color:#f59e0b">0%</b></div>
     </div>
@@ -268,16 +258,7 @@ tbody tr:hover { background: #1e293b; }
       <div id="heuristicPerf"><span style="opacity:0.6">Heuristic</span><b style="color:#22c55e">--%</b></div>
       <div id="bayesianPerf"><span style="opacity:0.6">Bayesian</span><b style="color:#8b5cf6">--%</b></div>
       <div id="markovPerf"><span style="opacity:0.6">Markov</span><b style="color:#3b82f6">--%</b></div>
-      <div id="psfPerf"><span style="opacity:0.6">PSF</span><b style="color:#f59e0b">--%</b></div>
-      <div id="lstmPerf"><span style="opacity:0.6">LSTM</span><b style="color:#ec4899">--%</b></div>
-    </div>
-    
-    <div class="lstm-training" id="lstmTrainingStatus">
-      🧠 LSTM Model Training... Please wait
-    </div>
-    
-    <div class="auto-train-status" id="autoTrainStatus">
-      🤖 Auto-Training: Next in <span id="nextTrainCountdown">--</span>s
+      <div id="patternPerf"><span style="opacity:0.6">Pattern</span><b style="color:#f59e0b">--%</b></div>
     </div>
     
     <div style="margin-top: 8px; font-size: 11px; opacity: 0.7; text-align: center;" id="patternMatch">Analyzing patterns...</div>
@@ -288,7 +269,7 @@ tbody tr:hover { background: #1e293b; }
             <span style="cursor:pointer; color:#3b82f6" onclick="document.getElementById('logContainer').innerHTML=''">Clear</span>
         </div>
         <div class="log-container" id="logContainer">
-            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">ML Engine v4 Ready (Auto-LSTM + PSF + DTW).</span></div>
+            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">ML Engine v3 Ready (Strategy Enhanced).</span></div>
         </div>
     </div>
   </div>
@@ -296,7 +277,6 @@ tbody tr:hover { background: #1e293b; }
 
 <div class="card">
   <h3>Trade Settings</h3>
-  
   <label>Stake ($)</label>
   <input id="stake" class="save-setting" type="number" value="1" min="0.35" step="0.01">
   <label>Duration (Ticks)</label>
@@ -399,7 +379,7 @@ tbody tr:hover { background: #1e293b; }
   </div>
 
   <div id="patternUI" style="display:none;">
-      <div class="pattern-mode-active">🎯 Pattern Detection Mode Active (v4 Enhanced)</div>
+      <div class="pattern-mode-active">🎯 Pattern Detection Mode Active (v3 Enhanced)</div>
       <label>Target Digits for Pattern Match (0-9)</label>
       <div class="pattern-target-grid">
           <input id="pattern1" class="save-setting" type="number" value="0" min="0" max="9" placeholder="Digit 1">
@@ -539,7 +519,6 @@ tbody tr:hover { background: #1e293b; }
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <script>
 // ============ CORE VARIABLES ============
 let ws = null;
@@ -577,7 +556,7 @@ let virtualLossStreak = 0;
 let hasSwatchedToLive = false;
 let virtualTradeHistory = [];
 
-// ============ ENHANCED ML VARIABLES v4 (PSF + LSTM + DTW) ============
+// ============ ENHANCED ML VARIABLES v3 (STRATEGY ENHANCED) ============
 let bayesianAlpha = 1;
 let bayesianBeta = 1;
 let markovTransitionMatrix = {};
@@ -588,41 +567,18 @@ let patternCache = {};
 let volatilityWindow = [];
 let detectedPattern = null;
 
-// NEW v4: PSF and LSTM variables
-let psfPatternClusters = [];
-let lstmModel = null;
-let isLSTMTrained = false;
-let isLSTMTraining = false;
-
-// AUTO-TRAINING VARIABLES
-let autoTrainInterval = null;
-let lastTrainingTime = 0;
-let trainingCooldown = 0;
-let nextTrainingCountdown = 0;
-
-// Market-specific LSTM settings (optimized for each market type)
-const marketLSTMSettings = {
-    'R_10': { seqLength: 15, epochs: 25, psfWindow: 8, psfTopK: 5 },
-    'R_25': { seqLength: 20, epochs: 30, psfWindow: 10, psfTopK: 5 },
-    'R_50': { seqLength: 25, epochs: 35, psfWindow: 12, psfTopK: 6 },
-    'R_75': { seqLength: 30, epochs: 40, psfWindow: 15, psfTopK: 7 },
-    'R_100': { seqLength: 35, epochs: 45, psfWindow: 18, psfTopK: 8 }
-};
-
 // Model performance tracking
 let modelAccuracies = {
     heuristic: 0,
     bayesian: 0,
     markov: 0,
-    psf: 0,
-    lstm: 0
+    pattern: 0
 };
 let modelPredictions = {
     heuristic: [],
     bayesian: [],
     markov: [],
-    psf: [],
-    lstm: []
+    pattern: []
 };
 
 // Advanced pattern detection
@@ -633,420 +589,14 @@ let patternDecayTimer = 0;
 const BAYESIAN_DECAY = 0.995;
 
 // OPTIMIZED CONSTANTS
-const MIN_PATTERN_LENGTH = 6;
+const MIN_PATTERN_LENGTH = 4;
 const MIN_PATTERN_OCCURRENCES = 3;
 const MIN_HISTORY_FOR_PATTERNS = 20;
 
-// NEW v4: Digit statistics tracking
+// NEW v3: Digit statistics tracking
 let digitCounts = Array(10).fill(0);
 let evenOddCounts = { even: 0, odd: 0 };
 let rsiValues = [];
-
-// ============ AUTO-TRAINING FUNCTIONS ============
-function getOptimalLSTMSettings() {
-    const settings = marketLSTMSettings[currentMarketValue] || marketLSTMSettings['R_10'];
-    addLog(`Using optimal settings for ${currentMarketValue}: SeqLen=${settings.seqLength}, Epochs=${settings.epochs}`, "info");
-    return settings;
-}
-
-function shouldAutoTrain() {
-    // Auto-train conditions:
-    // 1. Auto-trading is enabled
-    // 2. Have enough data (200+ ticks in extended history)
-    // 3. Not currently training
-    // 4. Either: no model exists OR enough time has passed since last training (30 minutes)
-    
-    if (!isAutoRunning) return false;
-    if (isLSTMTraining) return false;
-    if (extendedHistory.length < 200) return false;
-    
-    const now = Date.now();
-    const timeSinceLastTrain = now - lastTrainingTime;
-    const THIRTY_MINUTES = 30 * 60 * 1000;
-    
-    // Train immediately if no model exists
-    if (!isLSTMTrained) {
-        addLog("No LSTM model detected - triggering auto-training", "warn");
-        return true;
-    }
-    
-    // Retrain every 30 minutes if auto-trading
-    if (timeSinceLastTrain >= THIRTY_MINUTES) {
-        addLog("30 minutes elapsed - triggering model retraining", "info");
-        return true;
-    }
-    
-    return false;
-}
-
-async function autoTrainLSTM() {
-    if (isLSTMTraining) return;
-    
-    addLog("🤖 AUTO-TRAINING: Starting automated LSTM training...", "success");
-    await trainLSTMModel(true); // true = auto mode
-    
-    // Reset cooldown timer
-    lastTrainingTime = Date.now();
-    trainingCooldown = 30 * 60; // 30 minutes in seconds
-}
-
-function updateAutoTrainStatus() {
-    const statusEl = document.getElementById('autoTrainStatus');
-    
-    if (!isAutoRunning) {
-        statusEl.classList.remove('active');
-        return;
-    }
-    
-    if (isLSTMTraining) {
-        statusEl.classList.remove('active');
-        return;
-    }
-    
-    const now = Date.now();
-    const timeSinceLastTrain = now - lastTrainingTime;
-    const THIRTY_MINUTES_MS = 30 * 60 * 1000;
-    
-    if (lastTrainingTime === 0) {
-        statusEl.classList.add('active');
-        statusEl.innerHTML = '🤖 Auto-Training: Waiting for data (200+ ticks needed)';
-        return;
-    }
-    
-    const remainingMs = THIRTY_MINUTES_MS - timeSinceLastTrain;
-    
-    if (remainingMs <= 0) {
-        statusEl.classList.add('active');
-        statusEl.innerHTML = '🤖 Auto-Training: Ready to retrain';
-        return;
-    }
-    
-    const remainingMinutes = Math.floor(remainingMs / 60000);
-    const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
-    
-    statusEl.classList.add('active');
-    statusEl.innerHTML = `🤖 Auto-Training: Next in ${remainingMinutes}m ${remainingSeconds}s`;
-}
-
-// ============ NEW v4: DTW (Dynamic Time Warping) Implementation ============
-function dtwDistance(seq1, seq2) {
-    const n = seq1.length;
-    const m = seq2.length;
-    const dtw = Array(n + 1).fill(null).map(() => Array(m + 1).fill(Infinity));
-    
-    dtw[0][0] = 0;
-    
-    for (let i = 1; i <= n; i++) {
-        for (let j = 1; j <= m; j++) {
-            const cost = Math.abs(seq1[i - 1] - seq2[j - 1]);
-            dtw[i][j] = cost + Math.min(
-                dtw[i - 1][j],
-                dtw[i][j - 1],
-                dtw[i - 1][j - 1]
-            );
-        }
-    }
-    
-    return dtw[n][m];
-}
-
-// ============ NEW v4: PSF (Pattern Sequence-Based Forecasting) Implementation ============
-function calculateEuclideanDistance(arr1, arr2) {
-    if (arr1.length !== arr2.length) return Infinity;
-    let sum = 0;
-    for (let i = 0; i < arr1.length; i++) {
-        sum += Math.pow(arr1[i] - arr2[i], 2);
-    }
-    return Math.sqrt(sum);
-}
-
-function buildPSFPatterns() {
-    const settings = getOptimalLSTMSettings();
-    const windowSize = settings.psfWindow;
-    const patterns = [];
-    
-    if (extendedHistory.length < windowSize + 1) {
-        return patterns;
-    }
-    
-    for (let i = 0; i < extendedHistory.length - windowSize - 1; i++) {
-        const pattern = extendedHistory.slice(i, i + windowSize);
-        const nextDigit = extendedHistory[i + windowSize];
-        const timestamp = Date.now() - (extendedHistory.length - i) * 1000;
-        
-        patterns.push({
-            pattern: pattern,
-            nextDigit: nextDigit,
-            timestamp: timestamp,
-            index: i
-        });
-    }
-    
-    return patterns;
-}
-
-function calculatePSFPrediction() {
-    if (digitHistory.length < 10) return { prediction: 50, confidence: 0, method: 'PSF' };
-    
-    const settings = getOptimalLSTMSettings();
-    const windowSize = settings.psfWindow;
-    const topK = settings.psfTopK;
-    
-    if (digitHistory.length < windowSize) {
-        return { prediction: 50, confidence: 0, method: 'PSF' };
-    }
-    
-    const currentPattern = digitHistory.slice(0, windowSize);
-    const allPatterns = buildPSFPatterns();
-    
-    if (allPatterns.length === 0) {
-        return { prediction: 50, confidence: 0, method: 'PSF' };
-    }
-    
-    const distances = allPatterns.map(p => ({
-        ...p,
-        distance: dtwDistance(currentPattern, p.pattern),
-        euclidean: calculateEuclideanDistance(currentPattern, p.pattern)
-    }));
-    
-    distances.sort((a, b) => a.distance - b.distance);
-    const topMatches = distances.slice(0, topK);
-    
-    const now = Date.now();
-    let weightedSum = 0;
-    let totalWeight = 0;
-    
-    topMatches.forEach((match, idx) => {
-        const recencyWeight = Math.exp(-(now - match.timestamp) / (86400000 * 7));
-        const distanceWeight = Math.exp(-match.distance / windowSize);
-        const rankWeight = Math.exp(-idx / topK);
-        
-        const combinedWeight = recencyWeight * distanceWeight * rankWeight;
-        
-        weightedSum += match.nextDigit * combinedWeight;
-        totalWeight += combinedWeight;
-    });
-    
-    const predictedDigit = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 5;
-    
-    const avgDistance = topMatches.reduce((sum, m) => sum + m.distance, 0) / topMatches.length;
-    const maxDistance = windowSize * 9;
-    const confidence = Math.max(0, Math.min(98, 100 - (avgDistance / maxDistance) * 100));
-    
-    const isOver5 = predictedDigit > 5;
-    const psfProb = isOver5 ? (50 + confidence / 2) : (50 - confidence / 2);
-    
-    return {
-        prediction: psfProb,
-        confidence: confidence,
-        predictedDigit: predictedDigit,
-        method: 'PSF',
-        topMatches: topMatches.length,
-        avgDistance: avgDistance.toFixed(2)
-    };
-}
-
-// ============ NEW v4: LSTM Implementation ============
-async function buildLSTMModel() {
-    const settings = getOptimalLSTMSettings();
-    const seqLength = settings.seqLength;
-    
-    const model = tf.sequential();
-    
-    model.add(tf.layers.lstm({
-        units: 50,
-        returnSequences: true,
-        inputShape: [seqLength, 1],
-        dropout: 0.2,
-        recurrentDropout: 0.2
-    }));
-    
-    model.add(tf.layers.lstm({
-        units: 30,
-        dropout: 0.2,
-        recurrentDropout: 0.2
-    }));
-    
-    model.add(tf.layers.dense({ units: 20, activation: 'relu' }));
-    model.add(tf.layers.dropout({ rate: 0.2 }));
-    model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
-    
-    model.compile({
-        optimizer: tf.train.adam(0.001),
-        loss: 'binaryCrossentropy',
-        metrics: ['accuracy']
-    });
-    
-    return model;
-}
-
-function prepareLSTMData(history, seqLength) {
-    const sequences = [];
-    const labels = [];
-    
-    for (let i = seqLength; i < history.length; i++) {
-        const seq = history.slice(i - seqLength, i);
-        const nextDigit = history[i];
-        const label = nextDigit > 5 ? 1 : 0;
-        
-        sequences.push(seq);
-        labels.push(label);
-    }
-    
-    if (sequences.length === 0) return null;
-    
-    const normalizedSeqs = sequences.map(seq => seq.map(d => d / 9));
-    
-    const xs = tf.tensor3d(normalizedSeqs.map(seq => seq.map(d => [d])));
-    const ys = tf.tensor2d(labels, [labels.length, 1]);
-    
-    return { xs, ys };
-}
-
-async function trainLSTMModel(isAutoMode = false) {
-    if (isLSTMTraining) {
-        addLog("LSTM training already in progress...", "warn");
-        return;
-    }
-    
-    const settings = getOptimalLSTMSettings();
-    const seqLength = settings.seqLength;
-    const epochs = settings.epochs;
-    
-    const minDataRequired = isAutoMode ? 200 : (seqLength + 100);
-    
-    if (extendedHistory.length < minDataRequired) {
-        addLog(`Need at least ${minDataRequired} data points to train LSTM. Current: ${extendedHistory.length}`, "error");
-        return;
-    }
-    
-    isLSTMTraining = true;
-    document.getElementById('lstmTrainingStatus').classList.add('active');
-    
-    const modeLabel = isAutoMode ? "AUTO-TRAINING" : "MANUAL TRAINING";
-    addLog(`🧠 ${modeLabel}: Starting LSTM model training for ${currentMarketValue}...`, "info");
-    
-    try {
-        if (lstmModel) {
-            lstmModel.dispose();
-        }
-        lstmModel = await buildLSTMModel();
-        
-        const data = prepareLSTMData(extendedHistory, seqLength);
-        
-        if (!data) {
-            throw new Error("Failed to prepare training data");
-        }
-        
-        const originalXs = await data.xs.array();
-        const originalYs = await data.ys.array();
-        
-        const augmentedData = [];
-        const augmentedLabels = [];
-        
-        for (let i = 0; i < originalXs.length; i++) {
-            augmentedData.push(originalXs[i]);
-            augmentedLabels.push(originalYs[i]);
-            
-            if (Math.random() < 0.05) {
-                const noisySeq = originalXs[i].map(val => {
-                    const noise = (Math.random() - 0.5) * 0.1;
-                    return [Math.max(0, Math.min(1, val[0] + noise))];
-                });
-                augmentedData.push(noisySeq);
-                augmentedLabels.push(originalYs[i]);
-            }
-        }
-        
-        const augXs = tf.tensor3d(augmentedData);
-        const augYs = tf.tensor2d(augmentedLabels, [augmentedLabels.length, 1]);
-        
-        await lstmModel.fit(augXs, augYs, {
-            epochs: epochs,
-            batchSize: 32,
-            validationSplit: 0.2,
-            shuffle: true,
-            verbose: 0,
-            callbacks: {
-                onEpochEnd: (epoch, logs) => {
-                    if (epoch % 5 === 0 || epoch === epochs - 1) {
-                        addLog(`Epoch ${epoch + 1}/${epochs}: loss=${logs.loss.toFixed(4)}, acc=${(logs.acc * 100).toFixed(1)}%`, "info");
-                    }
-                }
-            }
-        });
-        
-        data.xs.dispose();
-        data.ys.dispose();
-        augXs.dispose();
-        augYs.dispose();
-        
-        isLSTMTrained = true;
-        lastTrainingTime = Date.now();
-        addLog(`✅ ${modeLabel} COMPLETE! Model ready for ${currentMarketValue}.`, "success");
-        
-        await lstmModel.save(`localstorage://lstm-${currentMarketValue}-model`);
-        addLog(`💾 Model saved for ${currentMarketValue}`, "success");
-        
-    } catch (error) {
-        addLog(`❌ LSTM training failed: ${error.message}`, "error");
-        console.error("LSTM training error:", error);
-    } finally {
-        isLSTMTraining = false;
-        document.getElementById('lstmTrainingStatus').classList.remove('active');
-    }
-}
-
-async function loadLSTMModel() {
-    try {
-        lstmModel = await tf.loadLayersModel(`localstorage://lstm-${currentMarketValue}-model`);
-        isLSTMTrained = true;
-        addLog(`✅ Loaded LSTM model for ${currentMarketValue}`, "success");
-        lastTrainingTime = Date.now();
-        return true;
-    } catch (error) {
-        addLog(`No saved LSTM model for ${currentMarketValue}. Will auto-train when ready.`, "warn");
-        return false;
-    }
-}
-
-function calculateLSTMPrediction() {
-    if (!isLSTMTrained || !lstmModel) {
-        return { prediction: 50, confidence: 0, method: 'LSTM' };
-    }
-    
-    const settings = getOptimalLSTMSettings();
-    const seqLength = settings.seqLength;
-    
-    if (digitHistory.length < seqLength) {
-        return { prediction: 50, confidence: 0, method: 'LSTM' };
-    }
-    
-    try {
-        const inputSeq = digitHistory.slice(0, seqLength).reverse();
-        const normalizedSeq = inputSeq.map(d => d / 9);
-        
-        const input = tf.tensor3d([[normalizedSeq.map(d => [d])]]);
-        const prediction = lstmModel.predict(input);
-        const predValue = prediction.dataSync()[0];
-        
-        input.dispose();
-        prediction.dispose();
-        
-        const lstmProb = predValue * 100;
-        const confidence = Math.abs(predValue - 0.5) * 200;
-        
-        return {
-            prediction: lstmProb,
-            confidence: confidence,
-            method: 'LSTM',
-            rawPrediction: predValue
-        };
-    } catch (error) {
-        console.error("LSTM prediction error:", error);
-        return { prediction: 50, confidence: 0, method: 'LSTM' };
-    }
-}
 
 // ============ VIRTUAL TRADE FUNCTIONS ============
 function toggleVirtualTrade() {
@@ -1119,15 +669,17 @@ function isCurrentlyVirtualMode() {
     return isVirtualTradeEnabled && !hasSwatchedToLive;
 }
 
-// ============ NEW v4: DIGIT STATISTICS FUNCTIONS ============
+// ============ NEW v3: DIGIT STATISTICS FUNCTIONS ============
 
 function calculateDigitPercentages() {
     const totalDigits = digitHistory.length;
     if (totalDigits === 0) return { digit69: 0, digit05: 0, even: 0, odd: 0 };
     
+    // Count digits 6-9 (over 5)
     const digit69Count = digitHistory.filter(d => d >= 6 && d <= 9).length;
     const digit05Count = digitHistory.filter(d => d >= 0 && d <= 5).length;
     
+    // Count even/odd
     const evenCount = digitHistory.filter(d => d % 2 === 0).length;
     const oddCount = digitHistory.filter(d => d % 2 !== 0).length;
     
@@ -1140,7 +692,7 @@ function calculateDigitPercentages() {
 }
 
 function calculateRSI(data, period = 14) {
-    if (data.length < period + 1) return 50;
+    if (data.length < period + 1) return 50; // Default neutral
     
     const recentData = data.slice(0, period + 1);
     let gains = 0;
@@ -1177,13 +729,14 @@ function updateDigitStatisticsDisplay() {
     const rsi = calculateRSI(digitHistory, 14);
     document.getElementById('rsiValue').textContent = rsi;
     
+    // Update RSI color based on value
     const rsiEl = document.getElementById('rsiValue');
     if (rsi < 30) {
-        rsiEl.style.color = '#22c55e';
+        rsiEl.style.color = '#22c55e'; // Oversold - potential buy
     } else if (rsi > 70) {
-        rsiEl.style.color = '#ef4444';
+        rsiEl.style.color = '#ef4444'; // Overbought - potential sell
     } else {
-        rsiEl.style.color = '#8b5cf6';
+        rsiEl.style.color = '#8b5cf6'; // Neutral
     }
 }
 
@@ -1196,6 +749,7 @@ function evaluateMarketZone() {
     
     const zoneEl = document.getElementById('marketZone');
     
+    // Safe Zone: Low volatility, no recent losses, good digit percentages
     const percentages = calculateDigitPercentages();
     const minDigit69 = parseFloat(document.getElementById('minDigit69Percent').value) || 54;
     
@@ -1204,7 +758,9 @@ function evaluateMarketZone() {
         zoneEl.textContent = '✅ SAFE ZONE - Good trading conditions';
         zoneEl.style.display = 'block';
         return 'safe';
-    } else if (volatility > maxVolThreshold || recentLosses > 2) {
+    }
+    // Danger Zone: High volatility or recent losses
+    else if (volatility > maxVolThreshold || recentLosses > 2) {
         zoneEl.className = 'danger-zone';
         zoneEl.textContent = '⚠️ DANGER ZONE - Avoid trading or reduce stake';
         zoneEl.style.display = 'block';
@@ -1297,11 +853,7 @@ function selectMarket(market) {
     selectedOption.classList.add('selected');
     document.getElementById(`market${market.replace('_', '')}`).checked = true;
     
-    // When market changes, try to load market-specific model
-    if (isConnected) {
-        subscribeToTicks();
-        loadLSTMModel(); // Load market-specific model
-    }
+    if (isConnected) subscribeToTicks();
     saveSettings();
 }
 
@@ -1350,13 +902,16 @@ function updateEnsembleFilterStatus() {
     if (activeCount === 0) {
         statusEl.textContent = '🔓 All filters DISABLED - Trading on pattern match only';
         statusEl.style.color = '#22c55e';
-    } else if (maxEnsemble > 0) {
+    }
+    else if (maxEnsemble > 0) {
         statusEl.textContent = `🔒 Active: Trade if Next Likely % ≤ ${maxEnsemble}% (LOW confidence)`;
         statusEl.style.color = '#f59e0b';
-    } else if (minEnsemble > 0) {
+    }
+    else if (minEnsemble > 0) {
         statusEl.textContent = `🔒 Active: Trade if Next Likely % ≥ ${minEnsemble}% (HIGH confidence)`;
         statusEl.style.color = '#3b82f6';
-    } else if (isSpecificEnsembleActive) {
+    }
+    else if (isSpecificEnsembleActive) {
         const specs = [
             parseInt(document.getElementById('specEns1').value),
             parseInt(document.getElementById('specEns2').value),
@@ -1393,11 +948,11 @@ function saveSettings() {
         hasSwatchedToLive: hasSwatchedToLive
     };
     document.querySelectorAll('.save-setting').forEach(el => settings[el.id] = el.value);
-    localStorage.setItem('bot_settings_v12_ml', JSON.stringify(settings));
+    localStorage.setItem('bot_settings_v10_ml', JSON.stringify(settings));
 }
 
 function loadSettings() {
-    const saved = localStorage.getItem('bot_settings_v12_ml');
+    const saved = localStorage.getItem('bot_settings_v10_ml');
     if (saved) {
         const settings = JSON.parse(saved);
         for (const id in settings) {
@@ -1444,7 +999,7 @@ function loadSettings() {
     
     toggleConfidenceUI();
     
-    const savedExtHistory = localStorage.getItem('extended_history_v12');
+    const savedExtHistory = localStorage.getItem('extended_history_v10');
     if(savedExtHistory) {
         try {
             extendedHistory = JSON.parse(savedExtHistory);
@@ -1455,23 +1010,23 @@ function loadSettings() {
         }
     }
     
-    const savedHistory = localStorage.getItem('trade_history_v12');
+    const savedHistory = localStorage.getItem('trade_history_v10');
     if(savedHistory) document.getElementById('history').innerHTML = savedHistory;
     
-    const savedStats = localStorage.getItem('trade_stats_v12');
+    const savedStats = localStorage.getItem('trade_stats_v10');
     if(savedStats) { 
         stats = JSON.parse(savedStats); 
         updateStats(); 
     }
     
-    const savedBayesian = localStorage.getItem('bayesian_params_v12');
+    const savedBayesian = localStorage.getItem('bayesian_params_v10');
     if(savedBayesian) {
         const params = JSON.parse(savedBayesian);
         bayesianAlpha = params.alpha || 1;
         bayesianBeta = params.beta || 1;
     }
     
-    const savedMarkov = localStorage.getItem('markov_matrix_v12');
+    const savedMarkov = localStorage.getItem('markov_matrix_v10');
     if(savedMarkov) {
         try {
             markovTransitionMatrix = JSON.parse(savedMarkov);
@@ -1481,7 +1036,7 @@ function loadSettings() {
         }
     }
     
-    const savedMarkov2nd = localStorage.getItem('markov_matrix_2nd_v12');
+    const savedMarkov2nd = localStorage.getItem('markov_matrix_2nd_v10');
     if(savedMarkov2nd) {
         try {
             markovTransitionMatrix2ndOrder = JSON.parse(savedMarkov2nd);
@@ -1543,9 +1098,6 @@ function handleMessage(data) {
     subscribeToTicks();
     startSessionTimer();
     
-    // Load market-specific LSTM model
-    loadLSTMModel();
-    
     const persistedAuto = localStorage.getItem('isAutoRunning') === 'true';
     if(persistedAuto && !isAutoRunning) {
         resumeAutoTrade();
@@ -1590,7 +1142,7 @@ function resumeAutoTrade() {
     addLog("Resuming Persistent Auto-Trade...", "success");
 }
 
-// ============ ENHANCED ML FUNCTIONS v4 (PSF + LSTM + DTW) ============
+// ============ ENHANCED ML FUNCTIONS v3 (STRATEGY ENHANCED) ============
 
 function smoothOutliers(digit, history) {
     if (history.length < 10) return digit;
@@ -1629,7 +1181,7 @@ function updateBayesianModel(isOver5) {
     }
     
     if ((bayesianAlpha + bayesianBeta) % 20 < 1) {
-        localStorage.setItem('bayesian_params_v12', JSON.stringify({
+        localStorage.setItem('bayesian_params_v10', JSON.stringify({
             alpha: bayesianAlpha,
             beta: bayesianBeta
         }));
@@ -1657,8 +1209,8 @@ function updateMarkovModel(currentDigit) {
     }
     
     if (digitHistory.length % 50 === 0) {
-        localStorage.setItem('markov_matrix_v12', JSON.stringify(markovTransitionMatrix));
-        localStorage.setItem('markov_matrix_2nd_v12', JSON.stringify(markovTransitionMatrix2ndOrder));
+        localStorage.setItem('markov_matrix_v10', JSON.stringify(markovTransitionMatrix));
+        localStorage.setItem('markov_matrix_2nd_v10', JSON.stringify(markovTransitionMatrix2ndOrder));
     }
 }
 
@@ -1716,7 +1268,7 @@ function levenshtein(a, b) {
     return matrix[a.length][b.length];
 }
 
-// ============ ENHANCED PATTERN DETECTION v4 (WITH FUZZY MATCHING + FREQUENT PATTERN MINING) ============
+// ============ ENHANCED PATTERN DETECTION v3 ============
 function detectPatterns() {
     if (digitHistory.length < MIN_HISTORY_FOR_PATTERNS) return null;
     
@@ -1734,7 +1286,7 @@ function detectPatterns() {
         }
     }
     
-    for (let len = MIN_PATTERN_LENGTH; len <= Math.min(15, digitHistory.length); len++) {
+    for (let len = MIN_PATTERN_LENGTH; len <= Math.min(10, digitHistory.length); len++) {
         const pattern = digitHistory.slice(0, len);
         const patternStr = pattern.join(',');
         const cacheKey = `pattern_${len}_${patternStr}`;
@@ -1752,31 +1304,27 @@ function detectPatterns() {
         
         for (let i = len; i <= digitHistory.length - len; i++) {
             const comparePattern = digitHistory.slice(i, i + len);
+            const distance = levenshtein(pattern, comparePattern);
             
-            const dtwDist = dtwDistance(pattern, comparePattern);
-            const maxDistance = len * 2;
+            const maxDistance = len <= 5 ? 0 : 1;
             
-            if (dtwDist <= maxDistance) {
+            if (distance <= maxDistance) {
                 if (i + len < digitHistory.length) {
                     const nextDigit = digitHistory[i + len];
+                    
+                    // v3 ENHANCEMENT: Use classification approach
                     const isNextOver5 = nextDigit > 5;
                     
-                    const baseConf = 55;
-                    const lengthBonus = len * 3;
-                    const occurrenceBonus = (patternCache[cacheKey]?.count || 0) * 2;
-                    const distancePenalty = (dtwDist / maxDistance) * 10;
-                    
-                    const confidence = Math.min(95, baseConf + lengthBonus + occurrenceBonus - distancePenalty);
+                    const confidence = Math.min(95, 55 + (len * 4) + (patternCache[cacheKey]?.count || 0) * 2);
                     
                     return {
                         pattern: patternStr,
                         nextDigit: nextDigit,
                         nextDigitClass: isNextOver5 ? 'OVER' : 'UNDER',
                         confidence: confidence,
-                        fuzzy: dtwDist > 0,
-                        distance: dtwDist.toFixed(2),
-                        occurrences: patternCache[cacheKey].count,
-                        method: 'DTW'
+                        fuzzy: distance > 0,
+                        distance: distance,
+                        occurrences: patternCache[cacheKey].count
                     };
                 }
             }
@@ -1803,45 +1351,35 @@ function calculateAdaptiveThreshold() {
     return 0;
 }
 
-// ============ NEW v4: ENHANCED ENSEMBLE WITH PSF + LSTM ============
-function calculateEnsemblePrediction(heuristicConf, bayesianProb, markovProb, psfProb, lstmProb, volatility) {
+function calculateEnsemblePrediction(heuristicConf, bayesianProb, markovProb, volatility) {
     let weights = {
-        heuristic: 0.25,
-        bayesian: 0.20,
-        markov: 0.20,
-        psf: 0.20,
-        lstm: 0.15
+        heuristic: 0.35,
+        bayesian: 0.30,
+        markov: 0.30,
+        pattern: 0.05
     };
     
-    const totalAccuracy = modelAccuracies.heuristic + modelAccuracies.bayesian + 
-                          modelAccuracies.markov + modelAccuracies.psf + modelAccuracies.lstm;
+    const totalAccuracy = modelAccuracies.heuristic + modelAccuracies.bayesian + modelAccuracies.markov;
     
     if (totalAccuracy > 0) {
-        const heuristicWeight = (modelAccuracies.heuristic / totalAccuracy) * 0.5;
-        const bayesianWeight = (modelAccuracies.bayesian / totalAccuracy) * 0.5;
-        const markovWeight = (modelAccuracies.markov / totalAccuracy) * 0.5;
-        const psfWeight = (modelAccuracies.psf / totalAccuracy) * 0.5;
-        const lstmWeight = (modelAccuracies.lstm / totalAccuracy) * 0.5;
+        const heuristicWeight = (modelAccuracies.heuristic / totalAccuracy) * 0.6;
+        const bayesianWeight = (modelAccuracies.bayesian / totalAccuracy) * 0.6;
+        const markovWeight = (modelAccuracies.markov / totalAccuracy) * 0.6;
         
-        weights.heuristic = 0.20 + heuristicWeight * 0.2;
-        weights.bayesian = 0.15 + bayesianWeight * 0.2;
-        weights.markov = 0.15 + markovWeight * 0.2;
-        weights.psf = 0.20 + psfWeight * 0.2;
-        weights.lstm = 0.15 + lstmWeight * 0.2;
+        weights.heuristic = 0.25 + heuristicWeight * 0.25;
+        weights.bayesian = 0.25 + bayesianWeight * 0.25;
+        weights.markov = 0.25 + markovWeight * 0.25;
+        weights.pattern = 0.05;
     }
     
     if (volatility > 3.0) {
-        weights.bayesian += 0.10;
-        weights.lstm += 0.10;
+        weights.bayesian += 0.15;
         weights.heuristic -= 0.10;
         weights.markov -= 0.05;
-        weights.psf -= 0.05;
     } else if (volatility > 2.5) {
-        weights.bayesian += 0.05;
-        weights.lstm += 0.05;
+        weights.bayesian += 0.10;
         weights.heuristic -= 0.05;
-        weights.markov -= 0.025;
-        weights.psf -= 0.025;
+        weights.markov -= 0.05;
     }
     
     const pattern = detectPatterns();
@@ -1849,15 +1387,12 @@ function calculateEnsemblePrediction(heuristicConf, bayesianProb, markovProb, ps
     if (pattern) {
         patternBonus = pattern.fuzzy ? 3 : 5;
         if (pattern.confidence > 70) patternBonus += 5;
-        if (pattern.occurrences > 5) patternBonus += 3;
     }
     
     const ensemble = (
         heuristicConf * weights.heuristic +
         bayesianProb * weights.bayesian +
         markovProb * weights.markov +
-        psfProb * weights.psf +
-        lstmProb * weights.lstm +
         patternBonus
     );
     
@@ -1904,28 +1439,17 @@ function updateModelAccuracies(actualResult) {
         modelAccuracies.markov = (correctCount / modelPredictions.markov.length) * 100;
     }
     
-    if (modelPredictions.psf.length > 0) {
-        const lastPSF = modelPredictions.psf[modelPredictions.psf.length - 1];
-        const psfCorrect = (lastPSF.prediction > 50 && isOver5) || 
-                            (lastPSF.prediction <= 50 && !isOver5);
+    // v3 ENHANCEMENT: Track pattern accuracy
+    if (modelPredictions.pattern.length > 0 && detectedPattern) {
+        const lastPattern = modelPredictions.pattern[modelPredictions.pattern.length - 1];
+        const patternCorrect = (lastPattern.prediction === 'OVER' && isOver5) || 
+                                (lastPattern.prediction === 'UNDER' && !isOver5);
         
-        modelPredictions.psf.push({ correct: psfCorrect });
-        if (modelPredictions.psf.length > 50) modelPredictions.psf.shift();
+        modelPredictions.pattern.push({ correct: patternCorrect });
+        if (modelPredictions.pattern.length > 50) modelPredictions.pattern.shift();
         
-        const correctCount = modelPredictions.psf.filter(p => p.correct).length;
-        modelAccuracies.psf = (correctCount / modelPredictions.psf.length) * 100;
-    }
-    
-    if (modelPredictions.lstm.length > 0) {
-        const lastLSTM = modelPredictions.lstm[modelPredictions.lstm.length - 1];
-        const lstmCorrect = (lastLSTM.prediction > 50 && isOver5) || 
-                             (lastLSTM.prediction <= 50 && !isOver5);
-        
-        modelPredictions.lstm.push({ correct: lstmCorrect });
-        if (modelPredictions.lstm.length > 50) modelPredictions.lstm.shift();
-        
-        const correctCount = modelPredictions.lstm.filter(p => p.correct).length;
-        modelAccuracies.lstm = (correctCount / modelPredictions.lstm.length) * 100;
+        const correctCount = modelPredictions.pattern.filter(p => p.correct).length;
+        modelAccuracies.pattern = (correctCount / modelPredictions.pattern.length) * 100;
     }
     
     updateModelPerformanceUI();
@@ -1935,8 +1459,7 @@ function updateModelPerformanceUI() {
     const heuristicEl = document.getElementById('heuristicPerf');
     const bayesianEl = document.getElementById('bayesianPerf');
     const markovEl = document.getElementById('markovPerf');
-    const psfEl = document.getElementById('psfPerf');
-    const lstmEl = document.getElementById('lstmPerf');
+    const patternEl = document.getElementById('patternPerf');
     
     if (modelAccuracies.heuristic > 0) {
         heuristicEl.innerHTML = `<span style="opacity:0.6">Heuristic</span><b style="color:#22c55e">${modelAccuracies.heuristic.toFixed(0)}%</b>`;
@@ -1953,14 +1476,9 @@ function updateModelPerformanceUI() {
         markovEl.className = modelAccuracies.markov >= 55 ? 'model-perf-high' : (modelAccuracies.markov < 45 ? 'model-perf-low' : '');
     }
     
-    if (modelAccuracies.psf > 0) {
-        psfEl.innerHTML = `<span style="opacity:0.6">PSF</span><b style="color:#f59e0b">${modelAccuracies.psf.toFixed(0)}%</b>`;
-        psfEl.className = modelAccuracies.psf >= 55 ? 'model-perf-high' : (modelAccuracies.psf < 45 ? 'model-perf-low' : '');
-    }
-    
-    if (modelAccuracies.lstm > 0) {
-        lstmEl.innerHTML = `<span style="opacity:0.6">LSTM</span><b style="color:#ec4899">${modelAccuracies.lstm.toFixed(0)}%</b>`;
-        lstmEl.className = modelAccuracies.lstm >= 55 ? 'model-perf-high' : (modelAccuracies.lstm < 45 ? 'model-perf-low' : '');
+    if (modelAccuracies.pattern > 0) {
+        patternEl.innerHTML = `<span style="opacity:0.6">Pattern</span><b style="color:#f59e0b">${modelAccuracies.pattern.toFixed(0)}%</b>`;
+        patternEl.className = modelAccuracies.pattern >= 55 ? 'model-perf-high' : (modelAccuracies.pattern < 45 ? 'model-perf-low' : '');
     }
 }
 
@@ -1975,7 +1493,7 @@ function addDigitToAnalyzer(digit) {
   if (extendedHistory.length > 5000) extendedHistory.pop();
   
   if (extendedHistory.length % 100 === 0) {
-    localStorage.setItem('extended_history_v12', JSON.stringify(extendedHistory));
+    localStorage.setItem('extended_history_v10', JSON.stringify(extendedHistory));
   }
   
   const isOver5 = digit > 5;
@@ -1989,22 +1507,18 @@ function addDigitToAnalyzer(digit) {
   volatilityWindow.unshift(digit);
   if (volatilityWindow.length > 100) volatilityWindow.pop();
   
+  // v3 ENHANCEMENT: Update digit statistics
   updateDigitStatisticsDisplay();
   evaluateMarketZone();
   
   updateAnalyzerDisplay();
-  
-  // Check if auto-training is needed
-  if (shouldAutoTrain()) {
-    autoTrainLSTM();
-  }
-  
   if (isAutoRunning && !isCycleCooldown) checkAndAutoTrade();
 }
 
 function checkAndAutoTrade() {
     if (currentContractId !== null) return;
     
+    // v3 ENHANCEMENT: Check market zone before trading
     const zone = evaluateMarketZone();
     if (zone === 'danger') {
         addLog("⚠️ DANGER ZONE - Skipping trade", "warn");
@@ -2041,7 +1555,7 @@ function checkAndAutoTrade() {
                 }
                 
                 if (activeFilters === 0) {
-                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) | Occ: ${detectedPattern.occurrences} - Trading NOW!`, "success");
+                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) | Occurrences: ${detectedPattern.occurrences} - Trading NOW!`, "success");
                     lastTradeTime = now;
                     placeTrade();
                     return;
@@ -2186,6 +1700,7 @@ function predictNextDigit() {
   });
   const weightedFreq = (weightedUnderScore / 10.5) * 100;
   
+  // v3 ENHANCEMENT: Apply streak count limits
   const minStreak = parseInt(document.getElementById('minStreakCount').value) || 3;
   const maxStreak = parseInt(document.getElementById('maxStreakCount').value) || 7;
   
@@ -2214,16 +1729,22 @@ function predictNextDigit() {
   
   document.getElementById('volatilityScore').textContent = volatilityLabel;
   
+  // v3 ENHANCEMENT: Add candlestick pattern detection
   let gravityBonus = 0;
   let trendLabel = 'Stable';
   if (digitHistory.length >= 3) {
+      // Rising pattern (bullish)
       if (digitHistory[0] > digitHistory[1] && digitHistory[1] > digitHistory[2]) {
           gravityBonus = 15;
           trendLabel = 'Rising';
-      } else if (digitHistory[0] < digitHistory[1] && digitHistory[1] < digitHistory[2]) {
+      } 
+      // Falling pattern (bearish)
+      else if (digitHistory[0] < digitHistory[1] && digitHistory[1] < digitHistory[2]) {
           gravityBonus = -10;
           trendLabel = 'Falling';
-      } else if (digitHistory.length >= 4) {
+      }
+      // Engulfing pattern
+      else if (digitHistory.length >= 4) {
           const diff1 = Math.abs(digitHistory[0] - digitHistory[1]);
           const diff2 = Math.abs(digitHistory[2] - digitHistory[3]);
           if (diff1 > diff2 * 1.5) {
@@ -2239,12 +1760,7 @@ function predictNextDigit() {
   const markovProb = calculateMarkovPrediction();
   document.getElementById('markovProb').textContent = markovProb.toFixed(0) + '%';
   
-  const psfResult = calculatePSFPrediction();
-  document.getElementById('psfProb').textContent = psfResult.prediction.toFixed(0) + '%';
-  
-  const lstmResult = calculateLSTMPrediction();
-  document.getElementById('lstmProb').textContent = lstmResult.prediction.toFixed(0) + '%';
-  
+  // v3 ENHANCEMENT: Add digit percentage check and RSI
   const percentages = calculateDigitPercentages();
   const minDigit69 = parseFloat(document.getElementById('minDigit69Percent').value) || 54;
   const rsi = calculateRSI(digitHistory, 14);
@@ -2252,20 +1768,27 @@ function predictNextDigit() {
   let heuristicConf = 0;
   let predText = 'WAIT';
   
+  // v3 ENHANCEMENT: Enhanced heuristic with new conditions
   if (overGap >= minStreak && overGap <= maxStreak) {
       predText = 'OVER 5';
       heuristicConf = 40 + (overGap * 9) + (weightedFreq * 0.1) + gravityBonus + volatilityPenalty;
       
+      // Add digit percentage bonus
       if (percentages.digit69 >= minDigit69) {
           heuristicConf += 10;
+          addLog(`Digit 6-9% (${percentages.digit69.toFixed(1)}%) >= threshold (${minDigit69}%) - Bonus applied`, "info");
       }
       
+      // Add RSI bonus
       if (rsi < 30) {
           heuristicConf += 10;
+          addLog(`RSI (${rsi}) oversold - Potential rebound bonus applied`, "info");
       }
       
+      // Even/odd bias bonus
       if (percentages.even > 60 && overGap >= minStreak) {
           heuristicConf += 5;
+          addLog(`Even bias detected (${percentages.even.toFixed(1)}%) - Bonus for digits 6,8`, "info");
       }
       
   } else if (overGap > maxStreak) {
@@ -2279,6 +1802,7 @@ function predictNextDigit() {
       }
   }
   
+  // v3 ENHANCEMENT: Apply volatility filter
   if (volatility > maxVolThreshold) {
       addLog(`High volatility (${volatility.toFixed(2)} > ${maxVolThreshold}) - Reducing confidence`, "warn");
   }
@@ -2286,15 +1810,11 @@ function predictNextDigit() {
   modelPredictions.heuristic.push({ prediction: predText });
   modelPredictions.bayesian.push({ prediction: bayesianProb });
   modelPredictions.markov.push({ prediction: markovProb });
-  modelPredictions.psf.push({ prediction: psfResult.prediction });
-  modelPredictions.lstm.push({ prediction: lstmResult.prediction });
   
   const ensembleScore = calculateEnsemblePrediction(
       Math.max(0, heuristicConf), 
       bayesianProb, 
-      markovProb,
-      psfResult.prediction,
-      lstmResult.prediction,
+      markovProb, 
       volatility
   );
   
@@ -2316,10 +1836,13 @@ function predictNextDigit() {
   detectedPattern = pattern;
   
   if (pattern) {
-      const fuzzyText = pattern.fuzzy ? ` (${pattern.method}, dist=${pattern.distance})` : '';
+      // v3 ENHANCEMENT: Track pattern predictions for accuracy
+      modelPredictions.pattern.push({ prediction: pattern.nextDigitClass });
+      
+      const fuzzyText = pattern.fuzzy ? ` (fuzzy, dist=${pattern.distance})` : '';
       const occText = ` [${pattern.occurrences}x seen]`;
       const classText = ` | Class: ${pattern.nextDigitClass}`;
-      document.getElementById('patternMatch').textContent = `Pattern: [${pattern.pattern}]${fuzzyText}${occText}${classText} → Next likely: ${pattern.nextDigit} (${pattern.confidence.toFixed(0)}%)`;
+      document.getElementById('patternMatch').textContent = `Pattern: [${pattern.pattern}]${fuzzyText}${occText}${classText} → Next likely: ${pattern.nextDigit} (${pattern.confidence}%)`;
   } else {
       document.getElementById('patternMatch').textContent = `No high-confidence patterns (need ${MIN_PATTERN_OCCURRENCES}+ occurrences, len ${MIN_PATTERN_LENGTH}+). Using ML ensemble.`;
   }
@@ -2328,7 +1851,8 @@ function predictNextDigit() {
 // ============ TRADING FUNCTIONS ============
 function placeTrade() {
   if (!isConnected || isCycleCooldown) return;
-    const stakeValue = parseFloat(document.getElementById('stake').value);
+  
+  const stakeValue = parseFloat(document.getElementById('stake').value);
   const tickValue = parseInt(document.getElementById('duration').value);
   const marketValue = currentMarketValue;
   const type = isReverseTradeActive ? 'DIGITUNDER' : 'DIGITOVER';
@@ -2354,8 +1878,8 @@ function placeTrade() {
           
           addLog(`🎮 VIRTUAL ${simulatedWin ? 'WIN' : 'LOSS'} | P/L: ${simulatedProfit.toFixed(2)}`, simulatedWin ? 'success' : 'error');
           
-          localStorage.setItem('trade_stats_v12', JSON.stringify(stats));
-          localStorage.setItem('trade_history_v12', document.getElementById('history').innerHTML);
+          localStorage.setItem('trade_stats_v10', JSON.stringify(stats));
+          localStorage.setItem('trade_history_v10', document.getElementById('history').innerHTML);
           
           checkRiskManagement();
       }, 2000);
@@ -2379,7 +1903,7 @@ function placeTrade() {
           confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% = Target | Occ: ${detectedPattern.occurrences}`;
       }
   } else {
-      confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence (Auto-LSTM Enhanced)`;
+      confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence`;
   }
   
   addLog(`🔴 LIVE: Executing ${type} trade with ${confidenceMsg}`, "info");
@@ -2411,22 +1935,15 @@ function toggleAuto() {
     localStorage.setItem('isAutoRunning', 'true');
     localStorage.setItem('autoStartTime', autoStartTime);
     shutdownUI.style.display = 'block';
-    addLog("ML Auto-Trade v4 Enabled (Auto-LSTM + PSF + DTW).", "success");
-    btn.textContent = 'Stop Auto'; 
-    btn.style.background = '#ef4444';
-    
-    // Check if LSTM training is needed when auto-trading starts
-    if (shouldAutoTrain()) {
-      autoTrainLSTM();
-    }
+    addLog("ML Auto-Trade v3 Enabled (Strategy Enhanced).", "success");
+    btn.textContent = 'Stop Auto'; btn.style.background = '#ef4444';
   } else {
     autoStartTime = null;
     localStorage.removeItem('isAutoRunning');
     localStorage.removeItem('autoStartTime');
     shutdownUI.style.display = 'none';
     addLog("Auto-Trade Stopped.", "warn");
-    btn.textContent = 'Start Auto'; 
-    btn.style.background = '#22c55e';
+    btn.textContent = 'Start Auto'; btn.style.background = '#22c55e';
   }
 }
 
@@ -2510,8 +2027,8 @@ function handleTradeResult(contract) {
   
   const historyLabel = isCurrentlyVirtualMode() ? `${isWin ? 'Win' : 'Loss'} (Virtual)` : (isWin ? 'Win' : 'Loss');
   addToHistory(stats.trades, historyLabel, profitLoss, contract.display_name || 'Market');
-  localStorage.setItem('trade_stats_v12', JSON.stringify(stats));
-  localStorage.setItem('trade_history_v12', document.getElementById('history').innerHTML);
+  localStorage.setItem('trade_stats_v10', JSON.stringify(stats));
+  localStorage.setItem('trade_history_v10', document.getElementById('history').innerHTML);
 
   const tp = parseFloat(document.getElementById('takeprofit').value);
   if (isMarketCycleActive && stats.profit >= tp) {
@@ -2605,8 +2122,6 @@ function startSessionTimer() {
     sessionStartTime = Date.now(); 
     timerIntervalId = setInterval(() => {
         updateSignalWindowTimer();
-        updateAutoTrainStatus();
-        
         const now = Date.now();
         const s = Math.floor((now - sessionStartTime) / 1000);
         document.getElementById('sessionTimer').textContent = `Session: ${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
@@ -2667,22 +2182,20 @@ function resetStats() {
         heuristic: 0,
         bayesian: 0,
         markov: 0,
-        psf: 0,
-        lstm: 0
+        pattern: 0
     };
     modelPredictions = {
         heuristic: [],
         bayesian: [],
         markov: [],
-        psf: [],
-        lstm: []
+        pattern: []
     };
     
     updateStats(); 
     updateModelPerformanceUI();
     document.getElementById('history').innerHTML = ''; 
-    localStorage.removeItem('trade_stats_v12');
-    localStorage.removeItem('trade_history_v12');
+    localStorage.removeItem('trade_stats_v10');
+    localStorage.removeItem('trade_history_v10');
     addLog("All stats reset.", "info");
     
     saveSettings();
@@ -2697,12 +2210,9 @@ function manualTrade() {
 }
 
 // ============ INITIALIZATION ============
-window.onload = async () => {
-  addLog("Initializing ML Enhanced Trading Bot v4 (Auto-LSTM + PSF + DTW)...", "info");
+window.onload = () => {
+  addLog("Initializing ML Enhanced Trading Bot v3 (Strategy Enhanced)...", "info");
   loadSettings();
-  
-  // Try to load saved LSTM model for current market
-  await loadLSTMModel();
   
   const ensembleMaxInput = document.getElementById('patternEnsembleMax');
   const ensembleMinInput = document.getElementById('patternEnsembleMin');
@@ -2746,26 +2256,20 @@ window.onload = async () => {
       setTimeout(connect, 1000); 
   }
   
-  addLog("✅ ML v4 Auto-LSTM Enhancements Applied:", "success");
-  addLog("- 🤖 AUTOMATED LSTM TRAINING: Triggers when auto-trade starts", "info");
-  addLog("- 📊 Market-Specific Settings: Optimized per market type", "info");
-  addLog("- ⏰ Auto-Retrain: Every 30 minutes during auto-trading", "info");
-  addLog("- 🎯 Best Settings: PSF window, epochs, sequence length auto-selected", "info");
-  addLog("- R_10: SeqLen=15, Epochs=25 | R_25: SeqLen=20, Epochs=30", "info");
-  addLog("- R_50: SeqLen=25, Epochs=35 | R_75: SeqLen=30, Epochs=40", "info");
-  addLog("- R_100: SeqLen=35, Epochs=45", "info");
-  addLog("- PSF (Pattern Sequence Forecasting) with adaptive K-nearest", "info");
-  addLog("- DTW (Dynamic Time Warping) for fuzzy pattern matching", "info");
-  addLog("- All original v3 features preserved", "info");
+  addLog("✅ ML v3 Strategy Enhancements Applied:", "success");
+  addLog("- Digit percentage thresholds (6-9% >= 54%)", "info");
+  addLog("- Streak limits (min 3, max 7 configurable)", "info");
+  addLog("- Even/odd bias detection", "info");
+  addLog("- RSI indicator with oversold/overbought signals", "info");
+  addLog("- Volatility filtering (avoid high volatility)", "info");
+  addLog("- Safe/Danger zone detection", "info");
+  addLog("- Candlestick pattern detection (rising/falling/engulfing)", "info");
+  addLog("- Classification approach (OVER/UNDER vs exact digits)", "info");
+  addLog("- Moving average smoothing", "info");
+  addLog("- Pattern accuracy tracking", "info");
+  addLog("- Market-specific threshold adjustments", "info");
   addLog("- 🎮 Virtual Trade Mode with auto-switch", "success");
-  
-  if (isLSTMTrained) {
-      addLog(`🧠 LSTM model for ${currentMarketValue} loaded and ready!`, "success");
-  } else {
-      addLog("⚠️ No LSTM model found. Will auto-train when you start auto-trading.", "warn");
-  }
-  
-  addLog("Ready to trade with automated ML training!", "success");
+  addLog("Ready to trade with enhanced strategies!", "success");
 };
 
 document.getElementById('logoutBtn').addEventListener('click', () => { 
