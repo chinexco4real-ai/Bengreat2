@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deriv Digit Over 5 Pro - Advanced ML Edition v3</title>
+<title>Deriv Digit Over 5 Pro - Advanced ML Edition v2</title>
 <style>
 /* --- STYLES PRESERVED --- */
 body { background: #020617; color: #e5e7eb; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
@@ -120,7 +120,7 @@ tbody tr:hover { background: #1e293b; }
 .specific-ensemble-grid input { text-align: center; padding: 8px; margin: 0; background: #1e293b; border: 2px solid #8b5cf6; }
 
 /* Model Performance Indicators */
-.model-performance { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 10px; }
+.model-performance { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 10px; }
 .model-performance > div { background: #1e293b; padding: 5px; border-radius: 4px; text-align: center; border: 1px solid #334155; }
 .model-perf-high { border-color: #22c55e; }
 .model-perf-low { border-color: #ef4444; }
@@ -136,20 +136,12 @@ tbody tr:hover { background: #1e293b; }
 .virtual-trade-stats b { font-size: 14px; display: block; margin-top: 2px; color: #8b5cf6; }
 .switch-notice { background: #22c55e; color: #020617; padding: 6px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; margin-top: 8px; display: none; }
 .switch-notice.active { display: block; }
-
-/* New Digit Percentage Display */
-.digit-percentage-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; padding: 10px; background: #1e293b; border-radius: 6px; }
-.digit-percentage-grid > div { text-align: center; padding: 5px; border-radius: 4px; background: #0f172a; }
-.digit-percentage-grid span { font-size: 10px; opacity: 0.7; display: block; }
-.digit-percentage-grid b { font-size: 14px; display: block; margin-top: 2px; }
-.safe-zone { background: #22c55e; color: #020617; padding: 6px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; margin-top: 8px; }
-.danger-zone { background: #ef4444; color: white; padding: 6px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; margin-top: 8px; }
 </style>
 </head>
 <body>
 <div class="app">
 
-<h2>Deriv Digit Over 5 Pro <span class="ml-indicator ml-active">ML Enhanced v3 (Advanced)</span></h2>
+<h2>Deriv Digit Over 5 Pro <span class="ml-indicator ml-active">ML Enhanced v2</span></h2>
 
 <div class="status-container">
     <div id="status" class="status disconnected">Disconnected</div>
@@ -212,7 +204,7 @@ tbody tr:hover { background: #1e293b; }
 </div>
 
 <div class="card">
-  <h3>📊 Advanced ML Analyzer v3 (Enhanced Strategies)</h3>
+  <h3>📊 Advanced ML Analyzer v2</h3>
   <div class="analyzer-grid" id="digitDisplay"></div>
   <div class="analyzer-stats">
     <div><span>Over 5</span><b id="overCount" style="color: #22c55e;">0</b></div>
@@ -220,19 +212,8 @@ tbody tr:hover { background: #1e293b; }
     <div><span>Over %</span><b id="overPercent" style="color: #22c55e;">0%</b></div>
   </div>
   
-  <!-- New Digit Percentage Display -->
-  <div class="digit-percentage-grid">
-    <div><span>D 6-9%</span><b id="digit69Percent" style="color: #22c55e;">0%</b></div>
-    <div><span>D 0-5%</span><b id="digit05Percent" style="color: #ef4444;">0%</b></div>
-    <div><span>Even%</span><b id="evenPercent" style="color: #3b82f6;">0%</b></div>
-    <div><span>Odd%</span><b id="oddPercent" style="color: #f59e0b;">0%</b></div>
-    <div><span>RSI</span><b id="rsiValue" style="color: #8b5cf6;">50</b></div>
-  </div>
-  
-  <div id="marketZone" style="display: none;"></div>
-  
   <div style="margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 8px; border: 2px solid #22c55e;">
-    <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #22c55e;">🔮 ML Prediction Engine v3 (Strategy Enhanced)</div>
+    <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #22c55e;">🔮 ML Prediction Engine v2</div>
     
     <div id="signalTimerDisplay" class="window-timer">SYNCING CLOCK...</div>
 
@@ -258,7 +239,6 @@ tbody tr:hover { background: #1e293b; }
       <div id="heuristicPerf"><span style="opacity:0.6">Heuristic</span><b style="color:#22c55e">--%</b></div>
       <div id="bayesianPerf"><span style="opacity:0.6">Bayesian</span><b style="color:#8b5cf6">--%</b></div>
       <div id="markovPerf"><span style="opacity:0.6">Markov</span><b style="color:#3b82f6">--%</b></div>
-      <div id="patternPerf"><span style="opacity:0.6">Pattern</span><b style="color:#f59e0b">--%</b></div>
     </div>
     
     <div style="margin-top: 8px; font-size: 11px; opacity: 0.7; text-align: center;" id="patternMatch">Analyzing patterns...</div>
@@ -269,7 +249,7 @@ tbody tr:hover { background: #1e293b; }
             <span style="cursor:pointer; color:#3b82f6" onclick="document.getElementById('logContainer').innerHTML=''">Clear</span>
         </div>
         <div class="log-container" id="logContainer">
-            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">ML Engine v3 Ready (Strategy Enhanced).</span></div>
+            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">ML Engine v2 Ready.</span></div>
         </div>
     </div>
   </div>
@@ -294,19 +274,6 @@ tbody tr:hover { background: #1e293b; }
       <input id="openingSec" class="save-setting" type="number" value="10" min="1" max="59">
     </div>
   </div>
-  
-  <!-- New Strategy Settings -->
-  <label>Minimum Digit 6-9% for Over-5 Trade</label>
-  <input id="minDigit69Percent" class="save-setting" type="number" value="54" min="0" max="100">
-  
-  <label>Maximum Volatility for Trading</label>
-  <input id="maxVolatilityThreshold" class="save-setting" type="number" value="2.5" min="0" max="10" step="0.1">
-  
-  <label>Minimum Streak Count for Trade</label>
-  <input id="minStreakCount" class="save-setting" type="number" value="3" min="1" max="10">
-  
-  <label>Maximum Streak Count (Cap)</label>
-  <input id="maxStreakCount" class="save-setting" type="number" value="7" min="1" max="20">
 
   <label>Confidence Selection Mode</label>
   <div class="radio-group" id="confidenceModeRadios">
@@ -379,7 +346,7 @@ tbody tr:hover { background: #1e293b; }
   </div>
 
   <div id="patternUI" style="display:none;">
-      <div class="pattern-mode-active">🎯 Pattern Detection Mode Active (v3 Enhanced)</div>
+      <div class="pattern-mode-active">🎯 Pattern Detection Mode Active</div>
       <label>Target Digits for Pattern Match (0-9)</label>
       <div class="pattern-target-grid">
           <input id="pattern1" class="save-setting" type="number" value="0" min="0" max="9" placeholder="Digit 1">
@@ -393,7 +360,7 @@ tbody tr:hover { background: #1e293b; }
       </div>
       
       <div class="ensemble-filter-box">
-          <label>⚡ Next Likely % Filter (Use ONE at a time)</label>
+        <label>⚡ Next Likely % Filter (Use ONE at a time)</label>
           <div class="ensemble-filter-grid">
               <div>
                   <span style="font-size: 10px; opacity: 0.7; display: block; margin-bottom: 3px;">Trade if ≤ (Less/Equal)</span>
@@ -556,7 +523,7 @@ let virtualLossStreak = 0;
 let hasSwatchedToLive = false;
 let virtualTradeHistory = [];
 
-// ============ ENHANCED ML VARIABLES v3 (STRATEGY ENHANCED) ============
+// ============ ENHANCED ML VARIABLES v2 ============
 let bayesianAlpha = 1;
 let bayesianBeta = 1;
 let markovTransitionMatrix = {};
@@ -571,14 +538,12 @@ let detectedPattern = null;
 let modelAccuracies = {
     heuristic: 0,
     bayesian: 0,
-    markov: 0,
-    pattern: 0
+    markov: 0
 };
 let modelPredictions = {
     heuristic: [],
     bayesian: [],
-    markov: [],
-    pattern: []
+    markov: []
 };
 
 // Advanced pattern detection
@@ -587,16 +552,6 @@ let patternDecayTimer = 0;
 
 // Decay factor for Bayesian
 const BAYESIAN_DECAY = 0.995;
-
-// OPTIMIZED CONSTANTS
-const MIN_PATTERN_LENGTH = 4;
-const MIN_PATTERN_OCCURRENCES = 3;
-const MIN_HISTORY_FOR_PATTERNS = 20;
-
-// NEW v3: Digit statistics tracking
-let digitCounts = Array(10).fill(0);
-let evenOddCounts = { even: 0, odd: 0 };
-let rsiValues = [];
 
 // ============ VIRTUAL TRADE FUNCTIONS ============
 function toggleVirtualTrade() {
@@ -646,14 +601,17 @@ function handleVirtualTradeResult(isWin) {
     if (!isVirtualTradeEnabled || hasSwatchedToLive) return;
     
     if (isWin) {
+        // Reset loss streak on win
         virtualLossStreak = 0;
         addLog("🎮 Virtual Trade WIN - Loss streak reset to 0", "success");
     } else {
+        // Increment loss streak on loss
         virtualLossStreak++;
         addLog(`🎮 Virtual Trade LOSS - Consecutive losses: ${virtualLossStreak}`, "error");
         
         const threshold = parseInt(document.getElementById('virtualLossThreshold').value) || 3;
         
+        // Check if we should switch to live
         if (virtualLossStreak >= threshold) {
             hasSwatchedToLive = true;
             addLog(`⚠️ SWITCHING TO LIVE ACCOUNT after ${virtualLossStreak} consecutive losses!`, "warn");
@@ -667,126 +625,6 @@ function handleVirtualTradeResult(isWin) {
 
 function isCurrentlyVirtualMode() {
     return isVirtualTradeEnabled && !hasSwatchedToLive;
-}
-
-// ============ NEW v3: DIGIT STATISTICS FUNCTIONS ============
-
-function calculateDigitPercentages() {
-    const totalDigits = digitHistory.length;
-    if (totalDigits === 0) return { digit69: 0, digit05: 0, even: 0, odd: 0 };
-    
-    // Count digits 6-9 (over 5)
-    const digit69Count = digitHistory.filter(d => d >= 6 && d <= 9).length;
-    const digit05Count = digitHistory.filter(d => d >= 0 && d <= 5).length;
-    
-    // Count even/odd
-    const evenCount = digitHistory.filter(d => d % 2 === 0).length;
-    const oddCount = digitHistory.filter(d => d % 2 !== 0).length;
-    
-    return {
-        digit69: (digit69Count / totalDigits) * 100,
-        digit05: (digit05Count / totalDigits) * 100,
-        even: (evenCount / totalDigits) * 100,
-        odd: (oddCount / totalDigits) * 100
-    };
-}
-
-function calculateRSI(data, period = 14) {
-    if (data.length < period + 1) return 50; // Default neutral
-    
-    const recentData = data.slice(0, period + 1);
-    let gains = 0;
-    let losses = 0;
-    
-    for (let i = 0; i < period; i++) {
-        const change = recentData[i] - recentData[i + 1];
-        if (change > 0) {
-            gains += change;
-        } else {
-            losses += Math.abs(change);
-        }
-    }
-    
-    const avgGain = gains / period;
-    const avgLoss = losses / period;
-    
-    if (avgLoss === 0) return 100;
-    
-    const rs = avgGain / avgLoss;
-    const rsi = 100 - (100 / (1 + rs));
-    
-    return Math.round(rsi);
-}
-
-function updateDigitStatisticsDisplay() {
-    const percentages = calculateDigitPercentages();
-    
-    document.getElementById('digit69Percent').textContent = percentages.digit69.toFixed(1) + '%';
-    document.getElementById('digit05Percent').textContent = percentages.digit05.toFixed(1) + '%';
-    document.getElementById('evenPercent').textContent = percentages.even.toFixed(1) + '%';
-    document.getElementById('oddPercent').textContent = percentages.odd.toFixed(1) + '%';
-    
-    const rsi = calculateRSI(digitHistory, 14);
-    document.getElementById('rsiValue').textContent = rsi;
-    
-    // Update RSI color based on value
-    const rsiEl = document.getElementById('rsiValue');
-    if (rsi < 30) {
-        rsiEl.style.color = '#22c55e'; // Oversold - potential buy
-    } else if (rsi > 70) {
-        rsiEl.style.color = '#ef4444'; // Overbought - potential sell
-    } else {
-        rsiEl.style.color = '#8b5cf6'; // Neutral
-    }
-}
-
-function evaluateMarketZone() {
-    if (digitHistory.length < 10) return null;
-    
-    const volatility = calculateVolatility(volatilityWindow, 50);
-    const maxVolThreshold = parseFloat(document.getElementById('maxVolatilityThreshold').value) || 2.5;
-    const recentLosses = stats.losses - stats.wins;
-    
-    const zoneEl = document.getElementById('marketZone');
-    
-    // Safe Zone: Low volatility, no recent losses, good digit percentages
-    const percentages = calculateDigitPercentages();
-    const minDigit69 = parseFloat(document.getElementById('minDigit69Percent').value) || 54;
-    
-    if (volatility <= maxVolThreshold && recentLosses <= 0 && percentages.digit69 >= minDigit69) {
-        zoneEl.className = 'safe-zone';
-        zoneEl.textContent = '✅ SAFE ZONE - Good trading conditions';
-        zoneEl.style.display = 'block';
-        return 'safe';
-    }
-    // Danger Zone: High volatility or recent losses
-    else if (volatility > maxVolThreshold || recentLosses > 2) {
-        zoneEl.className = 'danger-zone';
-        zoneEl.textContent = '⚠️ DANGER ZONE - Avoid trading or reduce stake';
-        zoneEl.style.display = 'block';
-        return 'danger';
-    } else {
-        zoneEl.style.display = 'none';
-        return 'neutral';
-    }
-}
-
-function applySimpleMovingAverage(data, period = 5) {
-    if (data.length < period) return data;
-    
-    const smoothed = [];
-    for (let i = 0; i < data.length; i++) {
-        if (i < period - 1) {
-            smoothed.push(data[i]);
-        } else {
-            let sum = 0;
-            for (let j = 0; j < period; j++) {
-                sum += data[i - j];
-            }
-            smoothed.push(sum / period);
-        }
-    }
-    return smoothed;
 }
 
 // ============ UTILITY FUNCTIONS ============
@@ -948,11 +786,11 @@ function saveSettings() {
         hasSwatchedToLive: hasSwatchedToLive
     };
     document.querySelectorAll('.save-setting').forEach(el => settings[el.id] = el.value);
-    localStorage.setItem('bot_settings_v10_ml', JSON.stringify(settings));
+    localStorage.setItem('bot_settings_v9_ml', JSON.stringify(settings));
 }
 
 function loadSettings() {
-    const saved = localStorage.getItem('bot_settings_v10_ml');
+    const saved = localStorage.getItem('bot_settings_v9_ml');
     if (saved) {
         const settings = JSON.parse(saved);
         for (const id in settings) {
@@ -978,6 +816,7 @@ function loadSettings() {
             }
         }
         
+        // Load virtual trade settings
         if (settings.virtualTradeEnabled !== undefined) {
             isVirtualTradeEnabled = settings.virtualTradeEnabled;
             document.getElementById('virtualTradeToggle').checked = isVirtualTradeEnabled;
@@ -996,10 +835,9 @@ function loadSettings() {
         
         updateVirtualTradeUI();
     }
-    
     toggleConfidenceUI();
     
-    const savedExtHistory = localStorage.getItem('extended_history_v10');
+    const savedExtHistory = localStorage.getItem('extended_history_v9');
     if(savedExtHistory) {
         try {
             extendedHistory = JSON.parse(savedExtHistory);
@@ -1010,23 +848,23 @@ function loadSettings() {
         }
     }
     
-    const savedHistory = localStorage.getItem('trade_history_v10');
+    const savedHistory = localStorage.getItem('trade_history_v9');
     if(savedHistory) document.getElementById('history').innerHTML = savedHistory;
     
-    const savedStats = localStorage.getItem('trade_stats_v10');
+    const savedStats = localStorage.getItem('trade_stats_v9');
     if(savedStats) { 
         stats = JSON.parse(savedStats); 
         updateStats(); 
     }
     
-    const savedBayesian = localStorage.getItem('bayesian_params_v10');
+    const savedBayesian = localStorage.getItem('bayesian_params_v9');
     if(savedBayesian) {
         const params = JSON.parse(savedBayesian);
         bayesianAlpha = params.alpha || 1;
         bayesianBeta = params.beta || 1;
     }
     
-    const savedMarkov = localStorage.getItem('markov_matrix_v10');
+    const savedMarkov = localStorage.getItem('markov_matrix_v9');
     if(savedMarkov) {
         try {
             markovTransitionMatrix = JSON.parse(savedMarkov);
@@ -1036,7 +874,7 @@ function loadSettings() {
         }
     }
     
-    const savedMarkov2nd = localStorage.getItem('markov_matrix_2nd_v10');
+    const savedMarkov2nd = localStorage.getItem('markov_matrix_2nd_v9');
     if(savedMarkov2nd) {
         try {
             markovTransitionMatrix2ndOrder = JSON.parse(savedMarkov2nd);
@@ -1142,7 +980,7 @@ function resumeAutoTrade() {
     addLog("Resuming Persistent Auto-Trade...", "success");
 }
 
-// ============ ENHANCED ML FUNCTIONS v3 (STRATEGY ENHANCED) ============
+// ============ ENHANCED ML FUNCTIONS v2 - CASCADING FALLBACK ENGINE ============
 
 function smoothOutliers(digit, history) {
     if (history.length < 10) return digit;
@@ -1181,7 +1019,7 @@ function updateBayesianModel(isOver5) {
     }
     
     if ((bayesianAlpha + bayesianBeta) % 20 < 1) {
-        localStorage.setItem('bayesian_params_v10', JSON.stringify({
+        localStorage.setItem('bayesian_params_v9', JSON.stringify({
             alpha: bayesianAlpha,
             beta: bayesianBeta
         }));
@@ -1209,8 +1047,8 @@ function updateMarkovModel(currentDigit) {
     }
     
     if (digitHistory.length % 50 === 0) {
-        localStorage.setItem('markov_matrix_v10', JSON.stringify(markovTransitionMatrix));
-        localStorage.setItem('markov_matrix_2nd_v10', JSON.stringify(markovTransitionMatrix2ndOrder));
+        localStorage.setItem('markov_matrix_v9', JSON.stringify(markovTransitionMatrix));
+        localStorage.setItem('markov_matrix_2nd_v9', JSON.stringify(markovTransitionMatrix2ndOrder));
     }
 }
 
@@ -1248,89 +1086,75 @@ function calculateMarkovPrediction() {
     return prediction;
 }
 
-function levenshtein(a, b) {
-    const matrix = Array(a.length + 1).fill(null).map(() => Array(b.length + 1).fill(0));
-    
-    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
-    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
-    
-    for (let i = 1; i <= a.length; i++) {
-        for (let j = 1; j <= b.length; j++) {
-            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-            matrix[i][j] = Math.min(
-                matrix[i - 1][j] + 1,
-                matrix[i][j - 1] + 1,
-                matrix[i - 1][j - 1] + cost
-            );
-        }
-    }
-    
-    return matrix[a.length][b.length];
-}
-
-// ============ ENHANCED PATTERN DETECTION v3 ============
+// ============ REVISED PATTERN ENGINE: CASCADING FALLBACK ============
 function detectPatterns() {
-    if (digitHistory.length < MIN_HISTORY_FOR_PATTERNS) return null;
-    
-    patternDecayTimer++;
-    
-    if (patternDecayTimer >= 100) {
-        patternDecayTimer = 0;
-        for (const key in patternCache) {
-            if (patternCache[key].count > 0) {
-                patternCache[key].count = Math.floor(patternCache[key].count * 0.5);
-                if (patternCache[key].count < 1) {
-                    delete patternCache[key];
+    // 1. Use whatever data we have. Even 15 ticks is enough for Level 1 analysis.
+    const sourceData = extendedHistory.length > 20 ? extendedHistory : digitHistory;
+    if (sourceData.length < 10) return null;
+
+    // 2. Define Scans: 3-digits (Specific) -> 2-digits (Context) -> 1-digit (Bias)
+    const scanDepths = [3, 2, 1]; 
+    const scanLimit = Math.min(sourceData.length, 2500);
+
+    for (let depth of scanDepths) {
+        const currentPattern = digitHistory.slice(0, depth);
+        
+        if (currentPattern.length < depth) continue;
+
+        let totalFound = 0;
+        let nextOverCount = 0;
+        let nextLikelyFreq = Array(10).fill(0);
+
+        // Scan history
+        for (let i = 1; i < scanLimit - depth - 1; i++) {
+            let isMatch = true;
+            for (let k = 0; k < depth; k++) {
+                if (sourceData[i + k] !== currentPattern[k]) {
+                    isMatch = false;
+                    break;
                 }
             }
-        }
-    }
-    
-    for (let len = MIN_PATTERN_LENGTH; len <= Math.min(10, digitHistory.length); len++) {
-        const pattern = digitHistory.slice(0, len);
-        const patternStr = pattern.join(',');
-        const cacheKey = `pattern_${len}_${patternStr}`;
-        
-        if (patternCache[cacheKey]) {
-            patternCache[cacheKey].count++;
-            patternCache[cacheKey].lastSeen = Date.now();
-        } else {
-            patternCache[cacheKey] = { count: 1, lastSeen: Date.now() };
-        }
-        
-        if (patternCache[cacheKey].count < MIN_PATTERN_OCCURRENCES) {
-            continue;
-        }
-        
-        for (let i = len; i <= digitHistory.length - len; i++) {
-            const comparePattern = digitHistory.slice(i, i + len);
-            const distance = levenshtein(pattern, comparePattern);
-            
-            const maxDistance = len <= 5 ? 0 : 1;
-            
-            if (distance <= maxDistance) {
-                if (i + len < digitHistory.length) {
-                    const nextDigit = digitHistory[i + len];
-                    
-                    // v3 ENHANCEMENT: Use classification approach
-                    const isNextOver5 = nextDigit > 5;
-                    
-                    const confidence = Math.min(95, 55 + (len * 4) + (patternCache[cacheKey]?.count || 0) * 2);
-                    
-                    return {
-                        pattern: patternStr,
-                        nextDigit: nextDigit,
-                        nextDigitClass: isNextOver5 ? 'OVER' : 'UNDER',
-                        confidence: confidence,
-                        fuzzy: distance > 0,
-                        distance: distance,
-                        occurrences: patternCache[cacheKey].count
-                    };
-                }
+
+            if (isMatch) {
+                totalFound++;
+                const nextDigit = sourceData[i - 1]; 
+                if (nextDigit > 5) nextOverCount++;
+                nextLikelyFreq[nextDigit]++;
             }
         }
+
+        // 3. REALISTIC Sample Requirements for ~500 ticks
+        // Depth 3 (1000 combos): If we saw this even TWICE before, it's a strong signal.
+        // Depth 2 (100 combos): Expect ~5 matches. Req 4.
+        // Depth 1 (10 combos): Expect ~50 matches. Req 5.
+        const minSamples = depth === 3 ? 2 : (depth === 2 ? 4 : 5);
+
+        if (totalFound >= minSamples) {
+            let probOver = (nextOverCount / totalFound) * 100;
+            
+            let bestDigit = -1;
+            let maxFreq = -1;
+            for(let d=0; d<=9; d++) {
+                if(nextLikelyFreq[d] > maxFreq) {
+                    maxFreq = nextLikelyFreq[d];
+                    bestDigit = d;
+                }
+            }
+
+            const patternStr = [...currentPattern].reverse().join('-');
+
+            // 4. ALWAYS return result if sample size is met. 
+            // We removed the strict ">60%" filter so the UI updates immediately.
+            return {
+                pattern: `N-Gram(${depth}): ${patternStr}`,
+                nextDigit: bestDigit,
+                confidence: probOver,
+                fuzzy: false,
+                distance: totalFound // Shows "Sample Size"
+            };
+        }
     }
-    
+
     return null;
 }
 
@@ -1404,9 +1228,8 @@ function updateModelAccuracies(actualResult) {
     
     if (modelPredictions.heuristic.length > 0) {
         const lastHeuristic = modelPredictions.heuristic[modelPredictions.heuristic.length - 1];
-        const heuristicCorrect = (lastHeuristic.prediction === 'OVER 5' && isOver5) || 
-                                  (lastHeuristic.prediction === 'WAIT' && !isOver5) ||
-                                  (lastHeuristic.prediction !== 'OVER 5' && !isOver5);
+        const heuristicCorrect = (lastHeuristic.prediction === 'OVER' && isOver5) || 
+                                  (lastHeuristic.prediction === 'UNDER' && !isOver5);
         
         modelPredictions.heuristic.push({ correct: heuristicCorrect });
         if (modelPredictions.heuristic.length > 50) modelPredictions.heuristic.shift();
@@ -1439,19 +1262,6 @@ function updateModelAccuracies(actualResult) {
         modelAccuracies.markov = (correctCount / modelPredictions.markov.length) * 100;
     }
     
-    // v3 ENHANCEMENT: Track pattern accuracy
-    if (modelPredictions.pattern.length > 0 && detectedPattern) {
-        const lastPattern = modelPredictions.pattern[modelPredictions.pattern.length - 1];
-        const patternCorrect = (lastPattern.prediction === 'OVER' && isOver5) || 
-                                (lastPattern.prediction === 'UNDER' && !isOver5);
-        
-        modelPredictions.pattern.push({ correct: patternCorrect });
-        if (modelPredictions.pattern.length > 50) modelPredictions.pattern.shift();
-        
-        const correctCount = modelPredictions.pattern.filter(p => p.correct).length;
-        modelAccuracies.pattern = (correctCount / modelPredictions.pattern.length) * 100;
-    }
-    
     updateModelPerformanceUI();
 }
 
@@ -1459,7 +1269,6 @@ function updateModelPerformanceUI() {
     const heuristicEl = document.getElementById('heuristicPerf');
     const bayesianEl = document.getElementById('bayesianPerf');
     const markovEl = document.getElementById('markovPerf');
-    const patternEl = document.getElementById('patternPerf');
     
     if (modelAccuracies.heuristic > 0) {
         heuristicEl.innerHTML = `<span style="opacity:0.6">Heuristic</span><b style="color:#22c55e">${modelAccuracies.heuristic.toFixed(0)}%</b>`;
@@ -1475,11 +1284,6 @@ function updateModelPerformanceUI() {
         markovEl.innerHTML = `<span style="opacity:0.6">Markov</span><b style="color:#3b82f6">${modelAccuracies.markov.toFixed(0)}%</b>`;
         markovEl.className = modelAccuracies.markov >= 55 ? 'model-perf-high' : (modelAccuracies.markov < 45 ? 'model-perf-low' : '');
     }
-    
-    if (modelAccuracies.pattern > 0) {
-        patternEl.innerHTML = `<span style="opacity:0.6">Pattern</span><b style="color:#f59e0b">${modelAccuracies.pattern.toFixed(0)}%</b>`;
-        patternEl.className = modelAccuracies.pattern >= 55 ? 'model-perf-high' : (modelAccuracies.pattern < 45 ? 'model-perf-low' : '');
-    }
 }
 
 // ============ DIGIT ANALYZER ============
@@ -1487,13 +1291,13 @@ function addDigitToAnalyzer(digit) {
   digit = smoothOutliers(digit, digitHistory);
   
   digitHistory.unshift(digit);
-  if (digitHistory.length > 100) digitHistory.pop();
+  if (digitHistory.length > 50) digitHistory.pop();
   
   extendedHistory.unshift(digit);
   if (extendedHistory.length > 5000) extendedHistory.pop();
   
   if (extendedHistory.length % 100 === 0) {
-    localStorage.setItem('extended_history_v10', JSON.stringify(extendedHistory));
+    localStorage.setItem('extended_history_v9', JSON.stringify(extendedHistory));
   }
   
   const isOver5 = digit > 5;
@@ -1507,23 +1311,12 @@ function addDigitToAnalyzer(digit) {
   volatilityWindow.unshift(digit);
   if (volatilityWindow.length > 100) volatilityWindow.pop();
   
-  // v3 ENHANCEMENT: Update digit statistics
-  updateDigitStatisticsDisplay();
-  evaluateMarketZone();
-  
   updateAnalyzerDisplay();
   if (isAutoRunning && !isCycleCooldown) checkAndAutoTrade();
 }
 
 function checkAndAutoTrade() {
     if (currentContractId !== null) return;
-    
-    // v3 ENHANCEMENT: Check market zone before trading
-    const zone = evaluateMarketZone();
-    if (zone === 'danger') {
-        addLog("⚠️ DANGER ZONE - Skipping trade", "warn");
-        return;
-    }
     
     if (currentConfidenceMode === 'pattern') {
         const now = Date.now();
@@ -1555,7 +1348,7 @@ function checkAndAutoTrade() {
                 }
                 
                 if (activeFilters === 0) {
-                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) | Occurrences: ${detectedPattern.occurrences} - Trading NOW!`, "success");
+                    addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) | All Filters: DISABLED - Trading NOW!`, "success");
                     lastTradeTime = now;
                     placeTrade();
                     return;
@@ -1563,7 +1356,7 @@ function checkAndAutoTrade() {
                 
                 if (maxNextLikely > 0) {
                     if (currentNextLikely <= maxNextLikely) {
-                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) ≤ ${maxNextLikely}% ✓ | Occ: ${detectedPattern.occurrences} - Trading NOW!`, "success");
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) ≤ ${maxNextLikely}% ✓ - Trading NOW!`, "success");
                         lastTradeTime = now;
                         placeTrade();
                     } else {
@@ -1574,7 +1367,7 @@ function checkAndAutoTrade() {
                 
                 if (minNextLikely > 0) {
                     if (currentNextLikely >= minNextLikely) {
-                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) ≥ ${minNextLikely}% ✓ | Occ: ${detectedPattern.occurrences} - Trading NOW!`, "success");
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) ≥ ${minNextLikely}% ✓ - Trading NOW!`, "success");
                         lastTradeTime = now;
                         placeTrade();
                     } else {
@@ -1593,7 +1386,7 @@ function checkAndAutoTrade() {
                     ].filter(v => !isNaN(v) && v >= 0 && v <= 100);
                     
                     if (specificTargets.includes(currentNextLikely)) {
-                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) = Target ✓ | Occ: ${detectedPattern.occurrences} - Trading NOW!`, "success");
+                        addLog(`Pattern Match! Next Likely: ${detectedPattern.nextDigit} (${currentNextLikely}%) = Target ✓ - Trading NOW!`, "success");
                         lastTradeTime = now;
                         placeTrade();
                     } else {
@@ -1665,15 +1458,12 @@ function checkAndAutoTrade() {
 function updateAnalyzerDisplay() {
   const container = document.getElementById('digitDisplay');
   container.innerHTML = '';
-  const displayLimit = Math.min(50, digitHistory.length);
-  
-  for (let i = 0; i < displayLimit; i++) {
-    const digit = digitHistory[i];
+  digitHistory.forEach(digit => {
     const box = document.createElement('div');
     box.className = 'digit-box ' + (digit > 5 ? 'digit-over' : 'digit-under');
     box.textContent = digit;
     container.appendChild(box);
-  }
+  });
   
   const overCount = digitHistory.filter(d => d > 5).length;
   document.getElementById('overCount').textContent = overCount;
@@ -1700,10 +1490,6 @@ function predictNextDigit() {
   });
   const weightedFreq = (weightedUnderScore / 10.5) * 100;
   
-  // v3 ENHANCEMENT: Apply streak count limits
-  const minStreak = parseInt(document.getElementById('minStreakCount').value) || 3;
-  const maxStreak = parseInt(document.getElementById('maxStreakCount').value) || 7;
-  
   let overGap = 0;
   for (let d of digitHistory) {
       if (d <= 5) overGap++;
@@ -1711,15 +1497,13 @@ function predictNextDigit() {
   }
   
   const volatility = calculateVolatility(volatilityWindow, 50);
-  const maxVolThreshold = parseFloat(document.getElementById('maxVolatilityThreshold').value) || 2.5;
-  
   let volatilityLabel = 'Low';
   let volatilityPenalty = 0;
   
   if (volatility > 3.0) {
       volatilityLabel = 'Extreme';
       volatilityPenalty = -20;
-  } else if (volatility > maxVolThreshold) {
+  } else if (volatility > 2.5) {
       volatilityLabel = 'High';
       volatilityPenalty = -15;
   } else if (volatility > 1.8) {
@@ -1729,28 +1513,15 @@ function predictNextDigit() {
   
   document.getElementById('volatilityScore').textContent = volatilityLabel;
   
-  // v3 ENHANCEMENT: Add candlestick pattern detection
   let gravityBonus = 0;
   let trendLabel = 'Stable';
   if (digitHistory.length >= 3) {
-      // Rising pattern (bullish)
       if (digitHistory[0] > digitHistory[1] && digitHistory[1] > digitHistory[2]) {
           gravityBonus = 15;
           trendLabel = 'Rising';
-      } 
-      // Falling pattern (bearish)
-      else if (digitHistory[0] < digitHistory[1] && digitHistory[1] < digitHistory[2]) {
+      } else if (digitHistory[0] < digitHistory[1] && digitHistory[1] < digitHistory[2]) {
           gravityBonus = -10;
           trendLabel = 'Falling';
-      }
-      // Engulfing pattern
-      else if (digitHistory.length >= 4) {
-          const diff1 = Math.abs(digitHistory[0] - digitHistory[1]);
-          const diff2 = Math.abs(digitHistory[2] - digitHistory[3]);
-          if (diff1 > diff2 * 1.5) {
-              gravityBonus += 8;
-              trendLabel = 'Engulfing';
-          }
       }
   }
   
@@ -1760,51 +1531,15 @@ function predictNextDigit() {
   const markovProb = calculateMarkovPrediction();
   document.getElementById('markovProb').textContent = markovProb.toFixed(0) + '%';
   
-  // v3 ENHANCEMENT: Add digit percentage check and RSI
-  const percentages = calculateDigitPercentages();
-  const minDigit69 = parseFloat(document.getElementById('minDigit69Percent').value) || 54;
-  const rsi = calculateRSI(digitHistory, 14);
-  
   let heuristicConf = 0;
   let predText = 'WAIT';
   
-  // v3 ENHANCEMENT: Enhanced heuristic with new conditions
-  if (overGap >= minStreak && overGap <= maxStreak) {
+  if (overGap >= 3) {
       predText = 'OVER 5';
       heuristicConf = 40 + (overGap * 9) + (weightedFreq * 0.1) + gravityBonus + volatilityPenalty;
-      
-      // Add digit percentage bonus
-      if (percentages.digit69 >= minDigit69) {
-          heuristicConf += 10;
-          addLog(`Digit 6-9% (${percentages.digit69.toFixed(1)}%) >= threshold (${minDigit69}%) - Bonus applied`, "info");
-      }
-      
-      // Add RSI bonus
-      if (rsi < 30) {
-          heuristicConf += 10;
-          addLog(`RSI (${rsi}) oversold - Potential rebound bonus applied`, "info");
-      }
-      
-      // Even/odd bias bonus
-      if (percentages.even > 60 && overGap >= minStreak) {
-          heuristicConf += 5;
-          addLog(`Even bias detected (${percentages.even.toFixed(1)}%) - Bonus for digits 6,8`, "info");
-      }
-      
-  } else if (overGap > maxStreak) {
-      addLog(`Streak (${overGap}) exceeds max cap (${maxStreak}) - Skipping to avoid overconfidence`, "warn");
   } else if (weightedFreq > 70) {
       predText = 'OVER 5';
       heuristicConf = 45 + (weightedFreq - 70) + gravityBonus + volatilityPenalty;
-      
-      if (percentages.digit69 >= minDigit69) {
-          heuristicConf += 10;
-      }
-  }
-  
-  // v3 ENHANCEMENT: Apply volatility filter
-  if (volatility > maxVolThreshold) {
-      addLog(`High volatility (${volatility.toFixed(2)} > ${maxVolThreshold}) - Reducing confidence`, "warn");
   }
   
   modelPredictions.heuristic.push({ prediction: predText });
@@ -1828,23 +1563,35 @@ function predictNextDigit() {
   
   document.getElementById('nextDigitPrediction').textContent = predText;
   document.getElementById('nextDigitPrediction').style.color = predText === 'OVER 5' ? '#22c55e' : '#f59e0b';
-  document.getElementById('predictionConfidence').textContent = `${lastPredictionConfidence.toFixed(0)}% (Ensemble) | ${trendLabel}`;
+  document.getElementById('predictionConfidence').textContent = `${lastPredictionConfidence.toFixed(0)}% (Ensemble)`;
   document.getElementById('freqScore').textContent = weightedFreq.toFixed(0) + '%';
   document.getElementById('cycleScore').textContent = overGap;
   
+  // ============ UPDATED PATTERN DISPLAY WITH VISUAL INDICATORS ============
   const pattern = detectPatterns();
   detectedPattern = pattern;
   
   if (pattern) {
-      // v3 ENHANCEMENT: Track pattern predictions for accuracy
-      modelPredictions.pattern.push({ prediction: pattern.nextDigitClass });
+      const sampleSize = pattern.distance;
+      const confidence = pattern.confidence;
       
-      const fuzzyText = pattern.fuzzy ? ` (fuzzy, dist=${pattern.distance})` : '';
-      const occText = ` [${pattern.occurrences}x seen]`;
-      const classText = ` | Class: ${pattern.nextDigitClass}`;
-      document.getElementById('patternMatch').textContent = `Pattern: [${pattern.pattern}]${fuzzyText}${occText}${classText} → Next likely: ${pattern.nextDigit} (${pattern.confidence}%)`;
+      // Visual indicators for strength
+      let color = '#94a3b8'; // Grey (Weak)
+      let strength = "Weak";
+
+      if (confidence >= 60 || confidence <= 40) {
+          color = '#f59e0b'; // Orange (Moderate)
+          strength = "Mod";
+      }
+      if (confidence >= 70 || confidence <= 30) {
+          color = '#22c55e'; // Green (Strong)
+          strength = "Strong";
+      }
+
+      document.getElementById('patternMatch').innerHTML = 
+          `<span style="color:#3b82f6">${pattern.pattern}:</span> Sample: <b>${sampleSize}</b> | Over 5: <b style="color:${color}">${confidence.toFixed(1)}%</b> [${strength}]`;
   } else {
-      document.getElementById('patternMatch').textContent = `No high-confidence patterns (need ${MIN_PATTERN_OCCURRENCES}+ occurrences, len ${MIN_PATTERN_LENGTH}+). Using ML ensemble.`;
+      document.getElementById('patternMatch').textContent = `Building pattern history... (${extendedHistory.length} ticks)`;
   }
 }
 
@@ -1857,9 +1604,11 @@ function placeTrade() {
   const marketValue = currentMarketValue;
   const type = isReverseTradeActive ? 'DIGITUNDER' : 'DIGITOVER';
   
+  // Virtual trade simulation
   if (isCurrentlyVirtualMode()) {
       addLog(`🎮 VIRTUAL TRADE SIMULATED (Not placing real trade)`, "warn");
       
+      // Simulate random result for virtual trade (50/50 chance)
       setTimeout(() => {
           const simulatedWin = Math.random() > 0.5;
           const simulatedProfit = simulatedWin ? stakeValue * 0.95 : -stakeValue;
@@ -1878,8 +1627,8 @@ function placeTrade() {
           
           addLog(`🎮 VIRTUAL ${simulatedWin ? 'WIN' : 'LOSS'} | P/L: ${simulatedProfit.toFixed(2)}`, simulatedWin ? 'success' : 'error');
           
-          localStorage.setItem('trade_stats_v10', JSON.stringify(stats));
-          localStorage.setItem('trade_history_v10', document.getElementById('history').innerHTML);
+          localStorage.setItem('trade_stats_v9', JSON.stringify(stats));
+          localStorage.setItem('trade_history_v9', document.getElementById('history').innerHTML);
           
           checkRiskManagement();
       }, 2000);
@@ -1887,6 +1636,7 @@ function placeTrade() {
       return;
   }
   
+  // Real trade
   let confidenceMsg = '';
   if (currentConfidenceMode === 'pattern' && detectedPattern) {
       const maxNextLikely = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
@@ -1894,13 +1644,13 @@ function placeTrade() {
       const nextLikelyPercent = Math.round(detectedPattern.confidence);
       
       if (maxNextLikely === 0 && minNextLikely === 0 && !isSpecificEnsembleActive) {
-          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} (${nextLikelyPercent}%) | Occ: ${detectedPattern.occurrences} | Filters: OFF`;
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} (${nextLikelyPercent}%) | Filters: OFF`;
       } else if (maxNextLikely > 0) {
-          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% ≤ ${maxNextLikely}% | Occ: ${detectedPattern.occurrences}`;
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% ≤ ${maxNextLikely}%`;
       } else if (minNextLikely > 0) {
-          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% ≥ ${minNextLikely}% | Occ: ${detectedPattern.occurrences}`;
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% ≥ ${minNextLikely}%`;
       } else if (isSpecificEnsembleActive) {
-          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% = Target | Occ: ${detectedPattern.occurrences}`;
+          confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% = Target`;
       }
   } else {
       confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence`;
@@ -1935,7 +1685,7 @@ function toggleAuto() {
     localStorage.setItem('isAutoRunning', 'true');
     localStorage.setItem('autoStartTime', autoStartTime);
     shutdownUI.style.display = 'block';
-    addLog("ML Auto-Trade v3 Enabled (Strategy Enhanced).", "success");
+    addLog("ML Auto-Trade v2 Enabled.", "success");
     btn.textContent = 'Stop Auto'; btn.style.background = '#ef4444';
   } else {
     autoStartTime = null;
@@ -2014,6 +1764,7 @@ function handleTradeResult(contract) {
   const tradeMode = isCurrentlyVirtualMode() ? "VIRTUAL" : "LIVE";
   addLog(`${tradeMode} RESULT: ${isWin ? 'WIN' : 'LOSS'} | P/L: ${profitLoss.toFixed(2)}`, isWin ? 'success' : 'error');
   
+  // Handle virtual trade tracking
   handleVirtualTradeResult(isWin);
   
   stats.trades++; 
@@ -2027,8 +1778,8 @@ function handleTradeResult(contract) {
   
   const historyLabel = isCurrentlyVirtualMode() ? `${isWin ? 'Win' : 'Loss'} (Virtual)` : (isWin ? 'Win' : 'Loss');
   addToHistory(stats.trades, historyLabel, profitLoss, contract.display_name || 'Market');
-  localStorage.setItem('trade_stats_v10', JSON.stringify(stats));
-  localStorage.setItem('trade_history_v10', document.getElementById('history').innerHTML);
+  localStorage.setItem('trade_stats_v9', JSON.stringify(stats));
+  localStorage.setItem('trade_history_v9', document.getElementById('history').innerHTML);
 
   const tp = parseFloat(document.getElementById('takeprofit').value);
   if (isMarketCycleActive && stats.profit >= tp) {
@@ -2174,6 +1925,7 @@ function resetStats() {
     stats = { trades: 0, wins: 0, losses: 0, profit: 0 }; 
     recentWinRates = [];
     
+    // Reset virtual trade tracking
     virtualLossStreak = 0;
     hasSwatchedToLive = false;
     updateVirtualTradeUI();
@@ -2181,21 +1933,19 @@ function resetStats() {
     modelAccuracies = {
         heuristic: 0,
         bayesian: 0,
-        markov: 0,
-        pattern: 0
+        markov: 0
     };
     modelPredictions = {
         heuristic: [],
         bayesian: [],
-        markov: [],
-        pattern: []
+        markov: []
     };
     
     updateStats(); 
     updateModelPerformanceUI();
     document.getElementById('history').innerHTML = ''; 
-    localStorage.removeItem('trade_stats_v10');
-    localStorage.removeItem('trade_history_v10');
+    localStorage.removeItem('trade_stats_v9');
+    localStorage.removeItem('trade_history_v9');
     addLog("All stats reset.", "info");
     
     saveSettings();
@@ -2211,7 +1961,7 @@ function manualTrade() {
 
 // ============ INITIALIZATION ============
 window.onload = () => {
-  addLog("Initializing ML Enhanced Trading Bot v3 (Strategy Enhanced)...", "info");
+  addLog("Initializing ML Enhanced Trading Bot v2 with Virtual Trade...", "info");
   loadSettings();
   
   const ensembleMaxInput = document.getElementById('patternEnsembleMax');
@@ -2236,6 +1986,7 @@ window.onload = () => {
       }
   });
   
+  // Virtual loss threshold listener
   const virtualThresholdInput = document.getElementById('virtualLossThreshold');
   if (virtualThresholdInput) {
       virtualThresholdInput.addEventListener('input', () => {
@@ -2256,20 +2007,17 @@ window.onload = () => {
       setTimeout(connect, 1000); 
   }
   
-  addLog("✅ ML v3 Strategy Enhancements Applied:", "success");
-  addLog("- Digit percentage thresholds (6-9% >= 54%)", "info");
-  addLog("- Streak limits (min 3, max 7 configurable)", "info");
-  addLog("- Even/odd bias detection", "info");
-  addLog("- RSI indicator with oversold/overbought signals", "info");
-  addLog("- Volatility filtering (avoid high volatility)", "info");
-  addLog("- Safe/Danger zone detection", "info");
-  addLog("- Candlestick pattern detection (rising/falling/engulfing)", "info");
-  addLog("- Classification approach (OVER/UNDER vs exact digits)", "info");
-  addLog("- Moving average smoothing", "info");
-  addLog("- Pattern accuracy tracking", "info");
-  addLog("- Market-specific threshold adjustments", "info");
-  addLog("- 🎮 Virtual Trade Mode with auto-switch", "success");
-  addLog("Ready to trade with enhanced strategies!", "success");
+  addLog("✅ ML v2 Enhancements Loaded:", "success");
+  addLog("- Cascading Fallback Pattern Engine (3→2→1 depth)", "info");
+  addLog("- Extended history: 5000 ticks", "info");
+  addLog("- Outlier detection & smoothing active", "info");
+  addLog("- 2nd-order Markov chain enabled", "info");
+  addLog("- Adaptive ensemble weighting", "info");
+  addLog("- Model performance tracking", "info");
+  addLog("- Pattern Mode uses Next Likely % for filters", "info");
+  addLog("- Visual strength indicators for patterns", "success");
+  addLog("- 🎮 Virtual Trade Mode with auto-switch feature", "success");
+  addLog("Ready to trade with enhanced accuracy!", "success");
 };
 
 document.getElementById('logoutBtn').addEventListener('click', () => { 
