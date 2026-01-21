@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deriv Digit Over 5 Pro - Advanced ML Edition v2</title>
+<title>Deriv Digit Over 5 Pro - Advanced ML Edition v3.3</title>
 <style>
 /* --- STYLES PRESERVED --- */
 body { background: #020617; color: #e5e7eb; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
@@ -43,7 +43,6 @@ tbody tr:hover { background: #1e293b; }
 .balance-display span { opacity: 0.7; font-size: 14px; }
 .balance-display b { color: #22c55e; font-size: 18px; margin: 0 5px; }
 .session-timer { margin-top: 8px; font-size: 12px; color: #f59e0b; font-weight: 600; }
-.shutdown-timer { font-size: 12px; color: #ef4444; font-weight: 700; margin-top: 4px; display: none; }
 .reset-button-permanent { background: #f59e0b !important; width: 100%; margin-bottom: 12px; font-size: 15px; display: block; }
 .reset-button-permanent:hover { background: #d97706 !important; }
 .analyzer-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; margin: 10px 0; }
@@ -70,7 +69,6 @@ tbody tr:hover { background: #1e293b; }
 .cycle-timer-display { color: #f59e0b; font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 10px; display: none; padding: 8px; border: 2px dashed #f59e0b; border-radius: 8px; background: rgba(245, 158, 11, 0.1); }
 .specific-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 10px; }
 .specific-grid input { text-align: center; padding: 8px 0; margin: 0; }
-.window-timer { margin-top: 10px; font-size: 12px; text-align: center; font-weight: 800; padding: 8px; border-radius: 6px; background: #020617; border: 2px solid #334155; transition: all 0.3s; }
 
 /* Sequence UI Styles */
 .sequence-slot { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
@@ -136,12 +134,55 @@ tbody tr:hover { background: #1e293b; }
 .virtual-trade-stats b { font-size: 14px; display: block; margin-top: 2px; color: #8b5cf6; }
 .switch-notice { background: #22c55e; color: #020617; padding: 6px; border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; margin-top: 8px; display: none; }
 .switch-notice.active { display: block; }
+
+/* Histogram Display */
+.histogram-container { background: #0f172a; border: 2px solid #3b82f6; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.histogram-header { font-size: 13px; font-weight: 700; color: #3b82f6; margin-bottom: 8px; text-align: center; }
+.histogram-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.histogram-bar { display: flex; flex-direction: column; align-items: center; }
+.histogram-bar-fill { width: 100%; background: #22c55e; border-radius: 4px; transition: all 0.3s; position: relative; }
+.histogram-bar-fill.low { background: #ef4444; }
+.histogram-bar-fill.medium { background: #f59e0b; }
+.histogram-digit { font-size: 10px; font-weight: 700; margin-top: 4px; }
+.histogram-count { font-size: 9px; opacity: 0.7; }
+.histogram-bias { text-align: center; margin-top: 8px; padding: 6px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+.histogram-bias.favorable { background: #22c55e; color: #020617; }
+.histogram-bias.unfavorable { background: #ef4444; color: white; }
+.histogram-bias.neutral { background: #334155; color: #e5e7eb; }
+
+/* Histogram Toggle */
+.histogram-toggle-container { background: #1e293b; padding: 8px; border-radius: 6px; margin-top: 8px; }
+
+/* Regime Indicator */
+.regime-indicator { background: #1e293b; padding: 8px; border-radius: 6px; margin-top: 8px; text-align: center; }
+.regime-indicator .regime-label { font-size: 10px; opacity: 0.7; }
+.regime-indicator .regime-value { font-size: 14px; font-weight: 700; margin-top: 4px; }
+.regime-random { color: #ef4444; }
+.regime-structured { color: #22c55e; }
+.regime-transitioning { color: #f59e0b; }
+
+/* Feature Importance */
+.feature-importance { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 9px; }
+.feature-importance > div { background: #1e293b; padding: 4px; border-radius: 4px; text-align: center; }
+.feature-high { border: 1px solid #22c55e; }
+.feature-low { opacity: 0.5; }
+
+/* Confidence Calibration Display */
+.calibration-display { background: #0f172a; padding: 6px; border-radius: 4px; margin-top: 8px; text-align: center; font-size: 10px; }
+.calibration-display .cal-label { opacity: 0.7; }
+.calibration-display .cal-value { font-weight: 700; color: #8b5cf6; margin-top: 2px; }
+
+/* NEW: Prediction Gap Mode Styles */
+.prediction-gap-container { background: #0f172a; border: 2px solid #06b6d4; border-radius: 6px; padding: 10px; margin-top: 10px; display: none; }
+.prediction-gap-container.active { display: block; }
+.slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.slot-grid input { text-align: center; padding: 8px; margin: 0; background: #1e293b; border: 2px solid #06b6d4; }
 </style>
 </head>
 <body>
 <div class="app">
 
-<h2>Deriv Digit Over 5 Pro <span class="ml-indicator ml-active">ML Enhanced v2</span></h2>
+<h2>Deriv Digit Over 5 Pro <span class="ml-indicator ml-active">ML Enhanced v3.3</span></h2>
 
 <div class="status-container">
     <div id="status" class="status disconnected">Disconnected</div>
@@ -153,7 +194,6 @@ tbody tr:hover { background: #1e293b; }
   <b id="balance">0.00</b>
   <span id="balanceCurrency">USD</span>
   <div id="sessionTimer" class="session-timer">Session: 00:00:00</div>
-  <div id="shutdownDisplay" class="shutdown-timer">Shutdown in: --:--:--</div>
 </div>
 
 <div class="card">
@@ -203,8 +243,36 @@ tbody tr:hover { background: #1e293b; }
   </div>
 </div>
 
+<!-- Histogram Display -->
+<div class="histogram-container">
+  <div class="histogram-header">📊 Digit Histogram (Last 1000 Ticks)</div>
+  <div class="histogram-grid" id="histogramDisplay">
+    <!-- Generated dynamically -->
+  </div>
+  <div class="histogram-bias" id="histogramBias">Collecting data...</div>
+  
+  <!-- Histogram Filter Toggle -->
+  <div class="histogram-toggle-container">
+    <div class="toggle-container" style="margin: 0;">
+      <span class="toggle-label">Enable Histogram Filter</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="histogramFilterToggle" onchange="toggleHistogramFilter()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div style="font-size: 10px; opacity: 0.7; margin-top: 6px; text-align: center;">
+      When enabled, blocks trades if histogram shows unfavorable bias
+    </div>
+  </div>
+  
+  <div class="regime-indicator">
+    <div class="regime-label">Market Regime</div>
+    <div class="regime-value" id="regimeValue">Initializing...</div>
+  </div>
+</div>
+
 <div class="card">
-  <h3>📊 Advanced ML Analyzer v2</h3>
+  <h3>📊 Advanced ML Analyzer v3.3</h3>
   <div class="analyzer-grid" id="digitDisplay"></div>
   <div class="analyzer-stats">
     <div><span>Over 5</span><b id="overCount" style="color: #22c55e;">0</b></div>
@@ -213,9 +281,7 @@ tbody tr:hover { background: #1e293b; }
   </div>
   
   <div style="margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 8px; border: 2px solid #22c55e;">
-    <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #22c55e;">🔮 ML Prediction Engine v2</div>
-    
-    <div id="signalTimerDisplay" class="window-timer">SYNCING CLOCK...</div>
+    <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #22c55e;">🔮 ML Prediction Engine v3.3</div>
 
     <div style="background: #0f172a; padding: 10px; border-radius: 6px; margin-bottom: 8px; margin-top: 8px;">
       <div style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">Next Digit Prediction:</div>
@@ -231,14 +297,26 @@ tbody tr:hover { background: #1e293b; }
     <div class="advanced-stats">
       <div><span style="opacity:0.6">Bayesian Prob</span><b id="bayesianProb" style="color:#8b5cf6">50%</b></div>
       <div><span style="opacity:0.6">Markov Pred</span><b id="markovProb" style="color:#3b82f6">50%</b></div>
+      <div><span style="opacity:0.6">LightGBM</span><b id="lgbmScore" style="color:#f59e0b">50%</b></div>
       <div><span style="opacity:0.6">Ensemble</span><b id="ensembleScore" style="color:#22c55e">50%</b></div>
-      <div><span style="opacity:0.6">Confidence Adj</span><b id="confAdj" style="color:#f59e0b">0%</b></div>
     </div>
     
     <div class="model-performance">
       <div id="heuristicPerf"><span style="opacity:0.6">Heuristic</span><b style="color:#22c55e">--%</b></div>
       <div id="bayesianPerf"><span style="opacity:0.6">Bayesian</span><b style="color:#8b5cf6">--%</b></div>
       <div id="markovPerf"><span style="opacity:0.6">Markov</span><b style="color:#3b82f6">--%</b></div>
+    </div>
+    
+    <div class="calibration-display">
+      <div class="cal-label">Calibrated Confidence</div>
+      <div class="cal-value" id="calibratedConf">--</div>
+    </div>
+    
+    <div class="feature-importance">
+      <div id="featFreq"><span>Freq: --</span></div>
+      <div id="featGap"><span>Gap: --</span></div>
+      <div id="featBayes"><span>Bayes: --</span></div>
+      <div id="featMarkov"><span>Markov: --</span></div>
     </div>
     
     <div style="margin-top: 8px; font-size: 11px; opacity: 0.7; text-align: center;" id="patternMatch">Analyzing patterns...</div>
@@ -249,7 +327,7 @@ tbody tr:hover { background: #1e293b; }
             <span style="cursor:pointer; color:#3b82f6" onclick="document.getElementById('logContainer').innerHTML=''">Clear</span>
         </div>
         <div class="log-container" id="logContainer">
-            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">ML Engine v2 Ready.</span></div>
+            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">ML Engine v3.3 Ready.</span></div>
         </div>
     </div>
   </div>
@@ -263,17 +341,6 @@ tbody tr:hover { background: #1e293b; }
   <input id="duration" class="save-setting" type="number" value="1" min="1" max="10">
   <label>Cooldown (seconds)</label>
   <input id="cooldown" class="save-setting" type="number" value="2" min="1">
-  
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-    <div>
-      <label>Window: Closing (Sec)</label>
-      <input id="closingSec" class="save-setting" type="number" value="10" min="1" max="59">
-    </div>
-    <div>
-      <label>Window: Opening (Sec)</label>
-      <input id="openingSec" class="save-setting" type="number" value="10" min="1" max="59">
-    </div>
-  </div>
 
   <label>Confidence Selection Mode</label>
   <div class="radio-group" id="confidenceModeRadios">
@@ -292,6 +359,10 @@ tbody tr:hover { background: #1e293b; }
       <div class="radio-option" onclick="selectConfidenceMode('pattern')">
           <input type="radio" name="confidenceMode" value="pattern" id="modePattern">
           <label for="modePattern">Mode 4: Pattern Detection (Next Likely Digit)</label>
+      </div>
+      <div class="radio-option" onclick="selectConfidenceMode('predictionGap')">
+          <input type="radio" name="confidenceMode" value="predictionGap" id="modePredictionGap">
+          <label for="modePredictionGap">Mode 5: Prediction % + Gap Count (6 Slots)</label>
       </div>
   </div>
 
@@ -414,6 +485,96 @@ tbody tr:hover { background: #1e293b; }
       </div>
   </div>
 
+  <!-- NEW: Mode 5 - Prediction % + Gap Count -->
+  <div id="predictionGapUI" class="prediction-gap-container">
+      <div style="background: #06b6d4; color: white; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 10px; font-weight: 700;">
+          ⚡ Mode 5: Prediction % + Gap Count (6 Slots)
+      </div>
+      
+      <div style="font-size: 11px; opacity: 0.8; margin-bottom: 10px; line-height: 1.4;">
+          Each slot checks BOTH prediction % range AND gap count. Trade triggers when ANY slot matches BOTH conditions.
+      </div>
+      
+      <div class="sequence-slot" style="border-color: #06b6d4;">
+          <div class="sequence-slot-title" style="color: #06b6d4;">Slot 1</div>
+          <div class="slot-grid">
+              <div><span style="font-size:9px">Prediction % Min</span><input id="pg_s1_pred_min" class="save-setting" type="number" value="55" min="0" max="100"></div>
+              <div><span style="font-size:9px">Prediction % Max</span><input id="pg_s1_pred_max" class="save-setting" type="number" value="70" min="0" max="100"></div>
+          </div>
+          <div style="margin-top: 5px;">
+              <span style="font-size:9px; display: block; margin-bottom: 3px;">Gap Count (Exact)</span>
+              <input id="pg_s1_gap" class="save-setting" type="number" value="3" min="0" max="50" style="width: 100%; text-align: center;">
+          </div>
+      </div>
+
+      <div class="sequence-slot" style="border-color: #06b6d4;">
+          <div class="sequence-slot-title" style="color: #06b6d4;">Slot 2</div>
+          <div class="slot-grid">
+              <div><span style="font-size:9px">Prediction % Min</span><input id="pg_s2_pred_min" class="save-setting" type="number" value="60" min="0" max="100"></div>
+              <div><span style="font-size:9px">Prediction % Max</span><input id="pg_s2_pred_max" class="save-setting" type="number" value="80" min="0" max="100"></div>
+          </div>
+          <div style="margin-top: 5px;">
+              <span style="font-size:9px; display: block; margin-bottom: 3px;">Gap Count (Exact)</span>
+              <input id="pg_s2_gap" class="save-setting" type="number" value="5" min="0" max="50" style="width: 100%; text-align: center;">
+          </div>
+      </div>
+
+      <div class="sequence-slot" style="border-color: #06b6d4;">
+          <div class="sequence-slot-title" style="color: #06b6d4;">Slot 3</div>
+          <div class="slot-grid">
+              <div><span style="font-size:9px">Prediction % Min</span><input id="pg_s3_pred_min" class="save-setting" type="number" value="65" min="0" max="100"></div>
+              <div><span style="font-size:9px">Prediction % Max</span><input id="pg_s3_pred_max" class="save-setting" type="number" value="85" min="0" max="100"></div>
+          </div>
+          <div style="margin-top: 5px;">
+              <span style="font-size:9px; display: block; margin-bottom: 3px;">Gap Count (Exact)</span>
+              <input id="pg_s3_gap" class="save-setting" type="number" value="7" min="0" max="50" style="width: 100%; text-align: center;">
+          </div>
+      </div>
+
+      <div class="sequence-slot" style="border-color: #06b6d4;">
+          <div class="sequence-slot-title" style="color: #06b6d4;">Slot 4</div>
+          <div class="slot-grid">
+              <div><span style="font-size:9px">Prediction % Min</span><input id="pg_s4_pred_min" class="save-setting" type="number" value="70" min="0" max="100"></div>
+              <div><span style="font-size:9px">Prediction % Max</span><input id="pg_s4_pred_max" class="save-setting" type="number" value="90" min="0" max="100"></div>
+          </div>
+          <div style="margin-top: 5px;">
+              <span style="font-size:9px; display: block; margin-bottom: 3px;">Gap Count (Exact)</span>
+              <input id="pg_s4_gap" class="save-setting" type="number" value="10" min="0" max="50" style="width: 100%; text-align: center;">
+          </div>
+      </div>
+
+      <div class="sequence-slot" style="border-color: #06b6d4;">
+          <div class="sequence-slot-title" style="color: #06b6d4;">Slot 5</div>
+          <div class="slot-grid">
+              <div><span style="font-size:9px">Prediction % Min</span><input id="pg_s5_pred_min" class="save-setting" type="number" value="50" min="0" max="100"></div>
+              <div><span style="font-size:9px">Prediction % Max</span><input id="pg_s5_pred_max" class="save-setting" type="number" value="65" min="0" max="100"></div>
+          </div>
+          <div style="margin-top: 5px;">
+              <span style="font-size:9px; display: block; margin-bottom: 3px;">Gap Count (Exact)</span>
+              <input id="pg_s5_gap" class="save-setting" type="number" value="4" min="0" max="50" style="width: 100%; text-align: center;">
+          </div>
+      </div>
+
+      <div class="sequence-slot" style="border-color: #06b6d4;">
+          <div class="sequence-slot-title" style="color: #06b6d4;">Slot 6</div>
+          <div class="slot-grid">
+              <div><span style="font-size:9px">Prediction % Min</span><input id="pg_s6_pred_min" class="save-setting" type="number" value="75" min="0" max="100"></div>
+              <div><span style="font-size:9px">Prediction % Max</span><input id="pg_s6_pred_max" class="save-setting" type="number" value="95" min="0" max="100"></div>
+          </div>
+          <div style="margin-top: 5px;">
+              <span style="font-size:9px; display: block; margin-bottom: 3px;">Gap Count (Exact)</span>
+              <input id="pg_s6_gap" class="save-setting" type="number" value="12" min="0" max="50" style="width: 100%; text-align: center;">
+          </div>
+      </div>
+
+      <div style="background: #1e293b; padding: 8px; border-radius: 4px; margin-top: 10px; font-size: 10px; line-height: 1.4;">
+          <strong style="color: #06b6d4;">How it works:</strong><br>
+          • Each slot checks if prediction % is within range <strong>AND</strong> gap count matches exactly<br>
+          • Trade executes if <strong>ANY</strong> slot's conditions are met<br>
+          • Example: Slot 1 = Pred 55-70% + Gap=3 → Trades only when BOTH match
+      </div>
+  </div>
+
   <label>Market</label>
   <div class="radio-group" id="marketRadios">
       <div class="radio-option" onclick="selectMarket('R_10')">
@@ -445,8 +606,6 @@ tbody tr:hover { background: #1e293b; }
   <input id="stoploss" class="save-setting" type="number" value="10" min="1">
   <label>Take Profit ($)</label>
   <input id="takeprofit" class="save-setting" type="number" value="10" min="1">
-  <label>Auto Trade Duration (Hours) - [0 = Unlimited]</label>
-  <input id="autoDurationHrs" class="save-setting" type="number" value="1" min="0" step="0.01">
 </div>
 
 <button onclick="toggleMarketCycle()" id="cycleBtn" class="btn-cycle">Auto Market Cycle: OFF</button>
@@ -496,7 +655,6 @@ let accountBalance = 0;
 let stats = { trades: 0, wins: 0, losses: 0, profit: 0 };
 let digitHistory = [];
 let sessionStartTime = null;
-let autoStartTime = null; 
 let timerIntervalId = null;
 let isExplicitLogout = false;
 let lastPredictionConfidence = 0; 
@@ -507,6 +665,7 @@ let lastRequestTime = 0;
 let currentConfidenceMode = 'range';
 let currentMarketValue = 'R_10';
 let isSpecificEnsembleActive = false;
+let currentGapCount = 0;
 
 let isMarketCycleActive = false;
 let isCooldownLoopActive = false;
@@ -515,7 +674,6 @@ const marketSequence = ["R_10", "R_25", "R_50", "R_75", "R_100"];
 let currentMarketIndex = 0;
 let isReverseTradeActive = false;
 let cycleTimerId = null;
-let isSignalWindowOpen = false;
 
 // ============ VIRTUAL TRADE VARIABLES ============
 let isVirtualTradeEnabled = false;
@@ -523,7 +681,7 @@ let virtualLossStreak = 0;
 let hasSwatchedToLive = false;
 let virtualTradeHistory = [];
 
-// ============ ENHANCED ML VARIABLES v2 ============
+// ============ ENHANCED ML VARIABLES v3.3 ============
 let bayesianAlpha = 1;
 let bayesianBeta = 1;
 let markovTransitionMatrix = {};
@@ -538,12 +696,14 @@ let detectedPattern = null;
 let modelAccuracies = {
     heuristic: 0,
     bayesian: 0,
-    markov: 0
+    markov: 0,
+    lgbm: 0
 };
 let modelPredictions = {
     heuristic: [],
     bayesian: [],
-    markov: []
+    markov: [],
+    lgbm: []
 };
 
 // Advanced pattern detection
@@ -552,6 +712,83 @@ let patternDecayTimer = 0;
 
 // Decay factor for Bayesian
 const BAYESIAN_DECAY = 0.995;
+
+// Histogram-based entry filter with toggle
+let digitHistogram = Array(10).fill(0);
+let histogramWindow = 1000;
+let histogramBias = 'neutral';
+let isHistogramFilterEnabled = false;
+
+// Regime Detection
+let marketRegime = 'initializing';
+let regimeHistory = [];
+
+// Feature Importance Tracking
+let featureImportance = {
+    frequency: 0,
+    gap: 0,
+    bayesian: 0,
+    markov: 0,
+    pattern: 0
+};
+let featureWinCounts = {
+    frequency: 0,
+    gap: 0,
+    bayesian: 0,
+    markov: 0,
+    pattern: 0
+};
+let featureTotalCounts = {
+    frequency: 0,
+    gap: 0,
+    bayesian: 0,
+    markov: 0,
+    pattern: 0
+};
+
+// Confidence Calibration
+let calibrationData = [];
+let calibrationCurve = null;
+
+// Multi-Scale Patterns
+let microPatterns = [];
+let mesoPatterns = [];
+let macroPatterns = [];
+
+// Weighted Temporal Patterns
+const TEMPORAL_DECAY = 0.98;
+
+// LightGBM-style feature engineering
+let rollingFeatures = {
+    mean_10: 0,
+    mean_20: 0,
+    mean_50: 0,
+    std_10: 0,
+    std_20: 0,
+    ema_10: 0,
+    ema_20: 0,
+    roc_5: 0,
+    roc_10: 0,
+    autocorr_1: 0,
+    autocorr_2: 0
+};
+
+// HMM States
+let hmmStates = ['random', 'structured', 'transitioning'];
+let currentHMMState = 'random';
+let hmmTransitionProbs = {
+    'random': { 'random': 0.7, 'structured': 0.2, 'transitioning': 0.1 },
+    'structured': { 'random': 0.1, 'structured': 0.7, 'transitioning': 0.2 },
+    'transitioning': { 'random': 0.3, 'structured': 0.3, 'transitioning': 0.4 }
+};
+
+// Stacking Meta-Learner weights
+let stackingWeights = {
+    heuristic: 0.25,
+    bayesian: 0.25,
+    markov: 0.25,
+    lgbm: 0.25
+};
 
 // ============ VIRTUAL TRADE FUNCTIONS ============
 function toggleVirtualTrade() {
@@ -601,17 +838,14 @@ function handleVirtualTradeResult(isWin) {
     if (!isVirtualTradeEnabled || hasSwatchedToLive) return;
     
     if (isWin) {
-        // Reset loss streak on win
         virtualLossStreak = 0;
         addLog("🎮 Virtual Trade WIN - Loss streak reset to 0", "success");
     } else {
-        // Increment loss streak on loss
         virtualLossStreak++;
         addLog(`🎮 Virtual Trade LOSS - Consecutive losses: ${virtualLossStreak}`, "error");
         
         const threshold = parseInt(document.getElementById('virtualLossThreshold').value) || 3;
         
-        // Check if we should switch to live
         if (virtualLossStreak >= threshold) {
             hasSwatchedToLive = true;
             addLog(`⚠️ SWITCHING TO LIVE ACCOUNT after ${virtualLossStreak} consecutive losses!`, "warn");
@@ -627,6 +861,549 @@ function isCurrentlyVirtualMode() {
     return isVirtualTradeEnabled && !hasSwatchedToLive;
 }
 
+// ============ HISTOGRAM FUNCTIONS WITH TOGGLE ============
+function toggleHistogramFilter() {
+    isHistogramFilterEnabled = document.getElementById('histogramFilterToggle').checked;
+    
+    if (isHistogramFilterEnabled) {
+        addLog("📊 Histogram Filter ENABLED - Will block unfavorable trades", "success");
+    } else {
+        addLog("📊 Histogram Filter DISABLED - Histogram for display only", "warn");
+    }
+    
+    saveSettings();
+}
+
+function updateHistogram(digit) {
+    digitHistogram[digit]++;
+    
+    const total = digitHistogram.reduce((a, b) => a + b, 0);
+    if (total > histogramWindow) {
+        const oldestIndex = Math.floor(Math.random() * 10);
+        if (digitHistogram[oldestIndex] > 0) {
+            digitHistogram[oldestIndex]--;
+        }
+    }
+    
+    displayHistogram();
+    calculateHistogramBias();
+}
+
+function displayHistogram() {
+    const container = document.getElementById('histogramDisplay');
+    if (!container) return;
+    
+    const total = digitHistogram.reduce((a, b) => a + b, 0);
+    if (total === 0) return;
+    
+    const maxCount = Math.max(...digitHistogram);
+    container.innerHTML = '';
+    
+    digitHistogram.forEach((count, digit) => {
+        const percentage = (count / total) * 100;
+        const height = (count / maxCount) * 60;
+        
+        const bar = document.createElement('div');
+        bar.className = 'histogram-bar';
+        
+        let barClass = '';
+        if (percentage < 8) barClass = 'low';
+        else if (percentage < 10) barClass = 'medium';
+        
+        bar.innerHTML = `
+            <div class="histogram-bar-fill ${barClass}" style="height: ${height}px;"></div>
+            <div class="histogram-digit">${digit}</div>
+            <div class="histogram-count">${count}</div>
+        `;
+        
+        container.appendChild(bar);
+    });
+}
+
+function calculateHistogramBias() {
+    const total = digitHistogram.reduce((a, b) => a + b, 0);
+    if (total < 100) {
+        histogramBias = 'neutral';
+        updateHistogramBiasDisplay();
+        return;
+    }
+    
+    const under5Count = digitHistogram.slice(0, 6).reduce((a, b) => a + b, 0);
+    const over5Count = digitHistogram.slice(6, 10).reduce((a, b) => a + b, 0);
+    
+    const under5Percent = (under5Count / total) * 100;
+    const over5Percent = (over5Count / total) * 100;
+    
+    const imbalanceThreshold = 20;
+    
+    if (under5Percent < (50 - imbalanceThreshold / 2)) {
+        histogramBias = 'favorable_over';
+    } else if (over5Percent < (50 - imbalanceThreshold / 2)) {
+        histogramBias = 'favorable_under';
+    } else {
+        histogramBias = 'neutral';
+    }
+    
+    updateHistogramBiasDisplay();
+}
+
+function updateHistogramBiasDisplay() {
+    const biasEl = document.getElementById('histogramBias');
+    if (!biasEl) return;
+    
+    const total = digitHistogram.reduce((a, b) => a + b, 0);
+    const under5Count = digitHistogram.slice(0, 6).reduce((a, b) => a + b, 0);
+    const over5Count = digitHistogram.slice(6, 10).reduce((a, b) => a + b, 0);
+    const under5Percent = total > 0 ? ((under5Count / total) * 100).toFixed(1) : 0;
+    const over5Percent = total > 0 ? ((over5Count / total) * 100).toFixed(1) : 0;
+    
+    if (histogramBias === 'favorable_over') {
+        biasEl.className = 'histogram-bias favorable';
+        biasEl.textContent = `✅ FAVORABLE for Over 5 (Under: ${under5Percent}% | Over: ${over5Percent}%)`;
+    } else if (histogramBias === 'favorable_under') {
+        biasEl.className = 'histogram-bias unfavorable';
+        biasEl.textContent = `⚠️ UNFAVORABLE for Over 5 (Under: ${under5Percent}% | Over: ${over5Percent}%)`;
+    } else {
+        biasEl.className = 'histogram-bias neutral';
+        biasEl.textContent = `⚪ NEUTRAL (Under: ${under5Percent}% | Over: ${over5Percent}%)`;
+    }
+}
+
+// ============ REGIME DETECTION ============
+function detectMarketRegime() {
+    if (digitHistory.length < 50) {
+        marketRegime = 'initializing';
+        updateRegimeDisplay();
+        return;
+    }
+    
+    const recentDigits = digitHistory.slice(0, 50);
+    
+    const digitCounts = Array(10).fill(0);
+    recentDigits.forEach(d => digitCounts[d]++);
+    
+    const entropy = calculateEntropy(digitCounts);
+    
+    let longestRun = 1;
+    let currentRun = 1;
+    for (let i = 1; i < recentDigits.length; i++) {
+        if (recentDigits[i] === recentDigits[i-1]) {
+            currentRun++;
+            longestRun = Math.max(longestRun, currentRun);
+        } else {
+            currentRun = 1;
+        }
+    }
+    
+    let changeCount = 0;
+    for (let i = 1; i < recentDigits.length; i++) {
+        if (recentDigits[i] !== recentDigits[i-1]) changeCount++;
+    }
+    const changeFrequency = changeCount / recentDigits.length;
+    
+    if (entropy > 3.0 && changeFrequency > 0.85) {
+        marketRegime = 'random';
+    } else if (entropy < 2.5 && longestRun > 5) {
+        marketRegime = 'structured';
+    } else {
+        marketRegime = 'transitioning';
+    }
+    
+    regimeHistory.push(marketRegime);
+    if (regimeHistory.length > 20) regimeHistory.shift();
+    
+    updateRegimeDisplay();
+}
+
+function calculateEntropy(counts) {
+    const total = counts.reduce((a, b) => a + b, 0);
+    if (total === 0) return 0;
+    
+    let entropy = 0;
+    counts.forEach(count => {
+        if (count > 0) {
+            const p = count / total;
+            entropy -= p * Math.log2(p);
+        }
+    });
+    
+    return entropy;
+}
+
+function updateRegimeDisplay() {
+    const regimeEl = document.getElementById('regimeValue');
+    if (!regimeEl) return;
+    
+    let regimeText = '';
+    let regimeClass = '';
+    
+    switch(marketRegime) {
+        case 'random':
+            regimeText = '🎲 Random (High Entropy)';
+            regimeClass = 'regime-random';
+            break;
+        case 'structured':
+            regimeText = '📊 Structured (Low Entropy)';
+            regimeClass = 'regime-structured';
+            break;
+        case 'transitioning':
+            regimeText = '⚡ Transitioning';
+            regimeClass = 'regime-transitioning';
+            break;
+        default:
+            regimeText = '🔄 Initializing...';
+            regimeClass = '';
+    }
+    
+    regimeEl.textContent = regimeText;
+    regimeEl.className = 'regime-value ' + regimeClass;
+}
+
+// ============ FEATURE IMPORTANCE TRACKING ============
+function updateFeatureImportance(features, isWin) {
+    if (features.frequency) {
+        featureTotalCounts.frequency++;
+        if (isWin) featureWinCounts.frequency++;
+    }
+    
+    if (features.gap) {
+        featureTotalCounts.gap++;
+        if (isWin) featureWinCounts.gap++;
+    }
+    
+    if (features.bayesian) {
+        featureTotalCounts.bayesian++;
+        if (isWin) featureWinCounts.bayesian++;
+    }
+    
+    if (features.markov) {
+        featureTotalCounts.markov++;
+        if (isWin) featureWinCounts.markov++;
+    }
+    
+    if (features.pattern) {
+        featureTotalCounts.pattern++;
+        if (isWin) featureWinCounts.pattern++;
+    }
+    
+    for (let feature in featureImportance) {
+        if (featureTotalCounts[feature] > 0) {
+            featureImportance[feature] = (featureWinCounts[feature] / featureTotalCounts[feature]) * 100;
+        }
+    }
+    
+    updateFeatureImportanceDisplay();
+}
+
+function updateFeatureImportanceDisplay() {
+    const freqEl = document.getElementById('featFreq');
+    const gapEl = document.getElementById('featGap');
+    const bayesEl = document.getElementById('featBayes');
+    const markovEl = document.getElementById('featMarkov');
+    
+    if (freqEl && featureImportance.frequency > 0) {
+        freqEl.innerHTML = `<span>Freq: ${featureImportance.frequency.toFixed(0)}%</span>`;
+        freqEl.className = featureImportance.frequency >= 55 ? 'feature-high' : 'feature-low';
+    }
+    
+    if (gapEl && featureImportance.gap > 0) {
+        gapEl.innerHTML = `<span>Gap: ${featureImportance.gap.toFixed(0)}%</span>`;
+        gapEl.className = featureImportance.gap >= 55 ? 'feature-high' : 'feature-low';
+    }
+    
+    if (bayesEl && featureImportance.bayesian > 0) {
+        bayesEl.innerHTML = `<span>Bayes: ${featureImportance.bayesian.toFixed(0)}%</span>`;
+        bayesEl.className = featureImportance.bayesian >= 55 ? 'feature-high' : 'feature-low';
+    }
+    
+    if (markovEl && featureImportance.markov > 0) {
+        markovEl.innerHTML = `<span>Markov: ${featureImportance.markov.toFixed(0)}%</span>`;
+        markovEl.className = featureImportance.markov >= 55 ? 'feature-high' : 'feature-low';
+    }
+}
+
+// ============ CONFIDENCE CALIBRATION ============
+function calibrateConfidence(rawConfidence) {
+    if (calibrationData.length < 20) {
+        return rawConfidence;
+    }
+    
+    const bins = [0, 40, 45, 50, 55, 60, 65, 70, 75, 80, 100];
+    const binIndex = bins.findIndex(bin => rawConfidence <= bin) - 1;
+    
+    if (binIndex < 0 || binIndex >= bins.length - 1) {
+        return rawConfidence;
+    }
+    
+    const binData = calibrationData.filter(d => 
+        d.predicted >= bins[binIndex] && d.predicted < bins[binIndex + 1]
+    );
+    
+    if (binData.length < 3) {
+        return rawConfidence;
+    }
+    
+    const actualWinRate = binData.filter(d => d.actual === 1).length / binData.length;
+    const calibratedConf = actualWinRate * 100;
+    
+    return calibratedConf;
+}
+
+function addCalibrationData(predicted, actual) {
+    calibrationData.push({ predicted, actual });
+    
+    if (calibrationData.length > 200) {
+        calibrationData.shift();
+    }
+}
+
+function updateCalibrationDisplay(calibrated) {
+    const calEl = document.getElementById('calibratedConf');
+    if (calEl) {
+        calEl.textContent = `${calibrated.toFixed(1)}%`;
+    }
+}
+
+// ============ ROLLING FEATURES (LightGBM-style) ============
+function calculateRollingFeatures() {
+    if (digitHistory.length < 10) return;
+    
+    const recent10 = digitHistory.slice(0, 10);
+    const recent20 = digitHistory.slice(0, Math.min(20, digitHistory.length));
+    const recent50 = digitHistory.slice(0, Math.min(50, digitHistory.length));
+    
+    rollingFeatures.mean_10 = recent10.reduce((a, b) => a + b, 0) / recent10.length;
+    rollingFeatures.mean_20 = recent20.reduce((a, b) => a + b, 0) / recent20.length;
+    rollingFeatures.mean_50 = recent50.reduce((a, b) => a + b, 0) / recent50.length;
+    
+    const variance10 = recent10.reduce((sum, val) => sum + Math.pow(val - rollingFeatures.mean_10, 2), 0) / recent10.length;
+    rollingFeatures.std_10 = Math.sqrt(variance10);
+    
+    const variance20 = recent20.reduce((sum, val) => sum + Math.pow(val - rollingFeatures.mean_20, 2), 0) / recent20.length;
+    rollingFeatures.std_20 = Math.sqrt(variance20);
+    
+    if (digitHistory.length === 1) {
+        rollingFeatures.ema_10 = digitHistory[0];
+        rollingFeatures.ema_20 = digitHistory[0];
+    } else {
+        const alpha10 = 2 / (10 + 1);
+        const alpha20 = 2 / (20 + 1);
+        rollingFeatures.ema_10 = alpha10 * digitHistory[0] + (1 - alpha10) * rollingFeatures.ema_10;
+        rollingFeatures.ema_20 = alpha20 * digitHistory[0] + (1 - alpha20) * rollingFeatures.ema_20;
+    }
+    
+    if (digitHistory.length >= 5) {
+        rollingFeatures.roc_5 = ((digitHistory[0] - digitHistory[4]) / (digitHistory[4] + 0.1)) * 100;
+    }
+    if (digitHistory.length >= 10) {
+        rollingFeatures.roc_10 = ((digitHistory[0] - digitHistory[9]) / (digitHistory[9] + 0.1)) * 100;
+    }
+    
+    if (digitHistory.length >= 20) {
+        rollingFeatures.autocorr_1 = calculateAutocorrelation(digitHistory.slice(0, 20), 1);
+        rollingFeatures.autocorr_2 = calculateAutocorrelation(digitHistory.slice(0, 20), 2);
+    }
+}
+
+function calculateAutocorrelation(data, lag) {
+    if (data.length <= lag) return 0;
+    
+    const mean = data.reduce((a, b) => a + b, 0) / data.length;
+    let numerator = 0;
+    let denominator = 0;
+    
+    for (let i = 0; i < data.length - lag; i++) {
+        numerator += (data[i] - mean) * (data[i + lag] - mean);
+    }
+    
+    for (let i = 0; i < data.length; i++) {
+        denominator += Math.pow(data[i] - mean, 2);
+    }
+    
+    return denominator !== 0 ? numerator / denominator : 0;
+}
+
+// ============ LIGHTGBM-STYLE PREDICTION ============
+function calculateLightGBMPrediction() {
+    if (digitHistory.length < 20) return 50;
+    
+    calculateRollingFeatures();
+    
+    let score = 50;
+    
+    const meanDeviation = rollingFeatures.mean_10 - 4.5;
+    if (meanDeviation < -0.5) {
+        score += 8;
+    } else if (meanDeviation > 0.5) {
+        score -= 5;
+    }
+    
+    if (rollingFeatures.std_10 < 2.0) {
+        score += 5;
+    } else if (rollingFeatures.std_10 > 3.0) {
+        score -= 8;
+    }
+    
+    if (rollingFeatures.ema_10 < rollingFeatures.ema_20) {
+        score += 6;
+    }
+    
+    if (rollingFeatures.roc_5 < -10) {
+        score += 7;
+    } else if (rollingFeatures.roc_5 > 10) {
+        score -= 6;
+    }
+    
+    if (rollingFeatures.autocorr_1 < -0.2) {
+        score += 5;
+    }
+    
+    const recent10 = digitHistory.slice(0, 10);
+    const over5Count = recent10.filter(d => d > 5).length;
+    const over5Ratio = over5Count / 10;
+    
+    if (over5Ratio < 0.3) {
+        score += 12;
+    } else if (over5Ratio > 0.7) {
+        score -= 10;
+    }
+    
+    if (marketRegime === 'random') {
+        score *= 0.85;
+    } else if (marketRegime === 'structured') {
+        score *= 1.1;
+    }
+    
+    return Math.min(98, Math.max(2, score));
+}
+
+// ============ IMPROVED PATTERN DETECTION v3.3 ============
+function detectMultiScalePatterns() {
+    if (digitHistory.length < 10) return null;
+    
+    const sourceData = extendedHistory.length > 100 ? extendedHistory : digitHistory;
+    
+    // More conservative depth range for better quality patterns
+    for (let depth = 3; depth <= 6; depth++) {
+        if (digitHistory.length < depth) continue;
+        
+        const currentPattern = digitHistory.slice(0, depth);
+        let totalFound = 0;
+        let nextOverCount = 0;
+        let nextLikelyFreq = Array(10).fill(0);
+        
+        const scanLimit = Math.min(sourceData.length - depth - 1, 500);
+        
+        for (let i = 1; i < scanLimit; i++) {
+            let matchCount = 0;
+            
+            for (let k = 0; k < depth; k++) {
+                if (sourceData[i + k] === currentPattern[k]) {
+                    matchCount++;
+                }
+            }
+            
+            // More strict matching: 85% or better for quality
+            const matchPercent = matchCount / depth;
+            if (matchPercent >= 0.85) {
+                const weight = Math.pow(TEMPORAL_DECAY, i / 10) * matchPercent;
+                totalFound += weight;
+                
+                const nextDigit = sourceData[i - 1];
+                if (nextDigit > 5) nextOverCount += weight;
+                nextLikelyFreq[nextDigit] += weight;
+            }
+        }
+        
+        // Higher threshold for pattern quality
+        if (totalFound >= 2.5) {
+            const probOver = (nextOverCount / totalFound) * 100;
+            
+            let bestDigit = -1;
+            let maxFreq = -1;
+            for (let d = 0; d <= 9; d++) {
+                if (nextLikelyFreq[d] > maxFreq) {
+                    maxFreq = nextLikelyFreq[d];
+                    bestDigit = d;
+                }
+            }
+            
+            const patternStr = [...currentPattern].reverse().join('-');
+            const isExactMatch = totalFound > (scanLimit * 0.02);
+            
+            return {
+                pattern: `Pattern(${depth}): ${patternStr}`,
+                nextDigit: bestDigit,
+                confidence: probOver,
+                fuzzy: !isExactMatch,
+                distance: totalFound,
+                scale: depth >= 5 ? 'meso' : 'micro'
+            };
+        }
+    }
+    
+    // Fallback to statistical if no quality pattern found
+    if (digitHistory.length >= 15) {
+        const recent15 = digitHistory.slice(0, 15);
+        const over5Count = recent15.filter(d => d > 5).length;
+        const probOver = (over5Count / 15) * 100;
+        
+        const digitCounts = Array(10).fill(0);
+        recent15.forEach(d => digitCounts[d]++);
+        let mostCommon = 0;
+        let maxCount = 0;
+        digitCounts.forEach((count, digit) => {
+            if (count > maxCount) {
+                maxCount = count;
+                mostCommon = digit;
+            }
+        });
+        
+        return {
+            pattern: `Statistical(15): Freq-Based`,
+            nextDigit: mostCommon,
+            confidence: probOver,
+            fuzzy: true,
+            distance: 15,
+            scale: 'statistical'
+        };
+    }
+    
+    return null;
+}
+
+// ============ STACKING META-LEARNER ============
+function updateStackingWeights() {
+    if (modelAccuracies.heuristic === 0 && modelAccuracies.bayesian === 0 && 
+        modelAccuracies.markov === 0 && modelAccuracies.lgbm === 0) {
+        stackingWeights = {
+            heuristic: 0.25,
+            bayesian: 0.25,
+            markov: 0.25,
+            lgbm: 0.25
+        };
+        return;
+    }
+    
+    const totalAccuracy = modelAccuracies.heuristic + modelAccuracies.bayesian + 
+                          modelAccuracies.markov + modelAccuracies.lgbm;
+    
+    if (totalAccuracy > 0) {
+        stackingWeights.heuristic = modelAccuracies.heuristic / totalAccuracy;
+        stackingWeights.bayesian = modelAccuracies.bayesian / totalAccuracy;
+        stackingWeights.markov = modelAccuracies.markov / totalAccuracy;
+        stackingWeights.lgbm = modelAccuracies.lgbm / totalAccuracy;
+    }
+    
+    const expSum = Math.exp(stackingWeights.heuristic) + Math.exp(stackingWeights.bayesian) + 
+                   Math.exp(stackingWeights.markov) + Math.exp(stackingWeights.lgbm);
+    
+    stackingWeights.heuristic = Math.exp(stackingWeights.heuristic) / expSum;
+    stackingWeights.bayesian = Math.exp(stackingWeights.bayesian) / expSum;
+    stackingWeights.markov = Math.exp(stackingWeights.markov) / expSum;
+    stackingWeights.lgbm = Math.exp(stackingWeights.lgbm) / expSum;
+}
+
 // ============ UTILITY FUNCTIONS ============
 function addLog(msg, type = 'info') {
     const container = document.getElementById('logContainer');
@@ -636,37 +1413,6 @@ function addLog(msg, type = 'info') {
     entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-msg-${type}">${msg}</span>`;
     container.appendChild(entry);
     container.scrollTop = container.scrollHeight;
-}
-
-function updateSignalWindowTimer() {
-    const now = new Date();
-    const sec = now.getSeconds();
-    const timerEl = document.getElementById('signalTimerDisplay');
-    
-    const closeWindowSize = parseInt(document.getElementById('closingSec').value) || 10;
-    const openWindowSize = parseInt(document.getElementById('openingSec').value) || 10;
-    
-    const inClosingWindow = (sec >= (60 - closeWindowSize));
-    const inOpeningWindow = (sec <= openWindowSize);
-    
-    if (inClosingWindow || inOpeningWindow) {
-        isSignalWindowOpen = true;
-        if (timerEl) {
-            timerEl.style.color = "#22c55e";
-            timerEl.style.borderColor = "#22c55e";
-            timerEl.style.background = "rgba(34, 197, 94, 0.1)";
-            timerEl.innerHTML = `SCANNING SIGNAL... (${sec}s)`;
-        }
-    } else {
-        isSignalWindowOpen = false;
-        const nextWindowIn = (60 - closeWindowSize) - sec;
-        if (timerEl) {
-            timerEl.style.color = "#f59e0b";
-            timerEl.style.borderColor = "#334155";
-            timerEl.style.background = "#020617";
-            timerEl.innerHTML = `WAITING FOR WINDOW: ${nextWindowIn}s`;
-        }
-    }
 }
 
 function selectConfidenceMode(mode) {
@@ -768,6 +1514,7 @@ function toggleConfidenceUI() {
     document.getElementById('specificUI').style.display = (mode === 'specific') ? 'block' : 'none';
     document.getElementById('sequenceUI').style.display = (mode === 'sequence') ? 'block' : 'none';
     document.getElementById('patternUI').style.display = (mode === 'pattern') ? 'block' : 'none';
+    document.getElementById('predictionGapUI').classList.toggle('active', mode === 'predictionGap');
     
     if (mode === 'pattern') {
         updateEnsembleFilterStatus();
@@ -783,14 +1530,15 @@ function saveSettings() {
         specificEnsembleActive: isSpecificEnsembleActive,
         virtualTradeEnabled: isVirtualTradeEnabled,
         virtualLossStreak: virtualLossStreak,
-        hasSwatchedToLive: hasSwatchedToLive
+        hasSwatchedToLive: hasSwatchedToLive,
+        histogramFilterEnabled: isHistogramFilterEnabled
     };
     document.querySelectorAll('.save-setting').forEach(el => settings[el.id] = el.value);
-    localStorage.setItem('bot_settings_v9_ml', JSON.stringify(settings));
+    localStorage.setItem('bot_settings_v13_ml', JSON.stringify(settings));
 }
 
 function loadSettings() {
-    const saved = localStorage.getItem('bot_settings_v9_ml');
+    const saved = localStorage.getItem('bot_settings_v13_ml');
     if (saved) {
         const settings = JSON.parse(saved);
         for (const id in settings) {
@@ -816,7 +1564,6 @@ function loadSettings() {
             }
         }
         
-        // Load virtual trade settings
         if (settings.virtualTradeEnabled !== undefined) {
             isVirtualTradeEnabled = settings.virtualTradeEnabled;
             document.getElementById('virtualTradeToggle').checked = isVirtualTradeEnabled;
@@ -833,11 +1580,16 @@ function loadSettings() {
             hasSwatchedToLive = settings.hasSwatchedToLive;
         }
         
+        if (settings.histogramFilterEnabled !== undefined) {
+            isHistogramFilterEnabled = settings.histogramFilterEnabled;
+            document.getElementById('histogramFilterToggle').checked = isHistogramFilterEnabled;
+        }
+        
         updateVirtualTradeUI();
     }
     toggleConfidenceUI();
     
-    const savedExtHistory = localStorage.getItem('extended_history_v9');
+    const savedExtHistory = localStorage.getItem('extended_history_v13');
     if(savedExtHistory) {
         try {
             extendedHistory = JSON.parse(savedExtHistory);
@@ -848,23 +1600,23 @@ function loadSettings() {
         }
     }
     
-    const savedHistory = localStorage.getItem('trade_history_v9');
+    const savedHistory = localStorage.getItem('trade_history_v13');
     if(savedHistory) document.getElementById('history').innerHTML = savedHistory;
     
-    const savedStats = localStorage.getItem('trade_stats_v9');
+    const savedStats = localStorage.getItem('trade_stats_v13');
     if(savedStats) { 
         stats = JSON.parse(savedStats); 
         updateStats(); 
     }
     
-    const savedBayesian = localStorage.getItem('bayesian_params_v9');
+    const savedBayesian = localStorage.getItem('bayesian_params_v13');
     if(savedBayesian) {
         const params = JSON.parse(savedBayesian);
         bayesianAlpha = params.alpha || 1;
         bayesianBeta = params.beta || 1;
     }
     
-    const savedMarkov = localStorage.getItem('markov_matrix_v9');
+    const savedMarkov = localStorage.getItem('markov_matrix_v13');
     if(savedMarkov) {
         try {
             markovTransitionMatrix = JSON.parse(savedMarkov);
@@ -874,13 +1626,23 @@ function loadSettings() {
         }
     }
     
-    const savedMarkov2nd = localStorage.getItem('markov_matrix_2nd_v9');
+    const savedMarkov2nd = localStorage.getItem('markov_matrix_2nd_v13');
     if(savedMarkov2nd) {
         try {
             markovTransitionMatrix2ndOrder = JSON.parse(savedMarkov2nd);
             addLog("Loaded 2nd-order Markov matrix", "success");
         } catch(e) {
             markovTransitionMatrix2ndOrder = {};
+        }
+    }
+    
+    const savedCalibration = localStorage.getItem('calibration_data_v13');
+    if(savedCalibration) {
+        try {
+            calibrationData = JSON.parse(savedCalibration);
+            addLog("Loaded calibration data", "success");
+        } catch(e) {
+            calibrationData = [];
         }
     }
 }
@@ -935,11 +1697,6 @@ function handleMessage(data) {
     sendAPIRequest({ balance: 1, subscribe: 1 });
     subscribeToTicks();
     startSessionTimer();
-    
-    const persistedAuto = localStorage.getItem('isAutoRunning') === 'true';
-    if(persistedAuto && !isAutoRunning) {
-        resumeAutoTrade();
-    }
   }
   
   if (data.balance) { 
@@ -969,18 +1726,7 @@ function handleMessage(data) {
   }
 }
 
-function resumeAutoTrade() {
-    isAutoRunning = true;
-    const btn = document.getElementById('autoBtn');
-    const shutdownUI = document.getElementById('shutdownDisplay');
-    autoStartTime = parseInt(localStorage.getItem('autoStartTime')) || Date.now();
-    shutdownUI.style.display = 'block';
-    btn.textContent = 'Stop Auto'; 
-    btn.style.background = '#ef4444';
-    addLog("Resuming Persistent Auto-Trade...", "success");
-}
-
-// ============ ENHANCED ML FUNCTIONS v2 - CASCADING FALLBACK ENGINE ============
+// ============ ENHANCED ML FUNCTIONS v3.3 ============
 
 function smoothOutliers(digit, history) {
     if (history.length < 10) return digit;
@@ -1019,7 +1765,7 @@ function updateBayesianModel(isOver5) {
     }
     
     if ((bayesianAlpha + bayesianBeta) % 20 < 1) {
-        localStorage.setItem('bayesian_params_v9', JSON.stringify({
+        localStorage.setItem('bayesian_params_v13', JSON.stringify({
             alpha: bayesianAlpha,
             beta: bayesianBeta
         }));
@@ -1047,8 +1793,8 @@ function updateMarkovModel(currentDigit) {
     }
     
     if (digitHistory.length % 50 === 0) {
-        localStorage.setItem('markov_matrix_v9', JSON.stringify(markovTransitionMatrix));
-        localStorage.setItem('markov_matrix_2nd_v9', JSON.stringify(markovTransitionMatrix2ndOrder));
+        localStorage.setItem('markov_matrix_v13', JSON.stringify(markovTransitionMatrix));
+        localStorage.setItem('markov_matrix_2nd_v13', JSON.stringify(markovTransitionMatrix2ndOrder));
     }
 }
 
@@ -1086,78 +1832,6 @@ function calculateMarkovPrediction() {
     return prediction;
 }
 
-// ============ REVISED PATTERN ENGINE: CASCADING FALLBACK ============
-function detectPatterns() {
-    // 1. Use whatever data we have. Even 15 ticks is enough for Level 1 analysis.
-    const sourceData = extendedHistory.length > 20 ? extendedHistory : digitHistory;
-    if (sourceData.length < 10) return null;
-
-    // 2. Define Scans: 3-digits (Specific) -> 2-digits (Context) -> 1-digit (Bias)
-    const scanDepths = [3, 2, 1]; 
-    const scanLimit = Math.min(sourceData.length, 2500);
-
-    for (let depth of scanDepths) {
-        const currentPattern = digitHistory.slice(0, depth);
-        
-        if (currentPattern.length < depth) continue;
-
-        let totalFound = 0;
-        let nextOverCount = 0;
-        let nextLikelyFreq = Array(10).fill(0);
-
-        // Scan history
-        for (let i = 1; i < scanLimit - depth - 1; i++) {
-            let isMatch = true;
-            for (let k = 0; k < depth; k++) {
-                if (sourceData[i + k] !== currentPattern[k]) {
-                    isMatch = false;
-                    break;
-                }
-            }
-
-            if (isMatch) {
-                totalFound++;
-                const nextDigit = sourceData[i - 1]; 
-                if (nextDigit > 5) nextOverCount++;
-                nextLikelyFreq[nextDigit]++;
-            }
-        }
-
-        // 3. REALISTIC Sample Requirements for ~500 ticks
-        // Depth 3 (1000 combos): If we saw this even TWICE before, it's a strong signal.
-        // Depth 2 (100 combos): Expect ~5 matches. Req 4.
-        // Depth 1 (10 combos): Expect ~50 matches. Req 5.
-        const minSamples = depth === 3 ? 2 : (depth === 2 ? 4 : 5);
-
-        if (totalFound >= minSamples) {
-            let probOver = (nextOverCount / totalFound) * 100;
-            
-            let bestDigit = -1;
-            let maxFreq = -1;
-            for(let d=0; d<=9; d++) {
-                if(nextLikelyFreq[d] > maxFreq) {
-                    maxFreq = nextLikelyFreq[d];
-                    bestDigit = d;
-                }
-            }
-
-            const patternStr = [...currentPattern].reverse().join('-');
-
-            // 4. ALWAYS return result if sample size is met. 
-            // We removed the strict ">60%" filter so the UI updates immediately.
-            return {
-                pattern: `N-Gram(${depth}): ${patternStr}`,
-                nextDigit: bestDigit,
-                confidence: probOver,
-                fuzzy: false,
-                distance: totalFound // Shows "Sample Size"
-            };
-        }
-    }
-
-    return null;
-}
-
 function calculateAdaptiveThreshold() {
     if (recentWinRates.length < 5) return 0;
     
@@ -1175,52 +1849,33 @@ function calculateAdaptiveThreshold() {
     return 0;
 }
 
-function calculateEnsemblePrediction(heuristicConf, bayesianProb, markovProb, volatility) {
-    let weights = {
-        heuristic: 0.35,
-        bayesian: 0.30,
-        markov: 0.30,
-        pattern: 0.05
-    };
+function calculateEnsemblePrediction(heuristicConf, bayesianProb, markovProb, lgbmProb, volatility) {
+    updateStackingWeights();
     
-    const totalAccuracy = modelAccuracies.heuristic + modelAccuracies.bayesian + modelAccuracies.markov;
-    
-    if (totalAccuracy > 0) {
-        const heuristicWeight = (modelAccuracies.heuristic / totalAccuracy) * 0.6;
-        const bayesianWeight = (modelAccuracies.bayesian / totalAccuracy) * 0.6;
-        const markovWeight = (modelAccuracies.markov / totalAccuracy) * 0.6;
-        
-        weights.heuristic = 0.25 + heuristicWeight * 0.25;
-        weights.bayesian = 0.25 + bayesianWeight * 0.25;
-        weights.markov = 0.25 + markovWeight * 0.25;
-        weights.pattern = 0.05;
-    }
-    
-    if (volatility > 3.0) {
-        weights.bayesian += 0.15;
-        weights.heuristic -= 0.10;
-        weights.markov -= 0.05;
-    } else if (volatility > 2.5) {
-        weights.bayesian += 0.10;
-        weights.heuristic -= 0.05;
-        weights.markov -= 0.05;
-    }
-    
-    const pattern = detectPatterns();
+    const pattern = detectMultiScalePatterns();
     let patternBonus = 0;
     if (pattern) {
         patternBonus = pattern.fuzzy ? 3 : 5;
         if (pattern.confidence > 70) patternBonus += 5;
+        if (pattern.scale === 'meso') patternBonus += 3;
     }
     
     const ensemble = (
-        heuristicConf * weights.heuristic +
-        bayesianProb * weights.bayesian +
-        markovProb * weights.markov +
+        heuristicConf * stackingWeights.heuristic +
+        bayesianProb * stackingWeights.bayesian +
+        markovProb * stackingWeights.markov +
+        lgbmProb * stackingWeights.lgbm +
         patternBonus
     );
     
-    return Math.min(98, Math.max(0, ensemble));
+    let regimeAdjustment = 1.0;
+    if (marketRegime === 'random') {
+        regimeAdjustment = 0.85;
+    } else if (marketRegime === 'structured') {
+        regimeAdjustment = 1.15;
+    }
+    
+    return Math.min(98, Math.max(0, ensemble * regimeAdjustment));
 }
 
 function updateModelAccuracies(actualResult) {
@@ -1262,6 +1917,18 @@ function updateModelAccuracies(actualResult) {
         modelAccuracies.markov = (correctCount / modelPredictions.markov.length) * 100;
     }
     
+    if (modelPredictions.lgbm.length > 0) {
+        const lastLGBM = modelPredictions.lgbm[modelPredictions.lgbm.length - 1];
+        const lgbmCorrect = (lastLGBM.prediction > 50 && isOver5) || 
+                            (lastLGBM.prediction <= 50 && !isOver5);
+        
+        modelPredictions.lgbm.push({ correct: lgbmCorrect });
+        if (modelPredictions.lgbm.length > 50) modelPredictions.lgbm.shift();
+        
+        const correctCount = modelPredictions.lgbm.filter(p => p.correct).length;
+        modelAccuracies.lgbm = (correctCount / modelPredictions.lgbm.length) * 100;
+    }
+    
     updateModelPerformanceUI();
 }
 
@@ -1297,12 +1964,14 @@ function addDigitToAnalyzer(digit) {
   if (extendedHistory.length > 5000) extendedHistory.pop();
   
   if (extendedHistory.length % 100 === 0) {
-    localStorage.setItem('extended_history_v9', JSON.stringify(extendedHistory));
+    localStorage.setItem('extended_history_v13', JSON.stringify(extendedHistory));
   }
   
   const isOver5 = digit > 5;
   updateBayesianModel(isOver5);
   updateMarkovModel(digit);
+  
+  updateHistogram(digit);
   
   if (digitHistory.length > 1) {
     updateModelAccuracies(digit);
@@ -1311,12 +1980,56 @@ function addDigitToAnalyzer(digit) {
   volatilityWindow.unshift(digit);
   if (volatilityWindow.length > 100) volatilityWindow.pop();
   
+  if (digitHistory.length % 10 === 0) {
+    detectMarketRegime();
+  }
+  
   updateAnalyzerDisplay();
   if (isAutoRunning && !isCycleCooldown) checkAndAutoTrade();
 }
 
 function checkAndAutoTrade() {
     if (currentContractId !== null) return;
+    
+    if (isHistogramFilterEnabled && histogramBias === 'favorable_under' && !isReverseTradeActive) {
+        return;
+    }
+    
+    if (marketRegime === 'random' && digitHistory.length > 50) {
+        const randomRoll = Math.random();
+        if (randomRoll > 0.3) {
+            return;
+        }
+    }
+    
+    // Mode 5: Prediction % + Gap Count
+    if (currentConfidenceMode === 'predictionGap') {
+        const now = Date.now();
+        const cooldownMs = parseInt(document.getElementById('cooldown').value) * 1000;
+        if (now - lastTradeTime < Math.max(cooldownMs, 1000)) return;
+        
+        const currentConf = Math.round(lastPredictionConfidence);
+        const gap = currentGapCount;
+        
+        // Check all 6 slots
+        for (let i = 1; i <= 6; i++) {
+            const predMin = parseInt(document.getElementById(`pg_s${i}_pred_min`).value);
+            const predMax = parseInt(document.getElementById(`pg_s${i}_pred_max`).value);
+            const targetGap = parseInt(document.getElementById(`pg_s${i}_gap`).value);
+            
+            // Both conditions must match
+            const predInRange = (currentConf >= predMin && currentConf <= predMax);
+            const gapMatches = (gap === targetGap);
+            
+            if (predInRange && gapMatches) {
+                addLog(`Mode 5 Match! Slot ${i}: Pred=${currentConf}% (${predMin}-${predMax}%) + Gap=${gap} (=${targetGap})`, "success");
+                lastTradeTime = now;
+                placeTrade();
+                return;
+            }
+        }
+        return;
+    }
     
     if (currentConfidenceMode === 'pattern') {
         const now = Date.now();
@@ -1398,8 +2111,6 @@ function checkAndAutoTrade() {
         }
         return;
     }
-    
-    if (!isSignalWindowOpen) return;
 
     const now = Date.now();
     const cooldownMs = parseInt(document.getElementById('cooldown').value) * 1000;
@@ -1495,6 +2206,7 @@ function predictNextDigit() {
       if (d <= 5) overGap++;
       else break;
   }
+  currentGapCount = overGap; // Store for Mode 5
   
   const volatility = calculateVolatility(volatilityWindow, 50);
   let volatilityLabel = 'Low';
@@ -1514,14 +2226,11 @@ function predictNextDigit() {
   document.getElementById('volatilityScore').textContent = volatilityLabel;
   
   let gravityBonus = 0;
-  let trendLabel = 'Stable';
   if (digitHistory.length >= 3) {
       if (digitHistory[0] > digitHistory[1] && digitHistory[1] > digitHistory[2]) {
           gravityBonus = 15;
-          trendLabel = 'Rising';
       } else if (digitHistory[0] < digitHistory[1] && digitHistory[1] < digitHistory[2]) {
           gravityBonus = -10;
-          trendLabel = 'Falling';
       }
   }
   
@@ -1530,6 +2239,9 @@ function predictNextDigit() {
   
   const markovProb = calculateMarkovPrediction();
   document.getElementById('markovProb').textContent = markovProb.toFixed(0) + '%';
+  
+  const lgbmProb = calculateLightGBMPrediction();
+  document.getElementById('lgbmScore').textContent = lgbmProb.toFixed(0) + '%';
   
   let heuristicConf = 0;
   let predText = 'WAIT';
@@ -1545,53 +2257,57 @@ function predictNextDigit() {
   modelPredictions.heuristic.push({ prediction: predText });
   modelPredictions.bayesian.push({ prediction: bayesianProb });
   modelPredictions.markov.push({ prediction: markovProb });
+  modelPredictions.lgbm.push({ prediction: lgbmProb });
   
   const ensembleScore = calculateEnsemblePrediction(
       Math.max(0, heuristicConf), 
       bayesianProb, 
-      markovProb, 
+      markovProb,
+      lgbmProb,
       volatility
   );
   
   document.getElementById('ensembleScore').textContent = ensembleScore.toFixed(0) + '%';
   
-  lastPredictionConfidence = Math.min(98, Math.max(0, ensembleScore));
+  const rawConfidence = Math.min(98, Math.max(0, ensembleScore));
+  const calibratedConfidence = calibrateConfidence(rawConfidence);
+  
+  lastPredictionConfidence = calibratedConfidence;
   lastPredictionType = predText;
   
-  const confAdj = calculateAdaptiveThreshold();
-  document.getElementById('confAdj').textContent = (confAdj >= 0 ? '+' : '') + confAdj + '%';
+  updateCalibrationDisplay(calibratedConfidence);
   
   document.getElementById('nextDigitPrediction').textContent = predText;
   document.getElementById('nextDigitPrediction').style.color = predText === 'OVER 5' ? '#22c55e' : '#f59e0b';
-  document.getElementById('predictionConfidence').textContent = `${lastPredictionConfidence.toFixed(0)}% (Ensemble)`;
+  document.getElementById('predictionConfidence').textContent = `${lastPredictionConfidence.toFixed(0)}% (Calibrated)`;
   document.getElementById('freqScore').textContent = weightedFreq.toFixed(0) + '%';
   document.getElementById('cycleScore').textContent = overGap;
   
-  // ============ UPDATED PATTERN DISPLAY WITH VISUAL INDICATORS ============
-  const pattern = detectPatterns();
+  const pattern = detectMultiScalePatterns();
   detectedPattern = pattern;
   
   if (pattern) {
       const sampleSize = pattern.distance;
       const confidence = pattern.confidence;
       
-      // Visual indicators for strength
-      let color = '#94a3b8'; // Grey (Weak)
+      let color = '#94a3b8';
       let strength = "Weak";
 
       if (confidence >= 60 || confidence <= 40) {
-          color = '#f59e0b'; // Orange (Moderate)
+          color = '#f59e0b';
           strength = "Mod";
       }
-      if (confidence >= 70 || confidence <= 30) {
-          color = '#22c55e'; // Green (Strong)
+          
+       if (confidence >= 70 || confidence <= 30) {
+          color = '#22c55e';
           strength = "Strong";
       }
 
+      const fuzzyIndicator = pattern.fuzzy ? ' [Fuzzy]' : '';
       document.getElementById('patternMatch').innerHTML = 
-          `<span style="color:#3b82f6">${pattern.pattern}:</span> Sample: <b>${sampleSize}</b> | Over 5: <b style="color:${color}">${confidence.toFixed(1)}%</b> [${strength}]`;
+          `<span style="color:#3b82f6">${pattern.pattern}${fuzzyIndicator}:</span> Samples: <b>${sampleSize.toFixed(1)}</b> | Over 5: <b style="color:${color}">${confidence.toFixed(1)}%</b> [${strength}] | Next: <b style="color:#8b5cf6">${pattern.nextDigit}</b>`;
   } else {
-      document.getElementById('patternMatch').textContent = `Building pattern history... (${extendedHistory.length} ticks)`;
+      document.getElementById('patternMatch').textContent = `No quality pattern detected (${extendedHistory.length} ticks analyzed)`;
   }
 }
 
@@ -1604,11 +2320,9 @@ function placeTrade() {
   const marketValue = currentMarketValue;
   const type = isReverseTradeActive ? 'DIGITUNDER' : 'DIGITOVER';
   
-  // Virtual trade simulation
   if (isCurrentlyVirtualMode()) {
       addLog(`🎮 VIRTUAL TRADE SIMULATED (Not placing real trade)`, "warn");
       
-      // Simulate random result for virtual trade (50/50 chance)
       setTimeout(() => {
           const simulatedWin = Math.random() > 0.5;
           const simulatedProfit = simulatedWin ? stakeValue * 0.95 : -stakeValue;
@@ -1622,13 +2336,25 @@ function placeTrade() {
           recentWinRates.push(simulatedWin ? 1 : 0);
           if (recentWinRates.length > 20) recentWinRates.shift();
           
+          const usedFeatures = {
+              frequency: true,
+              gap: true,
+              bayesian: true,
+              markov: true,
+              pattern: detectedPattern !== null
+          };
+          updateFeatureImportance(usedFeatures, simulatedWin);
+          
+          addCalibrationData(lastPredictionConfidence, simulatedWin ? 1 : 0);
+          
           updateStats();
           addToHistory(stats.trades, simulatedWin ? 'Win (Virtual)' : 'Loss (Virtual)', simulatedProfit, marketValue);
           
           addLog(`🎮 VIRTUAL ${simulatedWin ? 'WIN' : 'LOSS'} | P/L: ${simulatedProfit.toFixed(2)}`, simulatedWin ? 'success' : 'error');
           
-          localStorage.setItem('trade_stats_v9', JSON.stringify(stats));
-          localStorage.setItem('trade_history_v9', document.getElementById('history').innerHTML);
+          localStorage.setItem('trade_stats_v13', JSON.stringify(stats));
+          localStorage.setItem('trade_history_v13', document.getElementById('history').innerHTML);
+          localStorage.setItem('calibration_data_v13', JSON.stringify(calibrationData));
           
           checkRiskManagement();
       }, 2000);
@@ -1636,7 +2362,6 @@ function placeTrade() {
       return;
   }
   
-  // Real trade
   let confidenceMsg = '';
   if (currentConfidenceMode === 'pattern' && detectedPattern) {
       const maxNextLikely = parseInt(document.getElementById('patternEnsembleMax').value) || 0;
@@ -1652,6 +2377,8 @@ function placeTrade() {
       } else if (isSpecificEnsembleActive) {
           confidenceMsg = `Pattern: [${detectedPattern.pattern}] → ${detectedPattern.nextDigit} | Next Likely: ${nextLikelyPercent}% = Target`;
       }
+  } else if (currentConfidenceMode === 'predictionGap') {
+      confidenceMsg = `Prediction: ${lastPredictionConfidence.toFixed(0)}% | Gap: ${currentGapCount}`;
   } else {
       confidenceMsg = `${lastPredictionConfidence.toFixed(0)}% confidence`;
   }
@@ -1678,20 +2405,11 @@ function toggleAuto() {
   if (!isConnected) return;
   isAutoRunning = !isAutoRunning;
   const btn = document.getElementById('autoBtn');
-  const shutdownUI = document.getElementById('shutdownDisplay');
 
   if (isAutoRunning) {
-    autoStartTime = Date.now();
-    localStorage.setItem('isAutoRunning', 'true');
-    localStorage.setItem('autoStartTime', autoStartTime);
-    shutdownUI.style.display = 'block';
-    addLog("ML Auto-Trade v2 Enabled.", "success");
+    addLog("ML Auto-Trade v3.3 Enabled.", "success");
     btn.textContent = 'Stop Auto'; btn.style.background = '#ef4444';
   } else {
-    autoStartTime = null;
-    localStorage.removeItem('isAutoRunning');
-    localStorage.removeItem('autoStartTime');
-    shutdownUI.style.display = 'none';
     addLog("Auto-Trade Stopped.", "warn");
     btn.textContent = 'Start Auto'; btn.style.background = '#22c55e';
   }
@@ -1764,7 +2482,6 @@ function handleTradeResult(contract) {
   const tradeMode = isCurrentlyVirtualMode() ? "VIRTUAL" : "LIVE";
   addLog(`${tradeMode} RESULT: ${isWin ? 'WIN' : 'LOSS'} | P/L: ${profitLoss.toFixed(2)}`, isWin ? 'success' : 'error');
   
-  // Handle virtual trade tracking
   handleVirtualTradeResult(isWin);
   
   stats.trades++; 
@@ -1774,12 +2491,24 @@ function handleTradeResult(contract) {
   recentWinRates.push(isWin ? 1 : 0);
   if (recentWinRates.length > 20) recentWinRates.shift();
   
+  const usedFeatures = {
+      frequency: true,
+      gap: true,
+      bayesian: true,
+      markov: true,
+      pattern: detectedPattern !== null
+  };
+  updateFeatureImportance(usedFeatures, isWin);
+  
+  addCalibrationData(lastPredictionConfidence, isWin ? 1 : 0);
+  
   updateStats();
   
   const historyLabel = isCurrentlyVirtualMode() ? `${isWin ? 'Win' : 'Loss'} (Virtual)` : (isWin ? 'Win' : 'Loss');
   addToHistory(stats.trades, historyLabel, profitLoss, contract.display_name || 'Market');
-  localStorage.setItem('trade_stats_v9', JSON.stringify(stats));
-  localStorage.setItem('trade_history_v9', document.getElementById('history').innerHTML);
+  localStorage.setItem('trade_stats_v13', JSON.stringify(stats));
+  localStorage.setItem('trade_history_v13', document.getElementById('history').innerHTML);
+  localStorage.setItem('calibration_data_v13', JSON.stringify(calibrationData));
 
   const tp = parseFloat(document.getElementById('takeprofit').value);
   if (isMarketCycleActive && stats.profit >= tp) {
@@ -1842,6 +2571,7 @@ function subscribeToTicks() {
   const market = currentMarketValue;
   sendAPIRequest({ forget_all: "ticks" });
   digitHistory = [];
+  digitHistogram = Array(10).fill(0);
   document.getElementById('digitDisplay').innerHTML = '';
   addLog(`Watching ${market}...`, "info");
   sendAPIRequest({ ticks: market, subscribe: 1 });
@@ -1872,31 +2602,9 @@ function startSessionTimer() {
     if (timerIntervalId) clearInterval(timerIntervalId);
     sessionStartTime = Date.now(); 
     timerIntervalId = setInterval(() => {
-        updateSignalWindowTimer();
         const now = Date.now();
         const s = Math.floor((now - sessionStartTime) / 1000);
         document.getElementById('sessionTimer').textContent = `Session: ${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-        
-        if (isAutoRunning && autoStartTime) {
-            const limitHours = parseFloat(document.getElementById('autoDurationHrs').value) || 0;
-            if (limitHours <= 0) {
-                document.getElementById('shutdownDisplay').textContent = `Shutdown in: Unlimited`;
-                return;
-            }
-            const limitMs = limitHours * 3600000;
-            const elapsedMs = now - autoStartTime;
-            const remainingMs = limitMs - elapsedMs;
-            if (remainingMs <= 0) {
-                addLog("Trade Duration Elapsed. Auto-Shutdown triggered.", "warn");
-                toggleAuto();
-            } else {
-                const remS = Math.floor(remainingMs / 1000);
-                const h = Math.floor(remS / 3600).toString().padStart(2, '0');
-                const m = Math.floor((remS % 3600) / 60).toString().padStart(2, '0');
-                const sec = (remS % 60).toString().padStart(2, '0');
-                document.getElementById('shutdownDisplay').textContent = `Shutdown in: ${h}:${m}:${sec}`;
-            }
-        }
     }, 1000);
 }
 
@@ -1925,7 +2633,6 @@ function resetStats() {
     stats = { trades: 0, wins: 0, losses: 0, profit: 0 }; 
     recentWinRates = [];
     
-    // Reset virtual trade tracking
     virtualLossStreak = 0;
     hasSwatchedToLive = false;
     updateVirtualTradeUI();
@@ -1933,19 +2640,47 @@ function resetStats() {
     modelAccuracies = {
         heuristic: 0,
         bayesian: 0,
-        markov: 0
+        markov: 0,
+        lgbm: 0
     };
     modelPredictions = {
         heuristic: [],
         bayesian: [],
-        markov: []
+        markov: [],
+        lgbm: []
     };
+    
+    featureImportance = {
+        frequency: 0,
+        gap: 0,
+        bayesian: 0,
+        markov: 0,
+        pattern: 0
+    };
+    featureWinCounts = {
+        frequency: 0,
+        gap: 0,
+        bayesian: 0,
+        markov: 0,
+        pattern: 0
+    };
+    featureTotalCounts = {
+        frequency: 0,
+        gap: 0,
+        bayesian: 0,
+        markov: 0,
+        pattern: 0
+    };
+    
+    calibrationData = [];
     
     updateStats(); 
     updateModelPerformanceUI();
+    updateFeatureImportanceDisplay();
     document.getElementById('history').innerHTML = ''; 
-    localStorage.removeItem('trade_stats_v9');
-    localStorage.removeItem('trade_history_v9');
+    localStorage.removeItem('trade_stats_v13');
+    localStorage.removeItem('trade_history_v13');
+    localStorage.removeItem('calibration_data_v13');
     addLog("All stats reset.", "info");
     
     saveSettings();
@@ -1961,7 +2696,7 @@ function manualTrade() {
 
 // ============ INITIALIZATION ============
 window.onload = () => {
-  addLog("Initializing ML Enhanced Trading Bot v2 with Virtual Trade...", "info");
+  addLog("Initializing ML Enhanced Trading Bot v3.3...", "info");
   loadSettings();
   
   const ensembleMaxInput = document.getElementById('patternEnsembleMax');
@@ -1986,7 +2721,6 @@ window.onload = () => {
       }
   });
   
-  // Virtual loss threshold listener
   const virtualThresholdInput = document.getElementById('virtualLossThreshold');
   if (virtualThresholdInput) {
       virtualThresholdInput.addEventListener('input', () => {
@@ -1999,6 +2733,11 @@ window.onload = () => {
       });
   }
   
+  const histogramFilterToggle = document.getElementById('histogramFilterToggle');
+  if (histogramFilterToggle) {
+      histogramFilterToggle.addEventListener('change', saveSettings);
+  }
+  
   updateEnsembleFilterStatus();
   
   const savedToken = sessionStorage.getItem('derivToken');
@@ -2007,23 +2746,27 @@ window.onload = () => {
       setTimeout(connect, 1000); 
   }
   
-  addLog("✅ ML v2 Enhancements Loaded:", "success");
-  addLog("- Cascading Fallback Pattern Engine (3→2→1 depth)", "info");
+  addLog("✅ ML v3.3 ENHANCEMENTS Applied:", "success");
+  addLog("NEW: Mode 5 - Prediction % + Gap Count (6 Slots)", "success");
+  addLog("IMPROVED: Pattern detection quality (85% match threshold)", "info");
+  addLog("REMOVED: Window closing/opening timing restrictions", "warn");
+  addLog("REMOVED: Auto Trade Duration limit", "warn");
+  addLog("Priority 1: Histogram filter (TOGGLEABLE)", "info");
+  addLog("Priority 1: Better pattern quality scoring", "info");
+  addLog("Priority 2: LightGBM-style engineered features", "info");
+  addLog("Priority 2: Weighted temporal pattern matching", "info");
+  addLog("Priority 2: Multi-scale pattern analysis", "info");
+  addLog("Priority 2: Confidence calibration system", "info");
+  addLog("Priority 3: HMM regime detection", "info");
+  addLog("Priority 3: Stacking meta-learner ensemble", "info");
   addLog("- Extended history: 5000 ticks", "info");
-  addLog("- Outlier detection & smoothing active", "info");
   addLog("- 2nd-order Markov chain enabled", "info");
-  addLog("- Adaptive ensemble weighting", "info");
-  addLog("- Model performance tracking", "info");
-  addLog("- Pattern Mode uses Next Likely % for filters", "info");
-  addLog("- Visual strength indicators for patterns", "success");
-  addLog("- 🎮 Virtual Trade Mode with auto-switch feature", "success");
-  addLog("Ready to trade with enhanced accuracy!", "success");
+  addLog("- 🎮 Virtual Trade Mode with auto-switch", "success");
+  addLog("Ready to trade with v3.3 enhanced features!", "success");
 };
 
 document.getElementById('logoutBtn').addEventListener('click', () => { 
     isExplicitLogout = true; 
-    localStorage.removeItem('isAutoRunning');
-    localStorage.removeItem('autoStartTime');
     if (ws) ws.close(); 
     sessionStorage.removeItem('derivToken'); 
     addLog("Logging out...", "info");
