@@ -117,6 +117,12 @@ tbody tr:hover { background: #1e293b; }
 .virtual-stat-box span { font-size: 10px; color: #94a3b8; display: block; }
 .virtual-stat-box b { font-size: 16px; color: #8b5cf6; display: block; margin-top: 3px; }
 
+/* Loss Streak Boxes */
+.streak-boxes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.streak-box { background: #0f172a; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #334155; }
+.streak-box span { font-size: 9px; color: #94a3b8; display: block; margin-bottom: 3px; }
+.streak-box b { font-size: 16px; color: #ef4444; display: block; }
+
 /* AI Model Selector */
 .ai-model-selector { background: #1e293b; padding: 10px; border-radius: 8px; border: 2px solid #3b82f6; margin-bottom: 10px; }
 .ai-model-label { color: #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 8px; }
@@ -142,6 +148,17 @@ tbody tr:hover { background: #1e293b; }
 .consec-loss-indicator { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; margin-top: 8px; border: 1px solid #334155; }
 .consec-loss-indicator span { font-size: 10px; color: #94a3b8; display: block; margin-bottom: 3px; }
 .consec-loss-indicator b { font-size: 16px; color: #ef4444; display: block; }
+
+/* Auto Resume Timer Styles */
+.auto-resume-container { background: #1e293b; padding: 10px; border-radius: 8px; border: 2px solid #3b82f6; margin-bottom: 10px; }
+.auto-resume-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.auto-resume-label { color: #3b82f6; font-weight: bold; font-size: 14px; }
+.auto-resume-badge { background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: none; }
+.auto-resume-badge.active { display: inline-block; animation: blink 1.5s infinite; }
+.timer-display { color: #3b82f6; font-size: 13px; font-weight: bold; text-align: center; margin-top: 10px; padding: 8px; border: 2px dashed #3b82f6; border-radius: 8px; background: rgba(59, 130, 246, 0.1); display: none; }
+.cumulative-profit-box { background: #0f172a; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #334155; margin-top: 10px; }
+.cumulative-profit-box span { font-size: 10px; color: #94a3b8; display: block; margin-bottom: 3px; }
+.cumulative-profit-box b { font-size: 20px; display: block; }
 </style>
 </head>
 <body>
@@ -286,6 +303,33 @@ tbody tr:hover { background: #1e293b; }
 <div class="card">
   <h3>Trade Settings</h3>
   
+  <!-- Auto Resume Timer Section -->
+  <div class="auto-resume-container">
+    <div class="auto-resume-header">
+      <div style="display:flex; flex-direction:column;">
+        <span class="auto-resume-label">⏱️ Auto Resume Timer</span>
+        <span style="font-size:9px; opacity:0.6;">Auto-restart trading after stops/targets</span>
+      </div>
+      <div style="display:flex; align-items:center; gap: 8px;">
+        <span class="auto-resume-badge" id="autoResumeBadge">TIMER ACTIVE</span>
+        <div style="display:flex; align-items:center;">
+          <span style="font-size:10px; margin-right:5px; opacity:0.7;">OFF/ON</span>
+          <input type="checkbox" id="autoResumeToggle" class="toggle-checkbox save-setting">
+        </div>
+      </div>
+    </div>
+    
+    <label style="margin-top: 5px;">Resume Wait Time (Minutes)</label>
+    <input id="autoResumeWaitTime" class="save-setting" type="number" value="5" min="1" max="60" step="1">
+    
+    <div class="timer-display" id="timerDisplay">Resuming in: --:--</div>
+    
+    <div class="cumulative-profit-box">
+      <span>Cumulative Session Profit/Loss</span>
+      <b id="cumulativeProfit" style="color: #22c55e;">0.00</b>
+    </div>
+  </div>
+  
   <!-- Virtual Trade Section -->
   <div class="virtual-trade-container">
     <div class="virtual-trade-header">
@@ -317,6 +361,28 @@ tbody tr:hover { background: #1e293b; }
       <div class="virtual-stat-box">
         <span>Virtual P/L</span>
         <b id="virtualProfit">0.00</b>
+      </div>
+    </div>
+    
+    <div style="margin-top: 10px;">
+      <div style="font-size: 11px; font-weight: 600; color: #8b5cf6; margin-bottom: 6px;">Top 4 Longest Loss Streaks:</div>
+      <div class="streak-boxes">
+        <div class="streak-box">
+          <span>Streak A</span>
+          <b id="streak1">0</b>
+        </div>
+        <div class="streak-box">
+          <span>Streak B</span>
+          <b id="streak2">0</b>
+        </div>
+        <div class="streak-box">
+          <span>Streak C</span>
+          <b id="streak3">0</b>
+        </div>
+        <div class="streak-box">
+          <span>Streak D</span>
+          <b id="streak4">0</b>
+        </div>
       </div>
     </div>
   </div>
@@ -463,6 +529,7 @@ tbody tr:hover { background: #1e293b; }
       this.modules.AIEngine.init();
       this.modules.Analyzer.init();
       this.modules.VirtualTrade.init();
+      this.modules.AutoResume.init();
       this.modules.Trader.init();
       
       this.modules.UI.loadSettings();
@@ -1103,7 +1170,7 @@ tbody tr:hover { background: #1e293b; }
         if(data.totalTransitions) totalTransitions = data.totalTransitions;
         if(data.aiData) App.modules.AIEngine.setData(data.aiData);
       }
-    };
+     };
   })();
 
   // ============ VIRTUAL TRADE MODULE ============
@@ -1115,6 +1182,9 @@ tbody tr:hover { background: #1e293b; }
       profit: 0
     };
     let pendingVirtualTrade = null;
+    let lossStreaks = []; // Track all loss streaks
+    let currentStreak = 0;
+    let topStreaks = [0, 0, 0, 0]; // Top 4 longest streaks
     
     function init() {
       document.getElementById('virtualTradeToggle').addEventListener('change', (e) => {
@@ -1135,6 +1205,13 @@ tbody tr:hover { background: #1e293b; }
       if (saved) {
         virtualStats = JSON.parse(saved);
         updateVirtualUI();
+      }
+      
+      // Load saved streaks
+      const savedStreaks = localStorage.getItem('virtual_streaks_dm_pro');
+      if (savedStreaks) {
+        topStreaks = JSON.parse(savedStreaks);
+        updateStreakDisplay();
       }
     }
     
@@ -1193,10 +1270,17 @@ tbody tr:hover { background: #1e293b; }
                        trade.contractType === 'DIGITOVER' ? 'Over 5' : 'Under 5';
       
       if (isWin) {
+        // If we had a loss streak, save it before resetting
+        if (currentStreak > 0) {
+          updateTopStreaks(currentStreak);
+          currentStreak = 0;
+        }
+        
         virtualStats.consecLosses = 0;
         App.modules.UI.addLog(`[VIRTUAL] WIN: ${typeDesc} matched ${actualDigit} ($${payout.toFixed(2)})`, "success");
       } else {
         virtualStats.consecLosses++;
+        currentStreak++;
         App.modules.UI.addLog(`[VIRTUAL] LOSS: ${typeDesc}, got ${actualDigit} ($${payout.toFixed(2)}) | Consecutive: ${virtualStats.consecLosses}`, "error");
       }
       
@@ -1212,6 +1296,27 @@ tbody tr:hover { background: #1e293b; }
       }
       
       return { isWin, payout };
+    }
+    
+    function updateTopStreaks(streak) {
+      // Add new streak to top streaks if it qualifies
+      topStreaks.push(streak);
+      topStreaks.sort((a, b) => b - a); // Sort descending
+      topStreaks = topStreaks.slice(0, 4); // Keep only top 4
+      
+      updateStreakDisplay();
+      saveStreakData();
+    }
+    
+    function updateStreakDisplay() {
+      document.getElementById('streak1').textContent = topStreaks[0] || 0;
+      document.getElementById('streak2').textContent = topStreaks[1] || 0;
+      document.getElementById('streak3').textContent = topStreaks[2] || 0;
+      document.getElementById('streak4').textContent = topStreaks[3] || 0;
+    }
+    
+    function saveStreakData() {
+      localStorage.setItem('virtual_streaks_dm_pro', JSON.stringify(topStreaks));
     }
     
     function switchToLiveMode() {
@@ -1246,8 +1351,12 @@ tbody tr:hover { background: #1e293b; }
       };
       isVirtualMode = false;
       pendingVirtualTrade = null;
+      currentStreak = 0;
+      topStreaks = [0, 0, 0, 0];
       updateVirtualUI();
+      updateStreakDisplay();
       saveVirtualStats();
+      saveStreakData();
     }
     
     return {
@@ -1257,6 +1366,137 @@ tbody tr:hover { background: #1e293b; }
       processTickResult,
       resetVirtualStats,
       getStats: () => virtualStats
+    };
+  })();
+
+  // ============ AUTO RESUME MODULE ============
+  App.modules.AutoResume = (function() {
+    let isTimerActive = false;
+    let timerIntervalId = null;
+    let cumulativeProfit = 0;
+    let remainingSeconds = 0;
+    
+    function init() {
+      document.getElementById('autoResumeToggle').addEventListener('change', (e) => {
+        const isEnabled = e.target.checked;
+        if (isEnabled) {
+          isTimerActive = true;
+          document.getElementById('autoResumeBadge').classList.add('active');
+          App.modules.UI.addLog("Auto Resume Timer ENABLED", "info");
+        } else {
+          isTimerActive = false;
+          stopTimer();
+          document.getElementById('autoResumeBadge').classList.remove('active');
+          document.getElementById('timerDisplay').style.display = 'none';
+          // Reset cumulative profit when disabled
+          cumulativeProfit = 0;
+          updateCumulativeDisplay();
+          App.modules.UI.addLog("Auto Resume Timer DISABLED", "warn");
+        }
+        App.modules.UI.saveSettings();
+      });
+      
+      // Load saved cumulative profit
+      const saved = localStorage.getItem('cumulative_profit_dm_pro');
+      if (saved && document.getElementById('autoResumeToggle').checked) {
+        cumulativeProfit = parseFloat(saved);
+        updateCumulativeDisplay();
+      }
+    }
+    
+    function isEnabled() {
+      return document.getElementById('autoResumeToggle').checked;
+    }
+    
+    function startTimer(reason) {
+      if (!isTimerActive) return;
+      
+      const waitMinutes = parseInt(document.getElementById('autoResumeWaitTime').value);
+      remainingSeconds = waitMinutes * 60;
+      
+      const display = document.getElementById('timerDisplay');
+      display.style.display = 'block';
+      
+      App.modules.UI.addLog(`⏱️ Auto Resume: Waiting ${waitMinutes}m (${reason})`, "warn");
+      
+      if (timerIntervalId) clearInterval(timerIntervalId);
+      
+      timerIntervalId = setInterval(() => {
+        remainingSeconds--;
+        const m = Math.floor(remainingSeconds / 60);
+        const s = remainingSeconds % 60;
+        display.textContent = `Resuming in: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        
+        if (remainingSeconds <= 0) {
+          stopTimer();
+          resumeTrading();
+        }
+      }, 1000);
+    }
+    
+    function stopTimer() {
+      if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+      }
+      remainingSeconds = 0;
+      document.getElementById('timerDisplay').style.display = 'none';
+    }
+    
+    function resumeTrading() {
+      App.modules.UI.addLog("⏱️ Timer Elapsed - Resuming Trading", "success");
+      
+      // Clear trade history
+      document.getElementById('history').innerHTML = '';
+      localStorage.removeItem('trade_history_dm_pro');
+      
+      // Enable virtual trade mode
+      const virtualToggle = document.getElementById('virtualTradeToggle');
+      if (!virtualToggle.checked) {
+        virtualToggle.checked = true;
+        document.getElementById('virtualModeBadge').classList.add('active');
+        App.modules.UI.addLog("Virtual Trade Mode AUTO-ENABLED", "info");
+      }
+      
+      // Enable auto-trade
+      if (!App.modules.Trader.getAutoRunning()) {
+        App.modules.Trader.toggleAuto(true);
+      }
+      
+      App.modules.UI.saveSettings();
+    }
+    
+    function addToCumulative(profit) {
+      if (isTimerActive) {
+        cumulativeProfit += profit;
+        updateCumulativeDisplay();
+        saveCumulativeProfit();
+      }
+    }
+    
+    function updateCumulativeDisplay() {
+      const el = document.getElementById('cumulativeProfit');
+      el.textContent = cumulativeProfit.toFixed(2);
+      el.style.color = cumulativeProfit > 0 ? '#22c55e' : (cumulativeProfit < 0 ? '#ef4444' : '#8b5cf6');
+    }
+    
+    function saveCumulativeProfit() {
+      localStorage.setItem('cumulative_profit_dm_pro', cumulativeProfit.toString());
+    }
+    
+    function resetCumulative() {
+      cumulativeProfit = 0;
+      updateCumulativeDisplay();
+      saveCumulativeProfit();
+    }
+    
+    return {
+      init,
+      isEnabled,
+      startTimer,
+      stopTimer,
+      addToCumulative,
+      resetCumulative
     };
   })();
 
@@ -1454,6 +1694,9 @@ tbody tr:hover { background: #1e293b; }
       }
       stats.profit += pl;
       
+      // Add to cumulative profit if timer is active
+      App.modules.AutoResume.addToCumulative(pl);
+      
       App.modules.UI.addLog(`[LIVE] Result: ${isWin?'WIN':'LOSS'} ($${pl.toFixed(2)})`, isWin?'success':'error');
       App.modules.UI.updateStats(stats);
       App.modules.UI.updateConsecLossCounter(consecutiveLosses);
@@ -1475,6 +1718,11 @@ tbody tr:hover { background: #1e293b; }
       if (consecLossStop > 0 && consecutiveLosses >= consecLossStop) {
         toggleAuto(false);
         App.modules.UI.addLog(`Consecutive Loss Stop Hit (${consecutiveLosses} losses).`, "error");
+        
+        // If auto resume timer is enabled, start it
+        if (App.modules.AutoResume.isEnabled()) {
+          App.modules.AutoResume.startTimer('Consecutive Loss Stop');
+        }
         return;
       }
       
@@ -1482,6 +1730,11 @@ tbody tr:hover { background: #1e293b; }
       if (stats.profit <= -sl) {
         toggleAuto(false);
         App.modules.UI.addLog("Stop Loss Hit.", "error");
+        
+        // If auto resume timer is enabled, start it
+        if (App.modules.AutoResume.isEnabled()) {
+          App.modules.AutoResume.startTimer('Stop Loss');
+        }
         return;
       }
       
@@ -1492,6 +1745,11 @@ tbody tr:hover { background: #1e293b; }
         } else {
            toggleAuto(false);
            App.modules.UI.addLog("Take Profit Hit.", "success");
+           
+           // If auto resume timer is enabled, start it
+           if (App.modules.AutoResume.isEnabled()) {
+             App.modules.AutoResume.startTimer('Take Profit');
+           }
         }
       }
     }
@@ -1683,7 +1941,8 @@ tbody tr:hover { background: #1e293b; }
       handleTradeResult,
       getAutoRunning: () => isAutoRunning,
       getCycleCooldown: () => isCycleCooldown,
-      resumeAutoTrade: () => toggleAuto(true)
+      resumeAutoTrade: () => toggleAuto(true),
+      toggleAuto
     };
   })();
 
@@ -1825,6 +2084,7 @@ tbody tr:hover { background: #1e293b; }
         market: Config.currentMarketValue,
         mapperToggle: document.getElementById('mapperToggle').checked,
         virtualTradeToggle: document.getElementById('virtualTradeToggle').checked,
+        autoResumeToggle: document.getElementById('autoResumeToggle').checked,
         selectedAIModel: Config.selectedAIModel,
         selectedContractType: Config.selectedContractType
       };
@@ -1848,6 +2108,12 @@ tbody tr:hover { background: #1e293b; }
           document.getElementById('virtualTradeToggle').checked = set.virtualTradeToggle;
           if(set.virtualTradeToggle) {
             document.getElementById('virtualModeBadge').classList.add('active');
+          }
+        }
+        if(set.autoResumeToggle) {
+          document.getElementById('autoResumeToggle').checked = set.autoResumeToggle;
+          if(set.autoResumeToggle) {
+            document.getElementById('autoResumeBadge').classList.add('active');
           }
         }
         
@@ -1917,3 +2183,4 @@ tbody tr:hover { background: #1e293b; }
 </script>
 </body>
 </html>
+      
