@@ -138,24 +138,10 @@ tbody tr:hover { background: #1e293b; }
 .contract-option label { cursor: pointer; margin: 0; font-size: 12px; width: 100%; }
 .contract-description { font-size: 9px; opacity: 0.6; margin-top: 2px; }
 
-/* Next Occurrence Indicator */
-.next-occurrence-badge { 
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); 
-  color: white; 
-  padding: 6px 12px; 
-  border-radius: 6px; 
-  font-size: 11px; 
-  font-weight: 700; 
-  display: inline-block; 
-  margin-top: 8px;
-  border: 2px solid #a78bfa;
-  animation: glow 2s infinite;
-}
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 5px #8b5cf6; }
-  50% { box-shadow: 0 0 15px #8b5cf6, 0 0 25px #8b5cf6; }
-}
+/* Consecutive Loss Counter */
+.consec-loss-indicator { background: #1e293b; padding: 8px; border-radius: 6px; text-align: center; margin-top: 8px; border: 1px solid #334155; }
+.consec-loss-indicator span { font-size: 10px; color: #94a3b8; display: block; margin-bottom: 3px; }
+.consec-loss-indicator b { font-size: 16px; color: #ef4444; display: block; }
 </style>
 </head>
 <body>
@@ -257,9 +243,7 @@ tbody tr:hover { background: #1e293b; }
   </div>
   
   <div class="prediction-box">
-    <div class="prediction-status">🎯 AI Next Digit Prediction
-      <div class="next-occurrence-badge">⏭️ NEXT OCCURRENCE MODE</div>
-    </div>
+    <div class="prediction-status">🎯 AI Next Digit Prediction</div>
     <div class="prediction-digit" id="predictionDisplay">
       <span class="prediction-waiting">WAITING...</span>
     </div>
@@ -294,7 +278,7 @@ tbody tr:hover { background: #1e293b; }
       <span id="clearLog" style="cursor:pointer; color:#3b82f6">Clear</span>
     </div>
     <div class="log-container" id="logContainer">
-      <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">AI Engine Ready - Next Occurrence Mode Active.</span></div>
+      <div class="log-entry"><span class="log-time">[System]</span> <span class="log-msg-success">AI Engine Ready.</span></div>
     </div>
   </div>
 </div>
@@ -341,8 +325,8 @@ tbody tr:hover { background: #1e293b; }
   <input id="stake" class="save-setting" type="number" value="1" min="0.35" step="0.01">
   <label>Duration (Ticks)</label>
   <input id="duration" class="save-setting" type="number" value="1" min="1" max="10">
-  <label>Cooldown (seconds)</label>
-  <input id="cooldown" class="save-setting" type="number" value="2" min="1">
+  <label>Cooldown (seconds) - Set to 0 for instant trading</label>
+  <input id="cooldown" class="save-setting" type="number" value="2" min="0">
   
   <label>Minimum Confidence Threshold (%)</label>
   <input id="minConfidence" class="save-setting" type="number" value="15" min="0" max="100" step="5">
@@ -408,6 +392,17 @@ tbody tr:hover { background: #1e293b; }
   <input id="stoploss" class="save-setting" type="number" value="10" min="1">
   <label>Take Profit ($)</label>
   <input id="takeprofit" class="save-setting" type="number" value="10" min="1">
+  
+  <label>Consecutive Loss Stop (0 = disabled, uses $ Stop Loss)</label>
+  <input id="consecLossStop" class="save-setting" type="number" value="0" min="0" max="50" step="1">
+  <div style="font-size: 10px; opacity: 0.7; margin-top: 3px; color: #94a3b8;">
+    When set to 0, only dollar-based stop loss applies. When &gt; 0, auto-trade stops after this many consecutive losses.
+  </div>
+  
+  <div class="consec-loss-indicator">
+    <span>Current Consecutive Losses</span>
+    <b id="consecLossCounter">0</b>
+  </div>
 </div>
 
 <button id="cycleBtn" class="btn-cycle">Auto Market Cycle: OFF</button>
@@ -435,7 +430,7 @@ tbody tr:hover { background: #1e293b; }
 
 <div class="card">
 <h3>Trade History</h3>
-  <div class="table-container">
+<div class="table-container">
 <table>
 <thead><tr><th>#</th><th>Mode</th><th>Result</th><th>P/L</th><th>Market</th></tr></thead>
 <tbody id="history"></tbody>
@@ -456,7 +451,7 @@ tbody tr:hover { background: #1e293b; }
     accountBalance: 0,
     selectedAIModel: 'markov1',
     selectedContractType: 'DIGITMATCH',
-    maxHistoryRows: 500
+    maxHistoryRows: 700
   };
 
   // ============ APP MODULES ============
@@ -478,7 +473,7 @@ tbody tr:hover { background: #1e293b; }
         setTimeout(() => this.modules.Connection.connect(), 1000); 
       }
       
-      this.modules.UI.addLog("System: AI Engine Initialized - Next Occurrence Mode.", "success");
+      this.modules.UI.addLog("System: AI Engine Initialized.", "success");
     }
   };
 
@@ -822,7 +817,7 @@ tbody tr:hover { background: #1e293b; }
       isExplicitLogout = false;
       App.modules.UI.updateStatus('Connecting...', 'disconnected');
       
-      ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
+      ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=116948');
       
       ws.onopen = () => { 
         App.modules.UI.addLog("WebSocket Connected.", "info"); 
@@ -880,7 +875,7 @@ tbody tr:hover { background: #1e293b; }
       }
       
       if (data.buy) {
-        App.modules.Trader.setContractId(data.buy.contract_id);
+        App.modules.Trader.addContractId(data.buy.contract_id);
         App.modules.UI.addLog(`Trade Placed (ID: ${data.buy.contract_id})`, "success");
         sendAPIRequest({ proposal_open_contract: 1, contract_id: data.buy.contract_id, subscribe: 1 });
       }
@@ -889,7 +884,7 @@ tbody tr:hover { background: #1e293b; }
         const contract = data.proposal_open_contract;
         if (contract.is_settled === 1 || ['won', 'lost', 'sold'].includes(contract.status)) {
           App.modules.Trader.handleTradeResult(contract);
-          App.modules.Trader.setContractId(null);
+          App.modules.Trader.removeContractId(contract.contract_id);
           if (data.subscription) sendAPIRequest({ forget: data.subscription.id });
         }
       }
@@ -947,31 +942,11 @@ tbody tr:hover { background: #1e293b; }
     let predictionConfidence = 0;
     let lastDigit = null;
     
-    // NEW: Track pending prediction for next occurrence
-    let pendingPrediction = null;
-    
     function processTick(digit) {
-      // Store current digit
+      // Store current digit for virtual trade validation
       lastDigit = digit;
       
-      // === CRITICAL: CHECK IF PENDING PREDICTION MATCHES CURRENT DIGIT ===
-      if (pendingPrediction !== null) {
-        if (pendingPrediction.digit === digit) {
-          // Prediction matched! This is the "next occurrence"
-          App.modules.UI.addLog(`✅ NEXT OCCURRENCE: Digit ${digit} appeared as predicted!`, "success");
-          
-          // Process virtual trade result if queued
-          App.modules.VirtualTrade.processTickResult(digit);
-          
-          // Clear the pending prediction
-          pendingPrediction = null;
-        } else {
-          // Prediction didn't match, update pending prediction to new one below
-          App.modules.UI.addLog(`❌ Predicted ${pendingPrediction.digit}, got ${digit}. Updating prediction...`, "warn");
-        }
-      }
-      
-      // 1. Update History & Math
+      // 1. Update History & Math FIRST
       digitHistory.unshift(digit);
       if (digitHistory.length > 1000) digitHistory.pop();
       
@@ -984,30 +959,20 @@ tbody tr:hover { background: #1e293b; }
       // 2. Update AI models (higher-order Markov chains)
       App.modules.AIEngine.updateModels(digitHistory);
       
-      // 3. CALCULATE NEW PREDICTION for NEXT occurrence
-      const newPrediction = calculateInternalPrediction(digit);
+      // 3. CALCULATE PREDICTION INTERNALLY (Before UI)
+      const internalPred = calculateInternalPrediction(digit);
       
-      // Store as pending prediction (will be validated on next tick)
-      if (newPrediction.digit !== null) {
-        pendingPrediction = {
-          digit: newPrediction.digit,
-          confidence: newPrediction.confidence,
-          timestamp: Date.now()
-        };
-        
-        // 4. CHECK FOR AUTO TRADE - NOW WITH UPDATED PENDING PREDICTION
-        // Only check if NOT in cycle cooldown and auto is running
-        if (App.modules.Trader.getAutoRunning() && !App.modules.Trader.getCycleCooldown()) {
-          App.modules.Trader.checkAndAutoTrade(pendingPrediction); 
-        }
-      } else {
-        // No valid prediction yet, clear pending
-        pendingPrediction = null;
+      // 4. Process pending virtual trade if exists
+      App.modules.VirtualTrade.processTickResult(digit);
+      
+      // 5. TRADE CHECK (Pass the prediction to Trader)
+      if (App.modules.Trader.getAutoRunning() && !App.modules.Trader.getCycleCooldown()) {
+         App.modules.Trader.checkAndAutoTrade(internalPred); 
       }
       
-      // 5. UPDATE UI
+      // 6. UPDATE UI
       updateDisplay();
-      updatePredictionUI(newPrediction, digit);
+      updatePredictionUI(internalPred, digit);
     }
     
     function calculateInternalPrediction(lastDigit) {
@@ -1053,7 +1018,7 @@ tbody tr:hover { background: #1e293b; }
       }
 
       const modelName = getModelDisplayName();
-      const info = `${modelName}: After ${lastDigit}, digit ${pred.digit} appears next ${pred.confidence.toFixed(1)}% of the time. Waiting for NEXT ${pred.digit}...`;
+      const info = `${modelName}: When ${lastDigit} appears, ${pred.digit} follows ${pred.confidence.toFixed(1)}% of the time.`;
       document.getElementById('predictionInfo').textContent = info;
       
       const strengthEl = document.getElementById('patternStrength');
@@ -1121,13 +1086,11 @@ tbody tr:hover { background: #1e293b; }
         predictedDigit = null;
         predictionConfidence = 0;
         lastDigit = null;
-        pendingPrediction = null; // Clear pending prediction
         App.modules.AIEngine.reset();
         App.modules.UI.addLog("Memory wiped for new market", "warn");
       },
       getPrediction: () => {
-        // Return the pending prediction if available, otherwise current
-        return pendingPrediction || { digit: predictedDigit, confidence: predictionConfidence };
+        return { digit: predictedDigit, confidence: predictionConfidence };
       },
       getLastDigit: () => lastDigit,
       getData: () => ({ 
@@ -1197,7 +1160,7 @@ tbody tr:hover { background: #1e293b; }
         timestamp: Date.now()
       };
       
-      const typeDesc = contractType === 'DIGITMATCH' ? `Next Digit ${targetDigit}` : 
+      const typeDesc = contractType === 'DIGITMATCH' ? `Digit ${targetDigit}` : 
                        contractType === 'DIGITOVER' ? 'Over 5' : 'Under 5';
       App.modules.UI.addLog(`[VIRTUAL] Trade queued: ${typeDesc} (Prob: ${confidence.toFixed(1)}%)`, "info");
     }
@@ -1226,7 +1189,7 @@ tbody tr:hover { background: #1e293b; }
       
       virtualStats.profit += payout;
       
-      const typeDesc = trade.contractType === 'DIGITMATCH' ? `Next Digit ${trade.targetDigit}` : 
+      const typeDesc = trade.contractType === 'DIGITMATCH' ? `Digit ${trade.targetDigit}` : 
                        trade.contractType === 'DIGITOVER' ? 'Over 5' : 'Under 5';
       
       if (isWin) {
@@ -1300,9 +1263,10 @@ tbody tr:hover { background: #1e293b; }
   // ============ TRADER MODULE ============
   App.modules.Trader = (function() {
     let isAutoRunning = false;
-    let currentContractId = null;
+    let activeContractIds = new Set();
     let stats = { trades: 0, wins: 0, losses: 0, profit: 0 };
     let lastTradeTime = 0;
+    let consecutiveLosses = 0;
     
     let isMarketCycleActive = false;
     let isCooldownLoopActive = false;
@@ -1336,14 +1300,14 @@ tbody tr:hover { background: #1e293b; }
       }
       
       if (isVirtual) {
-        const typeDesc = contractType === 'DIGITMATCH' ? `Next Digit ${targetDigit}` : 
+        const typeDesc = contractType === 'DIGITMATCH' ? `Digit ${targetDigit}` : 
                          contractType === 'DIGITOVER' ? 'Over 5' : 'Under 5';
         App.modules.UI.addLog(`[VIRTUAL] Buying ${typeDesc} (AI Prob: ${conf.toFixed(1)}%)`, "info");
         App.modules.VirtualTrade.queueVirtualTrade(contractType, targetDigit, conf);
         return;
       }
       
-      const typeDesc = contractType === 'DIGITMATCH' ? `Next Digit ${targetDigit}` : 
+      const typeDesc = contractType === 'DIGITMATCH' ? `Digit ${targetDigit}` : 
                        contractType === 'DIGITOVER' ? 'Over 5' : 'Under 5';
       App.modules.UI.addLog(`[LIVE] Buying ${typeDesc} (AI Prob: ${conf.toFixed(1)}%)`, "info");
       
@@ -1375,16 +1339,17 @@ tbody tr:hover { background: #1e293b; }
     }
     
     function checkAndAutoTrade(prediction) {
-      // Skip if contract is pending
-      if (currentContractId !== null) return;
-      
-      // Validate prediction object
-      if (!prediction || prediction.digit === null || prediction.digit === undefined) {
-        return;
-      }
-      
       const now = Date.now();
       const cooldownSec = parseFloat(document.getElementById('cooldown').value);
+      
+      // NEW LOGIC: If cooldown is 0, allow trading even with pending contracts
+      const allowMultipleTrades = (cooldownSec === 0);
+      
+      // Skip if contract is pending AND cooldown is NOT zero
+      if (!allowMultipleTrades && activeContractIds.size > 0) return;
+      
+      // Check cooldown timer only if cooldown > 0
+      if (cooldownSec > 0 && now - lastTradeTime < (cooldownSec * 1000)) return;
       
       // Check if in virtual mode
       const isVirtualEnabled = App.modules.VirtualTrade.isEnabled();
@@ -1394,6 +1359,9 @@ tbody tr:hover { background: #1e293b; }
       
       // === CONTRACT TYPE LOGIC ===
       if (contractType === 'DIGITMATCH') {
+        // Skip if prediction is not ready
+        if (prediction.digit === null || prediction.digit === undefined) return;
+        
         // === EXCLUSIVE PREDICTION MAPPER LOGIC (Only for DIGITMATCH) ===
         const isMapperOn = document.getElementById('mapperToggle').checked;
         const mapTrigger = document.getElementById('mapperTrigger').value;
@@ -1436,9 +1404,6 @@ tbody tr:hover { background: #1e293b; }
         const userMinConf = parseFloat(document.getElementById('minConfidence').value);
         if (finalConfidence < userMinConf) return;
         
-        // Check cooldown
-        if (now - lastTradeTime < (cooldownSec * 1000)) return;
-        
         lastTradeTime = now;
         
         // Route to virtual or live trade
@@ -1451,6 +1416,9 @@ tbody tr:hover { background: #1e293b; }
       } else if (contractType === 'DIGITOVER' || contractType === 'DIGITUNDER') {
         // For OVER/UNDER contracts, use same triggers as DIGITMATCH but ignore mapper
         
+        // Skip if prediction is not ready (still use prediction as trigger)
+        if (prediction.digit === null || prediction.digit === undefined) return;
+        
         // Check confidence threshold (use same threshold as DIGITMATCH)
         const userMinConf = parseFloat(document.getElementById('minConfidence').value);
         if (prediction.confidence < userMinConf) return;
@@ -1460,9 +1428,6 @@ tbody tr:hover { background: #1e293b; }
         if (!isNaN(manualDigit) && manualDigit !== 0 && prediction.digit !== manualDigit) {
           return;
         }
-        
-        // Check cooldown
-        if (now - lastTradeTime < (cooldownSec * 1000)) return;
         
         lastTradeTime = now;
         
@@ -1480,14 +1445,22 @@ tbody tr:hover { background: #1e293b; }
       const pl = parseFloat(contract.profit || 0);
       
       stats.trades++;
-      if(isWin) stats.wins++; else stats.losses++;
+      if(isWin) {
+        stats.wins++;
+        consecutiveLosses = 0; // Reset on win
+      } else {
+        stats.losses++;
+        consecutiveLosses++; // Increment on loss
+      }
       stats.profit += pl;
       
       App.modules.UI.addLog(`[LIVE] Result: ${isWin?'WIN':'LOSS'} ($${pl.toFixed(2)})`, isWin?'success':'error');
       App.modules.UI.updateStats(stats);
+      App.modules.UI.updateConsecLossCounter(consecutiveLosses);
       App.modules.UI.addToHistory(stats.trades, isWin?'Win':'Loss', pl, Config.currentMarketValue, false);
       
       localStorage.setItem('trade_stats_dm_pro', JSON.stringify(stats));
+      localStorage.setItem('consec_losses_dm_pro', consecutiveLosses.toString());
       localStorage.setItem('trade_history_dm_pro', document.getElementById('history').innerHTML);
       
       checkTargets();
@@ -1496,13 +1469,23 @@ tbody tr:hover { background: #1e293b; }
     function checkTargets() {
       const tp = parseFloat(document.getElementById('takeprofit').value);
       const sl = parseFloat(document.getElementById('stoploss').value);
+      const consecLossStop = parseInt(document.getElementById('consecLossStop').value);
       
+      // Check consecutive loss stop (if enabled - value > 0)
+      if (consecLossStop > 0 && consecutiveLosses >= consecLossStop) {
+        toggleAuto(false);
+        App.modules.UI.addLog(`Consecutive Loss Stop Hit (${consecutiveLosses} losses).`, "error");
+        return;
+      }
+      
+      // Check dollar-based stop loss
       if (stats.profit <= -sl) {
         toggleAuto(false);
         App.modules.UI.addLog("Stop Loss Hit.", "error");
         return;
       }
       
+      // Check take profit
       if (stats.profit >= tp) {
         if (isMarketCycleActive) {
            advanceCycle();
@@ -1520,13 +1503,17 @@ tbody tr:hover { background: #1e293b; }
         App.modules.UI.addLog(`Cycle Target Reached. Switching to ${next}`, "success");
         
         stats = { trades: 0, wins: 0, losses: 0, profit: 0 };
+        consecutiveLosses = 0;
         App.modules.UI.updateStats(stats);
+        App.modules.UI.updateConsecLossCounter(consecutiveLosses);
         
         App.modules.UI.selectMarket(next);
       } else {
         App.modules.UI.addLog("Full Market Cycle Complete.", "success");
         stats = { trades: 0, wins: 0, losses: 0, profit: 0 };
+        consecutiveLosses = 0;
         App.modules.UI.updateStats(stats);
+        App.modules.UI.updateConsecLossCounter(consecutiveLosses);
         
         if (isCooldownLoopActive) {
           startCycleCooldown();
@@ -1581,9 +1568,11 @@ tbody tr:hover { background: #1e293b; }
         
         const mode = App.modules.VirtualTrade.isEnabled() ? "VIRTUAL" : "LIVE";
         const model = Config.selectedAIModel.toUpperCase();
-        const contractType = Config.selectedContractType === 'DIGITMATCH' ? 'NEXT DIGIT MATCH' :
+        const contractType = Config.selectedContractType === 'DIGITMATCH' ? 'DIGIT MATCH' :
                             Config.selectedContractType === 'DIGITOVER' ? 'DIGIT OVER 5' : 'DIGIT UNDER 5';
-        App.modules.UI.addLog(`Auto-Trade Enabled in ${mode} mode using ${model} for ${contractType}.`, "success");
+        const cooldownSec = parseFloat(document.getElementById('cooldown').value);
+        const cooldownMsg = cooldownSec === 0 ? " (INSTANT TRADING MODE)" : "";
+        App.modules.UI.addLog(`Auto-Trade Enabled in ${mode} mode using ${model} for ${contractType}${cooldownMsg}.`, "success");
       } else {
         localStorage.removeItem('isAutoRunning');
         btn.textContent = "Start Auto";
@@ -1624,15 +1613,26 @@ tbody tr:hover { background: #1e293b; }
     
     function resetStats() {
       stats = { trades: 0, wins: 0, losses: 0, profit: 0 };
+      consecutiveLosses = 0;
       App.modules.UI.updateStats(stats);
+      App.modules.UI.updateConsecLossCounter(consecutiveLosses);
       document.getElementById('history').innerHTML = '';
       localStorage.removeItem('trade_stats_dm_pro');
+      localStorage.removeItem('consec_losses_dm_pro');
       localStorage.removeItem('trade_history_dm_pro');
       
       // Also reset virtual stats
       App.modules.VirtualTrade.resetVirtualStats();
       
       App.modules.UI.addLog("All stats reset.", "info");
+    }
+    
+    function addContractId(id) {
+      activeContractIds.add(id);
+    }
+    
+    function removeContractId(id) {
+      activeContractIds.delete(id);
     }
     
     return {
@@ -1667,11 +1667,19 @@ tbody tr:hover { background: #1e293b; }
         document.getElementById('cooldownBtn').addEventListener('click', toggleCooldownLoop);
         document.getElementById('resetBtn').addEventListener('click', resetStats);
         
+        // Load saved stats
         const s = localStorage.getItem('trade_stats_dm_pro');
         if(s) { stats = JSON.parse(s); App.modules.UI.updateStats(stats); }
+        
+        const cl = localStorage.getItem('consec_losses_dm_pro');
+        if(cl) { 
+          consecutiveLosses = parseInt(cl); 
+          App.modules.UI.updateConsecLossCounter(consecutiveLosses);
+        }
       },
       checkAndAutoTrade,
-      setContractId: (id) => currentContractId = id,
+      addContractId,
+      removeContractId,
       handleTradeResult,
       getAutoRunning: () => isAutoRunning,
       getCycleCooldown: () => isCycleCooldown,
@@ -1730,7 +1738,7 @@ tbody tr:hover { background: #1e293b; }
       localStorage.setItem('selectedContractType', type);
       
       const typeNames = {
-        DIGITMATCH: 'Next Digit Match',
+        DIGITMATCH: 'Digit Match',
         DIGITOVER: 'Digit Over 5',
         DIGITUNDER: 'Digit Under 5'
       };
@@ -1767,6 +1775,12 @@ tbody tr:hover { background: #1e293b; }
       p.style.color = stats.profit > 0 ? '#22c55e' : (stats.profit < 0 ? '#ef4444' : '#e5e7eb');
     }
     
+    function updateConsecLossCounter(count) {
+      const counter = document.getElementById('consecLossCounter');
+      counter.textContent = count;
+      counter.style.color = count === 0 ? '#22c55e' : (count >= 3 ? '#ef4444' : '#f59e0b');
+    }
+    
     function startSessionTimer() {
       if (timerIntervalId) clearInterval(timerIntervalId);
       sessionStartTime = Date.now(); 
@@ -1799,7 +1813,7 @@ tbody tr:hover { background: #1e293b; }
       
       if (digit !== null && digit !== undefined) {
         const color = conf > 18 ? '#22c55e' : (conf > 14 ? '#f59e0b' : '#94a3b8');
-        box.innerHTML = `<span class="prediction-ready" style="color:${color}">NEXT ${digit}</span>`;
+        box.innerHTML = `<span class="prediction-ready" style="color:${color}">DIGIT ${digit}</span>`;
       } else {
         box.innerHTML = `<span class="prediction-waiting">WAITING...</span>`;
       }
@@ -1884,6 +1898,7 @@ tbody tr:hover { background: #1e293b; }
       updateStatus,
       updateBalance,
       updateStats,
+      updateConsecLossCounter,
       startSessionTimer,
       addToHistory,
       updatePredictionDisplay,
