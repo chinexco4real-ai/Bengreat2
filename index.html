@@ -462,7 +462,7 @@ tbody tr:hover { background: #1e293b; }
   <label>Consecutive Loss Stop (0 = disabled, uses $ Stop Loss)</label>
   <input id="consecLossStop" class="save-setting" type="number" value="0" min="0" max="50" step="1">
   <div style="font-size: 10px; opacity: 0.7; margin-top: 3px; color: #94a3b8;">
-    When set to 0, only dollar-based stop loss applies. When &gt; 0, auto-trade stops after this many consecutive losses.
+    When set to 0, only dollar-based stop loss applies. When &gt; 0, auto-trade stops after this many consecutive losses (resets on win or profit target).
   </div>
   
   <div class="consec-loss-indicator">
@@ -517,7 +517,7 @@ tbody tr:hover { background: #1e293b; }
     accountBalance: 0,
     selectedAIModel: 'markov1',
     selectedContractType: 'DIGITMATCH',
-    maxHistoryRows: 700
+    maxHistoryRows: 2500
   };
 
   // ============ APP MODULES ============
@@ -1299,10 +1299,22 @@ tbody tr:hover { background: #1e293b; }
     }
     
     function updateTopStreaks(streak) {
-      // Add new streak to top streaks if it qualifies
+      // Add new streak to array
       topStreaks.push(streak);
-      topStreaks.sort((a, b) => b - a); // Sort descending
-      topStreaks = topStreaks.slice(0, 4); // Keep only top 4
+      
+      // Sort in descending order
+      topStreaks.sort((a, b) => b - a);
+      
+      // Remove duplicates by keeping only unique values
+      topStreaks = [...new Set(topStreaks)];
+      
+      // Keep only top 4
+      topStreaks = topStreaks.slice(0, 4);
+      
+      // Pad with zeros if less than 4
+      while (topStreaks.length < 4) {
+        topStreaks.push(0);
+      }
       
       updateStreakDisplay();
       saveStreakData();
@@ -1726,20 +1738,14 @@ tbody tr:hover { background: #1e293b; }
         return;
       }
       
-      // Check dollar-based stop loss
-      if (stats.profit <= -sl) {
-        toggleAuto(false);
-        App.modules.UI.addLog("Stop Loss Hit.", "error");
-        
-        // If auto resume timer is enabled, start it
-        if (App.modules.AutoResume.isEnabled()) {
-          App.modules.AutoResume.startTimer('Stop Loss');
-        }
-        return;
-      }
-      
-      // Check take profit
+      // Check take profit FIRST (before stop loss)
+      // If profit target is hit, reset consecutive losses and stats
       if (stats.profit >= tp) {
+        // Reset consecutive losses counter when profit target is hit
+        consecutiveLosses = 0;
+        App.modules.UI.updateConsecLossCounter(consecutiveLosses);
+        localStorage.setItem('consec_losses_dm_pro', consecutiveLosses.toString());
+        
         if (isMarketCycleActive) {
            advanceCycle();
         } else {
@@ -1751,6 +1757,19 @@ tbody tr:hover { background: #1e293b; }
              App.modules.AutoResume.startTimer('Take Profit');
            }
         }
+        return;
+      }
+      
+      // Check dollar-based stop loss
+      if (stats.profit <= -sl) {
+        toggleAuto(false);
+        App.modules.UI.addLog("Stop Loss Hit.", "error");
+        
+        // If auto resume timer is enabled, start it
+        if (App.modules.AutoResume.isEnabled()) {
+          App.modules.AutoResume.startTimer('Stop Loss');
+        }
+        return;
       }
     }
     
@@ -2183,4 +2202,3 @@ tbody tr:hover { background: #1e293b; }
 </script>
 </body>
 </html>
-      
