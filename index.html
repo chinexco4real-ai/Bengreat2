@@ -1726,50 +1726,44 @@ tbody tr:hover { background: #1e293b; }
       const sl = parseFloat(document.getElementById('stoploss').value);
       const consecLossStop = parseInt(document.getElementById('consecLossStop').value);
       
+      let shouldStop = false;
+      let stopReason = '';
+      
       // Check consecutive loss stop (if enabled - value > 0)
       if (consecLossStop > 0 && consecutiveLosses >= consecLossStop) {
-        toggleAuto(false);
-        App.modules.UI.addLog(`Consecutive Loss Stop Hit (${consecutiveLosses} losses).`, "error");
-        
-        // If auto resume timer is enabled, start it
-        if (App.modules.AutoResume.isEnabled()) {
-          App.modules.AutoResume.startTimer('Consecutive Loss Stop');
-        }
-        return;
+        shouldStop = true;
+        stopReason = 'Consecutive Loss Stop';
       }
       
-      // Check take profit FIRST (before stop loss)
-      // If profit target is hit, reset consecutive losses and stats
+      // Check take profit
       if (stats.profit >= tp) {
+        shouldStop = true;
+        stopReason = 'Take Profit';
         // Reset consecutive losses counter when profit target is hit
         consecutiveLosses = 0;
         App.modules.UI.updateConsecLossCounter(consecutiveLosses);
         localStorage.setItem('consec_losses_dm_pro', consecutiveLosses.toString());
-        
-        if (isMarketCycleActive) {
-           advanceCycle();
-        } else {
-           toggleAuto(false);
-           App.modules.UI.addLog("Take Profit Hit.", "success");
-           
-           // If auto resume timer is enabled, start it
-           if (App.modules.AutoResume.isEnabled()) {
-             App.modules.AutoResume.startTimer('Take Profit');
-           }
-        }
-        return;
       }
       
       // Check dollar-based stop loss
       if (stats.profit <= -sl) {
-        toggleAuto(false);
-        App.modules.UI.addLog("Stop Loss Hit.", "error");
-        
-        // If auto resume timer is enabled, start it
-        if (App.modules.AutoResume.isEnabled()) {
-          App.modules.AutoResume.startTimer('Stop Loss');
+        shouldStop = true;
+        stopReason = 'Stop Loss';
+      }
+      
+      // If any condition is met, stop trading and optionally start auto-resume
+      if (shouldStop) {
+        if (isMarketCycleActive && stopReason === 'Take Profit') {
+          advanceCycle();
+        } else {
+          toggleAuto(false);
+          App.modules.UI.addLog(`${stopReason} Hit.`, stopReason === 'Take Profit' ? 'success' : 'error');
+          
+          // If auto resume timer is enabled, start it for ANY of the 3 triggers
+          if (App.modules.AutoResume.isEnabled()) {
+            App.modules.AutoResume.startTimer(stopReason);
+          }
         }
-        return;
       }
     }
     
@@ -2212,4 +2206,3 @@ tbody tr:hover { background: #1e293b; }
 </script>
 </body>
 </html>
-        
