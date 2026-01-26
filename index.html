@@ -1421,7 +1421,10 @@ tbody tr:hover { background: #1e293b; }
     }
     
     function startTimer(reason) {
-      if (!isTimerActive) return;
+      if (!isEnabled()) {
+        App.modules.UI.addLog(`Auto Resume Timer is OFF - Not starting timer for ${reason}`, "warn");
+        return;
+      }
       
       const waitMinutes = parseInt(document.getElementById('autoResumeWaitTime').value);
       remainingSeconds = waitMinutes * 60;
@@ -1479,7 +1482,7 @@ tbody tr:hover { background: #1e293b; }
     }
     
     function addToCumulative(profit) {
-      if (isTimerActive) {
+      if (isEnabled()) {
         cumulativeProfit += profit;
         updateCumulativeDisplay();
         saveCumulativeProfit();
@@ -1759,9 +1762,12 @@ tbody tr:hover { background: #1e293b; }
           toggleAuto(false);
           App.modules.UI.addLog(`${stopReason} Hit.`, stopReason === 'Take Profit' ? 'success' : 'error');
           
-          // If auto resume timer is enabled, start it for ANY of the 3 triggers
+          // ENFORCED AUTO-RESUME: Always check and start timer if enabled
           if (App.modules.AutoResume.isEnabled()) {
+            App.modules.UI.addLog(`🔔 Triggering Auto-Resume Timer for: ${stopReason}`, "warn");
             App.modules.AutoResume.startTimer(stopReason);
+          } else {
+            App.modules.UI.addLog(`Auto-Resume Timer is disabled. Enable it to auto-restart trading.`, "info");
           }
         }
       }
