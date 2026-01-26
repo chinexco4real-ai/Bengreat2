@@ -1839,6 +1839,11 @@ tbody tr:hover { background: #1e293b; }
       
       const btn = document.getElementById('autoBtn');
       if (isAutoRunning) {
+        // RESET consecutive losses to 0 when auto-trade is enabled
+        consecutiveLosses = 0;
+        App.modules.UI.updateConsecLossCounter(consecutiveLosses);
+        localStorage.setItem('consec_losses_dm_pro', '0');
+        
         localStorage.setItem('isAutoRunning', 'true');
         btn.textContent = "Stop Auto";
         btn.style.background = "#ef4444";
@@ -1851,6 +1856,11 @@ tbody tr:hover { background: #1e293b; }
         const cooldownMsg = cooldownSec === 0 ? " (INSTANT TRADING MODE)" : "";
         App.modules.UI.addLog(`Auto-Trade Enabled in ${mode} mode using ${model} for ${contractType}${cooldownMsg}.`, "success");
       } else {
+        // RESET consecutive losses to 0 when auto-trade is disabled
+        consecutiveLosses = 0;
+        App.modules.UI.updateConsecLossCounter(consecutiveLosses);
+        localStorage.setItem('consec_losses_dm_pro', '0');
+        
         localStorage.removeItem('isAutoRunning');
         btn.textContent = "Start Auto";
         btn.style.background = "#22c55e";
@@ -2202,3 +2212,4 @@ tbody tr:hover { background: #1e293b; }
 </script>
 </body>
 </html>
+        
