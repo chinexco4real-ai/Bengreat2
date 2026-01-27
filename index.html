@@ -1394,7 +1394,7 @@ tbody tr:hover { background: #1e293b; }
         if (isEnabled) {
           isTimerActive = true;
           document.getElementById('autoResumeBadge').classList.add('active');
-          App.modules.UI.addLog("Auto Resume Timer ENABLED", "info");
+          App.modules.UI.addLog("🔔 Auto Resume Timer ENABLED - Will loop with same settings", "info");
         } else {
           isTimerActive = false;
           stopTimer();
@@ -1422,7 +1422,7 @@ tbody tr:hover { background: #1e293b; }
     
     function startTimer(reason) {
       if (!isEnabled()) {
-        App.modules.UI.addLog(`Auto Resume Timer is OFF - Not starting timer for ${reason}`, "warn");
+        App.modules.UI.addLog(`⚠️ Auto Resume Timer is OFF - Not starting timer for ${reason}`, "warn");
         return;
       }
       
@@ -1432,7 +1432,14 @@ tbody tr:hover { background: #1e293b; }
       const display = document.getElementById('timerDisplay');
       display.style.display = 'block';
       
-      App.modules.UI.addLog(`⏱️ Auto Resume: Waiting ${waitMinutes}m (${reason})`, "warn");
+      // Log the exact settings that will be used after resume
+      const tp = parseFloat(document.getElementById('takeprofit').value);
+      const sl = parseFloat(document.getElementById('stoploss').value);
+      const consecLoss = parseInt(document.getElementById('consecLossStop').value);
+      
+      App.modules.UI.addLog(`⏱️ Auto Resume Timer Started (${reason})`, "warn");
+      App.modules.UI.addLog(`⚙️ Will resume with: TP=$${tp}, SL=$${sl}, ConsecLoss=${consecLoss}`, "info");
+      App.modules.UI.addLog(`⏳ Waiting ${waitMinutes} minutes before restart...`, "info");
       
       if (timerIntervalId) clearInterval(timerIntervalId);
       
@@ -1459,21 +1466,31 @@ tbody tr:hover { background: #1e293b; }
     }
     
     function resumeTrading() {
-      App.modules.UI.addLog("⏱️ Timer Elapsed - Resuming Trading", "success");
+      App.modules.UI.addLog("⏱️ ✅ Timer Elapsed - RESUMING TRADING NOW", "success");
       
-      // Clear trade history
+      // Log the settings being used for this cycle
+      const tp = parseFloat(document.getElementById('takeprofit').value);
+      const sl = parseFloat(document.getElementById('stoploss').value);
+      const consecLoss = parseInt(document.getElementById('consecLossStop').value);
+      
+      App.modules.UI.addLog(`🔄 Cycle Settings: TP=$${tp}, SL=$${sl}, ConsecLoss=${consecLoss}`, "success");
+      
+      // Clear trade history for fresh cycle
       document.getElementById('history').innerHTML = '';
       localStorage.removeItem('trade_history_dm_pro');
       
-      // Enable virtual trade mode
+      // Enable virtual trade mode if not already enabled
       const virtualToggle = document.getElementById('virtualTradeToggle');
       if (!virtualToggle.checked) {
         virtualToggle.checked = true;
         document.getElementById('virtualModeBadge').classList.add('active');
-        App.modules.UI.addLog("Virtual Trade Mode AUTO-ENABLED", "info");
+        App.modules.UI.addLog("🎮 Virtual Trade Mode AUTO-ENABLED", "info");
       }
       
-      // Enable auto-trade
+      // CRITICAL: Reset virtual trade consecutive losses for new cycle
+      App.modules.VirtualTrade.resetVirtualStats();
+      
+      // Enable auto-trade with clean state
       if (!App.modules.Trader.getAutoRunning()) {
         App.modules.Trader.toggleAuto(true);
       }
@@ -1486,6 +1503,7 @@ tbody tr:hover { background: #1e293b; }
         cumulativeProfit += profit;
         updateCumulativeDisplay();
         saveCumulativeProfit();
+        App.modules.UI.addLog(`💰 Cumulative Total: $${cumulativeProfit.toFixed(2)}`, cumulativeProfit > 0 ? "success" : "error");
       }
     }
     
@@ -1709,8 +1727,7 @@ tbody tr:hover { background: #1e293b; }
       }
       stats.profit += pl;
       
-      // Add to cumulative profit if timer is active
-      App.modules.AutoResume.addToCumulative(pl);
+      // DO NOT add to cumulative here - only add when cycle completes
       
       App.modules.UI.addLog(`[LIVE] Result: ${isWin?'WIN':'LOSS'} ($${pl.toFixed(2)})`, isWin?'success':'error');
       App.modules.UI.updateStats(stats);
@@ -1725,6 +1742,7 @@ tbody tr:hover { background: #1e293b; }
     }
     
     function checkTargets() {
+      // CRITICAL: Always read fresh values from UI inputs
       const tp = parseFloat(document.getElementById('takeprofit').value);
       const sl = parseFloat(document.getElementById('stoploss').value);
       const consecLossStop = parseInt(document.getElementById('consecLossStop').value);
@@ -1736,9 +1754,10 @@ tbody tr:hover { background: #1e293b; }
       if (consecLossStop > 0 && consecutiveLosses >= consecLossStop) {
         shouldStop = true;
         stopReason = 'Consecutive Loss Stop';
+        App.modules.UI.addLog(`🛑 Consecutive Loss Stop: ${consecutiveLosses}/${consecLossStop}`, "error");
       }
       
-      // Check take profit
+      // Check take profit - use EXACT value from input
       if (stats.profit >= tp) {
         shouldStop = true;
         stopReason = 'Take Profit';
@@ -1746,12 +1765,14 @@ tbody tr:hover { background: #1e293b; }
         consecutiveLosses = 0;
         App.modules.UI.updateConsecLossCounter(consecutiveLosses);
         localStorage.setItem('consec_losses_dm_pro', consecutiveLosses.toString());
+        App.modules.UI.addLog(`✅ Take Profit Hit: $${stats.profit.toFixed(2)}/$${tp.toFixed(2)}`, "success");
       }
       
-      // Check dollar-based stop loss
+      // Check dollar-based stop loss - use EXACT value from input
       if (stats.profit <= -sl) {
         shouldStop = true;
         stopReason = 'Stop Loss';
+        App.modules.UI.addLog(`🛑 Stop Loss Hit: $${stats.profit.toFixed(2)}/-$${sl.toFixed(2)}`, "error");
       }
       
       // If any condition is met, stop trading and optionally start auto-resume
@@ -1759,15 +1780,31 @@ tbody tr:hover { background: #1e293b; }
         if (isMarketCycleActive && stopReason === 'Take Profit') {
           advanceCycle();
         } else {
+          // Stop auto-trading
           toggleAuto(false);
-          App.modules.UI.addLog(`${stopReason} Hit.`, stopReason === 'Take Profit' ? 'success' : 'error');
+          App.modules.UI.addLog(`🔴 ${stopReason} Triggered - Auto-Trade STOPPED`, stopReason === 'Take Profit' ? 'success' : 'error');
           
-          // ENFORCED AUTO-RESUME: Always check and start timer if enabled
+          // ENFORCED AUTO-RESUME LOGIC
           if (App.modules.AutoResume.isEnabled()) {
-            App.modules.UI.addLog(`🔔 Triggering Auto-Resume Timer for: ${stopReason}`, "warn");
+            App.modules.UI.addLog(`🔔 Auto-Resume is ENABLED - Starting timer...`, "warn");
+            
+            // IMPORTANT: Add cycle profit to cumulative BEFORE resetting
+            const cycleProfit = stats.profit;
+            App.modules.AutoResume.addToCumulative(cycleProfit);
+            App.modules.UI.addLog(`💰 Cycle P/L: $${cycleProfit.toFixed(2)} added to cumulative`, cycleProfit > 0 ? "success" : "error");
+            
+            // CRITICAL: Reset stats for next cycle AFTER adding to cumulative
+            stats = { trades: 0, wins: 0, losses: 0, profit: 0 };
+            consecutiveLosses = 0;
+            App.modules.UI.updateStats(stats);
+            App.modules.UI.updateConsecLossCounter(consecutiveLosses);
+            localStorage.setItem('trade_stats_dm_pro', JSON.stringify(stats));
+            localStorage.setItem('consec_losses_dm_pro', '0');
+            
+            // Start the timer
             App.modules.AutoResume.startTimer(stopReason);
           } else {
-            App.modules.UI.addLog(`Auto-Resume Timer is disabled. Enable it to auto-restart trading.`, "info");
+            App.modules.UI.addLog(`ℹ️ Auto-Resume is DISABLED. Enable it to automatically restart trading.`, "info");
           }
         }
       }
@@ -1854,7 +1891,7 @@ tbody tr:hover { background: #1e293b; }
                             Config.selectedContractType === 'DIGITOVER' ? 'DIGIT OVER 5' : 'DIGIT UNDER 5';
         const cooldownSec = parseFloat(document.getElementById('cooldown').value);
         const cooldownMsg = cooldownSec === 0 ? " (INSTANT TRADING MODE)" : "";
-        App.modules.UI.addLog(`Auto-Trade Enabled in ${mode} mode using ${model} for ${contractType}${cooldownMsg}.`, "success");
+        App.modules.UI.addLog(`🚀 Auto-Trade STARTED in ${mode} mode using ${model} for ${contractType}${cooldownMsg}`, "success");
       } else {
         // RESET consecutive losses to 0 when auto-trade is disabled
         consecutiveLosses = 0;
@@ -1864,7 +1901,7 @@ tbody tr:hover { background: #1e293b; }
         localStorage.removeItem('isAutoRunning');
         btn.textContent = "Start Auto";
         btn.style.background = "#22c55e";
-        App.modules.UI.addLog("Auto-Trade Stopped.", "warn");
+        App.modules.UI.addLog("🛑 Auto-Trade STOPPED", "warn");
       }
     }
     
@@ -1910,6 +1947,9 @@ tbody tr:hover { background: #1e293b; }
       
       // Also reset virtual stats
       App.modules.VirtualTrade.resetVirtualStats();
+      
+      // Also reset cumulative profit
+      App.modules.AutoResume.resetCumulative();
       
       App.modules.UI.addLog("All stats reset.", "info");
     }
