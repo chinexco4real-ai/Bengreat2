@@ -2183,9 +2183,11 @@
             }
         }
 
+        // ==================== FIXED analyzeMarketSignals() ====================
         function analyzeMarketSignals() {
             let result = { signal: null, message: 'Waiting for data...' };
 
+            // Run the selected strategy (now using the patched versions)
             switch (currentStrategy) {
                 case 'bounce':
                     result = analyzeBounceStrategy();
@@ -2196,60 +2198,57 @@
             }
 
             let signal = result.signal;
-            const originalSignal = signal; // Store original before any modifications
+            const originalSignal = signal;
 
-            // Log original signal
             if (signal) {
-                addLog(`📊 Strategy Signal: ${signal} - ${result.message}`, 'info');
+                addLog(`📊 Raw Strategy Signal: ${signal} - ${result.message}`, 'info');
             }
 
-            // Apply One Entry Per Setup filter
+            // ====================== ONE ENTRY PER SETUP (NOW FIXED) ======================
             const oneEntryEnabled = document.getElementById('oneEntryMode').checked;
             if (oneEntryEnabled && signal) {
-                const setupId = `${currentStrategy}-${Date.now()}`;
                 const timeSinceLastSetup = Date.now() - lastSetupDetectedTime;
                 
-                if (timeSinceLastSetup < 60000 && currentSetupId === setupId) {
-                    addLog(`🔒 One Entry Per Setup: Signal blocked (waiting for new setup)`, 'warning');
-                    updateSignalUI('NONE', 'One Entry Per Setup: Waiting for new setup...');
+                // Block if we are still inside the same setup (2 minutes window)
+                if (timeSinceLastSetup < 120000) {   // ← 120 seconds = 2 minutes
+                    addLog(`🔒 One Entry Per Setup: Blocked (same setup ${Math.round(timeSinceLastSetup/1000)}s ago)`, 'warning');
+                    updateSignalUI('NONE', `One Entry: Waiting for new setup... (${Math.round((120000 - timeSinceLastSetup)/1000)}s left)`);
                     return null;
                 }
                 
-                if (signal) {
-                    currentSetupId = setupId;
-                    lastSetupDetectedTime = Date.now();
-                    addLog(`✓ One Entry Per Setup: Allowed (new setup detected)`, 'info');
-                }
+                // New setup detected → allow the trade and reset timer
+                lastSetupDetectedTime = Date.now();
+                addLog(`✅ One Entry Per Setup: New setup accepted`, 'success');
             }
 
-            // FIXED: Apply Reverse Mode FIRST (before alternator)
+            // ====================== REVERSE MODE ======================
             const reverseModeEnabled = document.getElementById('reverseMode').checked;
             if (reverseModeEnabled && signal) {
-                const beforeReverse = signal;
+                const before = signal;
                 signal = signal === 'BUY' ? 'SELL' : 'BUY';
                 result.message += ' (Reversed)';
-                addLog(`🔁 Reverse Mode: ${beforeReverse} → ${signal}`, 'info');
+                addLog(`🔁 Reverse Mode: ${before} → ${signal}`, 'info');
             }
 
-            // FIXED: Apply Alternator Mode AFTER Reverse (checks final signal)
+            // ====================== ALTERNATOR MODE ======================
             const alternatorEnabled = document.getElementById('alternatorMode').checked;
             if (alternatorEnabled && signal) {
                 if (lastExecutedTradeType !== null && signal === lastExecutedTradeType) {
-                    const expectedSignal = lastExecutedTradeType === 'BUY' ? 'SELL' : 'BUY';
-                    addLog(`🔄 Alternator Mode: ${signal} blocked (last trade was ${lastExecutedTradeType}, waiting for ${expectedSignal})`, 'warning');
-                    updateSignalUI('NONE', `Alternator Mode: Waiting for ${expectedSignal} signal`);
+                    const nextExpected = lastExecutedTradeType === 'BUY' ? 'SELL' : 'BUY';
+                    addLog(`🔄 Alternator: ${signal} blocked (waiting for ${nextExpected})`, 'warning');
+                    updateSignalUI('NONE', `Alternator: Waiting for ${nextExpected}`);
                     return null;
-                } else {
-                    addLog(`✓ Alternator Mode: ${signal} allowed (last: ${lastExecutedTradeType || 'None'})`, 'info');
                 }
+                addLog(`✅ Alternator: ${signal} allowed`, 'info');
             }
 
+            // ====================== FINAL SIGNAL ======================
             if (signal) {
-                addLog(`✅ Final Signal: ${signal} (Original: ${originalSignal})`, 'success');
+                addLog(`🚀 FINAL EXECUTION SIGNAL: ${signal}`, 'success');
                 updateSignalUI(signal, result.message);
                 return signal;
             }
-            
+
             updateSignalUI('NONE', result.message);
             return null;
         }
