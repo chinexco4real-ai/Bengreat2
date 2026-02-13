@@ -1759,23 +1759,21 @@
         }
 
         function detectHigherHighsHigherLows(candles) {
-            if (candles.length < 3) return false;
-            
-            const recent = candles.slice(-3);
-            return recent[2].high > recent[1].high && 
-                   recent[1].high > recent[0].high &&
-                   recent[2].low > recent[1].low &&
-                   recent[1].low > recent[0].low;
+            if (candles.length < 4) return false;
+            const recent = candles.slice(-4);
+            return recent[3].high > recent[2].high && 
+                   recent[2].high > recent[1].high &&
+                   recent[3].low  > recent[2].low  && 
+                   recent[2].low  > recent[1].low;
         }
 
         function detectLowerLowsLowerHighs(candles) {
-            if (candles.length < 3) return false;
-            
-            const recent = candles.slice(-3);
-            return recent[2].high < recent[1].high && 
-                   recent[1].high < recent[0].high &&
-                   recent[2].low < recent[1].low &&
-                   recent[1].low < recent[0].low;
+            if (candles.length < 4) return false;
+            const recent = candles.slice(-4);
+            return recent[3].high < recent[2].high && 
+                   recent[2].high < recent[1].high &&
+                   recent[3].low  < recent[2].low  && 
+                   recent[2].low  < recent[1].low;
         }
 
         function calculateATR(candles, period = 14) {
@@ -1801,133 +1799,133 @@
 
         // --- Strategy Analysis Functions ---
 
-        // The Bounce Strategy - Trend Continuation (1m Candles)
+        // ==================== PATCHED BOUNCE STRATEGY ====================
         function analyzeBounceStrategy() {
-            if (candle1MinHistory.length < 5) {
-                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/5 needed` };
+            if (candle1MinHistory.length < 10) {
+                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/10 needed` };
             }
 
-            const lastCandle = candle1MinHistory[candle1MinHistory.length - 1];
-            const prevCandle = candle1MinHistory[candle1MinHistory.length - 2];
+            const recentCandles = candle1MinHistory.slice(-10);           // More data for better trend
+            const lastCandle = recentCandles[recentCandles.length - 1];
+            const prevCandle = recentCandles[recentCandles.length - 2];
+
+            // === IMPROVED TREND DETECTION (EMA slope + structure) ===
+            const closes = recentCandles.map(c => c.close);
+            const ema8  = calculateEMA(closes, 8);
+            const ema21 = calculateEMA(closes, 21);
             
-            // Detect trend using higher highs/lows or lower highs/lows
-            const recentCandles = candle1MinHistory.slice(-5);
-            const isUptrend = detectHigherHighsHigherLows(recentCandles);
-            const isDowntrend = detectLowerLowsLowerHighs(recentCandles);
+            const isUptrend   = ema8 > ema21 && detectHigherHighsHigherLows(recentCandles.slice(-6));
+            const isDowntrend = ema8 < ema21 && detectLowerLowsLowerHighs(recentCandles.slice(-6));
+
+            // === DYNAMIC LEVELS WITH ATR (this fixes the "never touches" bug) ===
+            const atr = calculateATR(recentCandles, 10);
+            const support    = Math.min(...recentCandles.map(c => c.low));
+            const resistance = Math.max(...recentCandles.map(c => c.high));
+
+            const touchingSupport    = lastCandle.low  <= support    + (atr * 1.2);
+            const touchingResistance = lastCandle.high >= resistance - (atr * 1.2);
+
+            // === BETTER CANDLESTICK PATTERNS ===
+            const body  = Math.abs(lastCandle.close - lastCandle.open);
+            const range = lastCandle.high - lastCandle.low;
             
-            // Simple trendline estimation (connect recent lows for uptrend, highs for downtrend)
-            const trendlineSupport = Math.min(...recentCandles.map(c => c.low));
-            const trendlineResistance = Math.max(...recentCandles.map(c => c.high));
-            
-            // Check for bullish candlestick patterns
-            const isHammer = (lastCandle.close > lastCandle.open) && 
-                            ((lastCandle.low - Math.min(lastCandle.open, lastCandle.close)) > 
-                             2 * (lastCandle.high - lastCandle.close));
-            
-            const isBullishEngulfing = (prevCandle.close < prevCandle.open) && 
+            const isHammer = lastCandle.close > lastCandle.open &&
+                             (lastCandle.low - Math.min(lastCandle.open, lastCandle.close)) > body * 1.8 &&
+                             body < range * 0.35;
+
+            const isShootingStar = lastCandle.close < lastCandle.open &&
+                                   (lastCandle.high - Math.max(lastCandle.open, lastCandle.close)) > body * 1.8 &&
+                                   body < range * 0.35;
+
+            const isBullishEngulfing = (prevCandle.close < prevCandle.open) &&
                                        (lastCandle.close > lastCandle.open) &&
                                        (lastCandle.close > prevCandle.open) &&
                                        (lastCandle.open < prevCandle.close);
-            
-            // Check for bearish candlestick patterns
-            const isShootingStar = (lastCandle.close < lastCandle.open) && 
-                                   ((lastCandle.high - Math.max(lastCandle.open, lastCandle.close)) > 
-                                    2 * (Math.min(lastCandle.open, lastCandle.close) - lastCandle.low));
-            
-            const isBearishEngulfing = (prevCandle.close > prevCandle.open) && 
+
+            const isBearishEngulfing = (prevCandle.close > prevCandle.open) &&
                                        (lastCandle.close < lastCandle.open) &&
                                        (lastCandle.close < prevCandle.open) &&
                                        (lastCandle.open > prevCandle.close);
-            
+
+            // === DISPLAY FOR DEBUGGING ===
             const displayData = {
-                'Trend': isUptrend ? '📈 Uptrend' : isDowntrend ? '📉 Downtrend' : '➡️ Neutral',
-                'Support Line': trendlineSupport.toFixed(5),
-                'Resistance Line': trendlineResistance.toFixed(5),
-                'Pattern': isHammer ? 'Hammer' : isBullishEngulfing ? 'Bull Engulf' : 
-                          isShootingStar ? 'Shoot Star' : isBearishEngulfing ? 'Bear Engulf' : 'None',
+                'Trend': isUptrend ? '📈 Strong Uptrend' : isDowntrend ? '📉 Strong Downtrend' : '➡️ Neutral',
+                'Support': support.toFixed(5),
+                'Resistance': resistance.toFixed(5),
+                'ATR': atr.toFixed(5),
+                'Touching Support': touchingSupport ? 'YES' : 'No',
+                'Touching Resistance': touchingResistance ? 'YES' : 'No',
+                'Pattern': isHammer ? 'Hammer' : isShootingStar ? 'Shooting Star' :
+                           isBullishEngulfing ? 'Bull Engulf' : isBearishEngulfing ? 'Bear Engulf' : 'None',
                 '1-Min Candles': candle1MinHistory.length
             };
-            
             updateIndicatorDisplay(displayData);
 
-            // BUY: Uptrend + Price touches support + Bullish pattern
-            const touchingSupport = Math.abs(lastCandle.low - trendlineSupport) < (trendlineSupport * 0.002);
+            // === SIGNALS (now works in both directions) ===
             if (isUptrend && touchingSupport && (isHammer || isBullishEngulfing)) {
-                return { signal: 'BUY', message: '✅ Bounce from uptrend support + Bullish pattern!' };
+                return { signal: 'BUY', message: '✅ Bounce from support in uptrend + Bullish pattern' };
             }
 
-            // SELL: Downtrend + Price touches resistance + Bearish pattern
-            const touchingResistance = Math.abs(lastCandle.high - trendlineResistance) < (trendlineResistance * 0.002);
             if (isDowntrend && touchingResistance && (isShootingStar || isBearishEngulfing)) {
-                return { signal: 'SELL', message: '✅ Bounce from downtrend resistance + Bearish pattern!' };
+                return { signal: 'SELL', message: '✅ Bounce from resistance in downtrend + Bearish pattern' };
             }
 
-            return { signal: null, message: 'Monitoring for bounce confirmation...' };
+            return { signal: null, message: 'Scanning for bounce setup...' };
         }
 
-        // The Breakout Strategy - Trend Reversal (1m Candles)
+        // ==================== PATCHED BREAKOUT STRATEGY ====================
         function analyzeBreakoutStrategy() {
-            if (candle1MinHistory.length < 5) {
-                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/5 needed` };
+            if (candle1MinHistory.length < 12) {
+                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/12 needed` };
             }
 
-            const lastCandle = candle1MinHistory[candle1MinHistory.length - 1];
-            const prevCandle = candle1MinHistory[candle1MinHistory.length - 2];
-            
-            // Detect previous trend
-            const recentCandles = candle1MinHistory.slice(-5, -1); // Exclude last candle
-            const wasDowntrend = detectLowerLowsLowerHighs(recentCandles);
-            const wasUptrend = detectHigherHighsHigherLows(recentCandles);
-            
-            // Trendline levels
-            const downtrendResistance = Math.max(...recentCandles.map(c => c.high));
-            const uptrendSupport = Math.min(...recentCandles.map(c => c.low));
-            
-            // Volume approximation (use tick count as proxy)
-            const avgVolume = recentCandles.reduce((sum, c) => sum + c.ticks, 0) / recentCandles.length;
-            const highVolume = lastCandle.ticks > avgVolume * 1.2;
-            
-            // Retest detection
-            const retestWindow = candle1MinHistory.slice(-3, -1);
-            const hasRetestSupport = retestWindow.some(c => 
-                Math.abs(c.low - downtrendResistance) < (downtrendResistance * 0.001) && 
-                c.close > downtrendResistance
-            );
-            const hasRetestResistance = retestWindow.some(c => 
-                Math.abs(c.high - uptrendSupport) < (uptrendSupport * 0.001) && 
-                c.close < uptrendSupport
-            );
-            
+            const recentCandles = candle1MinHistory.slice(-12);
+            const lastCandle = recentCandles[recentCandles.length - 1];
+            const prevCandles = recentCandles.slice(0, -1);   // All candles before the current one
+
+            // === PREVIOUS TREND ===
+            const wasDowntrend = detectLowerLowsLowerHighs(prevCandles.slice(-6));
+            const wasUptrend   = detectHigherHighsHigherLows(prevCandles.slice(-6));
+
+            // === LEVELS FROM PREVIOUS CANDLES ===
+            const resistance = Math.max(...prevCandles.map(c => c.high));
+            const support    = Math.min(...prevCandles.map(c => c.low));
+
+            // === VOLUME CONFIRMATION (more realistic) ===
+            const avgTicks = prevCandles.reduce((sum, c) => sum + (c.ticks || 1), 0) / prevCandles.length;
+            const highVolume = lastCandle.ticks > avgTicks * 1.6;
+
+            // === DISPLAY ===
             const displayData = {
                 'Previous Trend': wasDowntrend ? '📉 Downtrend' : wasUptrend ? '📈 Uptrend' : '➡️ Neutral',
-                'Resistance': downtrendResistance.toFixed(5),
-                'Support': uptrendSupport.toFixed(5),
+                'Resistance': resistance.toFixed(5),
+                'Support': support.toFixed(5),
+                'Current Close': lastCandle.close.toFixed(5),
                 'Volume': highVolume ? 'High 🔥' : 'Normal',
-                'Retest': hasRetestSupport ? 'Support ✓' : hasRetestResistance ? 'Resistance ✓' : 'None',
+                'Break Above Resistance': lastCandle.close > resistance ? 'YES' : 'No',
+                'Break Below Support': lastCandle.close < support ? 'YES' : 'No',
                 '1-Min Candles': candle1MinHistory.length
             };
-            
             updateIndicatorDisplay(displayData);
 
-            // BUY: Downtrend breaks above resistance
-            if (wasDowntrend && lastCandle.close > downtrendResistance) {
-                if (highVolume || hasRetestSupport) {
-                    return { signal: 'BUY', message: '✅ Breakout above downtrend resistance! ' + 
-                            (highVolume ? '(High volume)' : '(Retest confirmed)') };
-                }
-                return { signal: null, message: 'Breakout detected - waiting for volume/retest confirmation...' };
+            // === CLEAN & RELIABLE SIGNALS ===
+            // BUY: Downtrend → breaks above resistance with bullish candle
+            if (wasDowntrend && lastCandle.close > resistance && lastCandle.close > lastCandle.open) {
+                return { 
+                    signal: 'BUY', 
+                    message: `✅ Bullish breakout above resistance ${highVolume ? '(High volume confirmed)' : ''}` 
+                };
             }
 
-            // SELL: Uptrend breaks below support
-            if (wasUptrend && lastCandle.close < uptrendSupport) {
-                if (highVolume || hasRetestResistance) {
-                    return { signal: 'SELL', message: '✅ Breakdown below uptrend support! ' + 
-                            (highVolume ? '(High volume)' : '(Retest confirmed)') };
-                }
-                return { signal: null, message: 'Breakdown detected - waiting for volume/retest confirmation...' };
+            // SELL: Uptrend → breaks below support with bearish candle
+            if (wasUptrend && lastCandle.close < support && lastCandle.close < lastCandle.open) {
+                return { 
+                    signal: 'SELL', 
+                    message: `✅ Bearish breakdown below support ${highVolume ? '(High volume confirmed)' : ''}` 
+                };
             }
 
-            return { signal: null, message: 'Monitoring for trendline break...' };
+            return { signal: null, message: 'Waiting for strong breakout...' };
         }
 
         function updateIndicatorDisplay(indicators) {
