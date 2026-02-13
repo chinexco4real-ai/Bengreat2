@@ -724,7 +724,6 @@
             margin-top: 5px;
         }
 
-
         /* Strategy Selector Styles */
         .strategy-card {
             background: #1a1f2e;
@@ -917,12 +916,31 @@
                     <strong>BUY (Long):</strong> Uptrend - Price touches trendline support + Bullish candlestick pattern (Hammer, Bullish Engulfing)<br>
                     <strong>SELL (Short):</strong> Downtrend - Price touches trendline resistance + Bearish candlestick pattern (Shooting Star, Bearish Engulfing)
                 </div>
+
+                <!-- Timeframe Selector -->
+                <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #10b981;">
+                    <label>Analysis Timeframe</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="timeframe1min" name="timeframe" value="1min" checked>
+                            <label for="timeframe1min">1 Minute Candles</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="timeframe30sec" name="timeframe" value="30sec">
+                            <label for="timeframe30sec">30 Second Candles</label>
+                        </div>
+                    </div>
+                    <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">
+                        Select which candle timeframe to use for strategy analysis
+                    </div>
+                </div>
             </div>
 
 
             <div class="grid-3" id="tradingSettings">
                 <div class="card">
                     <h3>⚙️ Trading Settings</h3>
+                    <!-- Single Market Selection -->
                     <div class="form-group">
                         <label>Market</label>
                         <div class="radio-group" id="marketRadioGroup">
@@ -1041,7 +1059,7 @@
                     </div>
                     <div style="padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; margin-top: 15px; border: 1px solid #2d3748;">
                         <div style="font-size: 12px; color: #10b981; margin-bottom: 5px;">💡 Active Strategy</div>
-                        <div style="font-size: 11px; color: #6ee7b7;" id="activeStrategyDisplay">Ben Sniper Entry</div>
+                        <div style="font-size: 11px; color: #6ee7b7;" id="activeStrategyDisplay">The Bounce Strategy</div>
                     </div>
                 </div>
             </div>
@@ -1064,6 +1082,9 @@
                 </div>
             </div>
 
+            <!-- Single Market Signal -->
+            <div id="singleMarketSignal">
+
             <div class="indicator-status" id="indicatorStatus">
                 <h4>📈 Live Strategy Indicators</h4>
                 <div id="indicatorDisplay">
@@ -1073,6 +1094,8 @@
                     </div>
                 </div>
             </div>
+            </div>
+            <!-- End of singleMarketSignal -->
 
             <div class="control-buttons" id="controlButtons">
                 <button class="btn btn-success" id="buyBtn" disabled>
@@ -1162,6 +1185,7 @@
         let currentMarketSymbol = '';
         let currentPrice = 0;
         let currentStrategy = 'bounce';
+        let currentTimeframe = '1min'; // New: Selected timeframe for analysis
         let lastExecutedTradeType = null;
         let nextTradeType = 'BUY';
         let lastSetupDetectedTime = 0;
@@ -1365,13 +1389,15 @@
         });
 
         function updateStrategyDescription() {
+            const timeframeDisplay = currentTimeframe === '1min' ? '1m' : '30s';
+            
             const descriptions = {
-                bounce: `<strong>The Bounce Strategy - Trend Continuation (1m Candles)</strong><br>
+                bounce: `<strong>The Bounce Strategy - Trend Continuation (${timeframeDisplay} Candles)</strong><br>
                     <strong>BUY (Long):</strong> Uptrend - Price touches trendline support + Bullish candlestick pattern (Hammer, Bullish Engulfing)<br>
                     <strong>SELL (Short):</strong> Downtrend - Price touches trendline resistance + Bearish candlestick pattern (Shooting Star, Bearish Engulfing)`,
-                breakout: `<strong>The Breakout Strategy - Trend Reversal (1m Candles)</strong><br>
-                    <strong>BUY (Long):</strong> Downtrend ends - Price closes above resistance line + High volume or retest confirmation<br>
-                    <strong>SELL (Short):</strong> Uptrend ends - Price closes below support line + High volume or retest confirmation`
+                breakout: `<strong>The Breakout Strategy - Trend Reversal (${timeframeDisplay} Candles)</strong><br>
+                    <strong>BUY (Long):</strong> Downtrend ends - Price closes above resistance line + High volume confirmation<br>
+                    <strong>SELL (Short):</strong> Uptrend ends - Price closes below support line + High volume confirmation`
             };
             
             document.getElementById('strategyDescription').innerHTML = descriptions[currentStrategy] || descriptions.bounce;
@@ -1801,11 +1827,16 @@
 
         // ==================== PATCHED BOUNCE STRATEGY ====================
         function analyzeBounceStrategy() {
-            if (candle1MinHistory.length < 10) {
-                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/10 needed` };
+            // Use selected timeframe
+            const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
+            const timeframeName = currentTimeframe === '1min' ? '1-min' : '30-sec';
+            const requiredCandles = 10; // Same for both timeframes - 30sec just gets signals faster!
+            
+            if (candleHistory.length < requiredCandles) {
+                return { signal: null, message: `Collecting ${timeframeName} candles... ${candleHistory.length}/${requiredCandles} needed` };
             }
 
-            const recentCandles = candle1MinHistory.slice(-10);           // More data for better trend
+            const recentCandles = candleHistory.slice(-requiredCandles);
             const lastCandle = recentCandles[recentCandles.length - 1];
             const prevCandle = recentCandles[recentCandles.length - 2];
 
@@ -1849,6 +1880,7 @@
 
             // === DISPLAY FOR DEBUGGING ===
             const displayData = {
+                'Timeframe': currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
                 'Trend': isUptrend ? '📈 Strong Uptrend' : isDowntrend ? '📉 Strong Downtrend' : '➡️ Neutral',
                 'Support': support.toFixed(5),
                 'Resistance': resistance.toFixed(5),
@@ -1857,17 +1889,17 @@
                 'Touching Resistance': touchingResistance ? 'YES' : 'No',
                 'Pattern': isHammer ? 'Hammer' : isShootingStar ? 'Shooting Star' :
                            isBullishEngulfing ? 'Bull Engulf' : isBearishEngulfing ? 'Bear Engulf' : 'None',
-                '1-Min Candles': candle1MinHistory.length
+                'Candles': candleHistory.length
             };
             updateIndicatorDisplay(displayData);
 
             // === SIGNALS (now works in both directions) ===
             if (isUptrend && touchingSupport && (isHammer || isBullishEngulfing)) {
-                return { signal: 'BUY', message: '✅ Bounce from support in uptrend + Bullish pattern' };
+                return { signal: 'BUY', message: `✅ Bounce from support in uptrend + Bullish pattern (${timeframeName})` };
             }
 
             if (isDowntrend && touchingResistance && (isShootingStar || isBearishEngulfing)) {
-                return { signal: 'SELL', message: '✅ Bounce from resistance in downtrend + Bearish pattern' };
+                return { signal: 'SELL', message: `✅ Bounce from resistance in downtrend + Bearish pattern (${timeframeName})` };
             }
 
             return { signal: null, message: 'Scanning for bounce setup...' };
@@ -1875,11 +1907,16 @@
 
         // ==================== PATCHED BREAKOUT STRATEGY ====================
         function analyzeBreakoutStrategy() {
-            if (candle1MinHistory.length < 12) {
-                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/12 needed` };
+            // Use selected timeframe
+            const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
+            const timeframeName = currentTimeframe === '1min' ? '1-min' : '30-sec';
+            const requiredCandles = 12; // Same for both timeframes - 30sec just gets signals faster!
+            
+            if (candleHistory.length < requiredCandles) {
+                return { signal: null, message: `Collecting ${timeframeName} candles... ${candleHistory.length}/${requiredCandles} needed` };
             }
 
-            const recentCandles = candle1MinHistory.slice(-12);
+            const recentCandles = candleHistory.slice(-requiredCandles);
             const lastCandle = recentCandles[recentCandles.length - 1];
             const prevCandles = recentCandles.slice(0, -1);   // All candles before the current one
 
@@ -1897,6 +1934,7 @@
 
             // === DISPLAY ===
             const displayData = {
+                'Timeframe': currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
                 'Previous Trend': wasDowntrend ? '📉 Downtrend' : wasUptrend ? '📈 Uptrend' : '➡️ Neutral',
                 'Resistance': resistance.toFixed(5),
                 'Support': support.toFixed(5),
@@ -1904,7 +1942,7 @@
                 'Volume': highVolume ? 'High 🔥' : 'Normal',
                 'Break Above Resistance': lastCandle.close > resistance ? 'YES' : 'No',
                 'Break Below Support': lastCandle.close < support ? 'YES' : 'No',
-                '1-Min Candles': candle1MinHistory.length
+                'Candles': candleHistory.length
             };
             updateIndicatorDisplay(displayData);
 
@@ -1913,7 +1951,7 @@
             if (wasDowntrend && lastCandle.close > resistance && lastCandle.close > lastCandle.open) {
                 return { 
                     signal: 'BUY', 
-                    message: `✅ Bullish breakout above resistance ${highVolume ? '(High volume confirmed)' : ''}` 
+                    message: `✅ Bullish breakout above resistance ${highVolume ? '(High volume confirmed)' : ''} (${timeframeName})` 
                 };
             }
 
@@ -1921,7 +1959,7 @@
             if (wasUptrend && lastCandle.close < support && lastCandle.close < lastCandle.open) {
                 return { 
                     signal: 'SELL', 
-                    message: `✅ Bearish breakdown below support ${highVolume ? '(High volume confirmed)' : ''}` 
+                    message: `✅ Bearish breakdown below support ${highVolume ? '(High volume confirmed)' : ''} (${timeframeName})` 
                 };
             }
 
@@ -1965,7 +2003,7 @@
                 return { signal: 'SELL', message: '✅ FALL: 3 green candles + RSI > 60 + 4th red!' };
             }
 
-            return { signal: null, message: 'Monitoring for Ben Sniper Entry setup...' };
+            return { signal: null, message: 'Monitoring for Monitoring for setup setup...' };
         }
 
         function analyzeMomentumStrategy() {
@@ -2287,55 +2325,51 @@
 
                 const now = Date.now();
 
-                // Build 30-second candles
-                if (['bensniperentry', 'momentum'].includes(currentStrategy)) {
-                    if (currentCandle30Sec.ticks === 0) {
-                        currentCandle30Sec.open = currentPrice;
-                        currentCandle30Sec.high = currentPrice;
-                        currentCandle30Sec.low = currentPrice;
-                        currentCandle30Sec.close = currentPrice;
-                        currentCandle30Sec.ticks = 1;
-                        currentCandle30Sec.timestamp = now;
-                        currentCandle30Sec.volume = 1;
-                    } else {
-                        currentCandle30Sec.high = Math.max(currentCandle30Sec.high, currentPrice);
-                        currentCandle30Sec.low = Math.min(currentCandle30Sec.low, currentPrice);
-                        currentCandle30Sec.close = currentPrice;
-                        currentCandle30Sec.ticks++;
-                        currentCandle30Sec.volume++;
+                // Build 30-second candles (ALWAYS - needed for timeframe selection)
+                if (currentCandle30Sec.ticks === 0) {
+                    currentCandle30Sec.open = currentPrice;
+                    currentCandle30Sec.high = currentPrice;
+                    currentCandle30Sec.low = currentPrice;
+                    currentCandle30Sec.close = currentPrice;
+                    currentCandle30Sec.ticks = 1;
+                    currentCandle30Sec.timestamp = now;
+                    currentCandle30Sec.volume = 1;
+                } else {
+                    currentCandle30Sec.high = Math.max(currentCandle30Sec.high, currentPrice);
+                    currentCandle30Sec.low = Math.min(currentCandle30Sec.low, currentPrice);
+                    currentCandle30Sec.close = currentPrice;
+                    currentCandle30Sec.ticks++;
+                    currentCandle30Sec.volume++;
 
-                        if (now - currentCandle30Sec.timestamp >= CANDLE_30SEC_MS) {
-                            candle30SecHistory.push({ ...currentCandle30Sec });
-                            currentCandle30Sec = { open: 0, high: 0, low: 0, close: 0, ticks: 0, timestamp: 0, volume: 0 };
-                        }
+                    if (now - currentCandle30Sec.timestamp >= CANDLE_30SEC_MS) {
+                        candle30SecHistory.push({ ...currentCandle30Sec });
+                        currentCandle30Sec = { open: 0, high: 0, low: 0, close: 0, ticks: 0, timestamp: 0, volume: 0 };
                     }
                 }
 
-                // Build 1-minute candles
-                if (['supertrend', 'bounce', 'breakout', 'bensniperentry', 'vwap', 'triangle', 'multitime'].includes(currentStrategy)) {
-                    if (currentCandle1Min.ticks === 0) {
-                        currentCandle1Min.open = currentPrice;
-                        currentCandle1Min.high = currentPrice;
-                        currentCandle1Min.low = currentPrice;
-                        currentCandle1Min.close = currentPrice;
-                        currentCandle1Min.ticks = 1;
-                        currentCandle1Min.timestamp = now;
-                        currentCandle1Min.volume = 1;
-                    } else {
-                        currentCandle1Min.high = Math.max(currentCandle1Min.high, currentPrice);
-                        currentCandle1Min.low = Math.min(currentCandle1Min.low, currentPrice);
-                        currentCandle1Min.close = currentPrice;
-                        currentCandle1Min.ticks++;
-                        currentCandle1Min.volume++;
+                // Build 1-minute candles (ALWAYS - needed for timeframe selection)
+                if (currentCandle1Min.ticks === 0) {
+                    currentCandle1Min.open = currentPrice;
+                    currentCandle1Min.high = currentPrice;
+                    currentCandle1Min.low = currentPrice;
+                    currentCandle1Min.close = currentPrice;
+                    currentCandle1Min.ticks = 1;
+                    currentCandle1Min.timestamp = now;
+                    currentCandle1Min.volume = 1;
+                } else {
+                    currentCandle1Min.high = Math.max(currentCandle1Min.high, currentPrice);
+                    currentCandle1Min.low = Math.min(currentCandle1Min.low, currentPrice);
+                    currentCandle1Min.close = currentPrice;
+                    currentCandle1Min.ticks++;
+                    currentCandle1Min.volume++;
 
-                        if (now - currentCandle1Min.timestamp >= CANDLE_1MIN_MS) {
-                            candle1MinHistory.push({ ...currentCandle1Min });
-                            currentCandle1Min = { open: 0, high: 0, low: 0, close: 0, ticks: 0, timestamp: 0, volume: 0 };
-                        }
+                    if (now - currentCandle1Min.timestamp >= CANDLE_1MIN_MS) {
+                        candle1MinHistory.push({ ...currentCandle1Min });
+                        currentCandle1Min = { open: 0, high: 0, low: 0, close: 0, ticks: 0, timestamp: 0, volume: 0 };
                     }
                 }
 
-                // Build 5-minute candles
+                // Build 5-minute candles (only if needed)
                 if (currentStrategy === 'multitime') {
                     if (currentCandle5Min.ticks === 0) {
                         currentCandle5Min.open = currentPrice;
@@ -2877,6 +2911,18 @@
             addLog('Stop Auto Trade button clicked', 'info');
         });
 
+        // Timeframe Selection
+        document.querySelectorAll('input[name="timeframe"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                currentTimeframe = e.target.value;
+                const timeframeName = currentTimeframe === '1min' ? '1 Minute' : '30 Second';
+                addLog(`⏱️ Timeframe changed to: ${timeframeName} candles`, 'success');
+                
+                // Update strategy description to reflect new timeframe
+                updateStrategyDescription();
+            });
+        });
+
         // NEW: Event listeners for mode toggles with logging
         document.getElementById('alternatorMode').addEventListener('change', (e) => {
             if (e.target.checked) {
@@ -2904,6 +2950,15 @@
             } else {
                 addLog('🔒 One Entry Per Setup: DISABLED', 'warning');
             }
+        });
+
+        // Single Market Radio Changes
+        document.querySelectorAll('input[name="market"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    subscribeToMarket(e.target.value);
+                }
+            });
         });
 
         // Double-click logout with visual feedback
@@ -2979,6 +3034,7 @@
             addLog('✅ 2 Professional Trading Strategies loaded', 'success');
             addLog('  1. The Bounce Strategy (Trend Continuation)', 'info');
             addLog('  2. The Breakout Strategy (Trend Reversal)', 'info');
+            addLog('✅ Timeframe Selection: 1-Minute or 30-Second candles', 'success');
             addLog('Unlimited candle collection enabled', 'info');
             addLog('Fast data processing active - Real-time tick processing', 'info');
 
