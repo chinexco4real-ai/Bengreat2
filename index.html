@@ -1222,19 +1222,10 @@
 
         // Strategy-specific indicators
         let strategyIndicators = {
-            momentum: 0,
-            momentumPrev: 0,
-            vwap: 0,
-            triangleUpper: 0,
-            triangleLower: 0,
-            bollingerUpper: 0,
-            bollingerLower: 0,
-            bollingerMiddle: 0,
             rsi: 0,
-            ema50_5min: 0,
-            adx: 0,  // NEW: ADX indicator
-            plusDI: 0,  // NEW: +DI component
-            minusDI: 0  // NEW: -DI component
+            adx: 0,
+            plusDI: 0,
+            minusDI: 0
         };
 
         // Candle data for different timeframes
@@ -1405,16 +1396,10 @@
 
         function resetStrategyIndicators() {
             strategyIndicators = {
-                momentum: 0,
-                momentumPrev: 0,
-                vwap: 0,
-                triangleUpper: 0,
-                triangleLower: 0,
-                bollingerUpper: 0,
-                bollingerLower: 0,
-                bollingerMiddle: 0,
                 rsi: 0,
-                ema50_5min: 0
+                adx: 0,
+                plusDI: 0,
+                minusDI: 0
             };
             candle30SecHistory = [];
             candle1MinHistory = [];
@@ -1731,58 +1716,6 @@
             return { adx, plusDI, minusDI };
         }
 
-        function calculateMomentum(prices, period) {
-            if (prices.length < period + 1) return 0;
-            return prices[prices.length - 1] - prices[prices.length - period - 1];
-        }
-
-        function calculateVWAP(candles) {
-            if (candles.length === 0) return 0;
-            
-            let totalPriceVolume = 0;
-            let totalVolume = 0;
-            
-            candles.forEach(candle => {
-                const typicalPrice = (candle.high + candle.low + candle.close) / 3;
-                const volume = candle.volume || 1;
-                totalPriceVolume += typicalPrice * volume;
-                totalVolume += volume;
-            });
-            
-            return totalVolume > 0 ? totalPriceVolume / totalVolume : 0;
-        }
-
-        function calculateBollingerBands(prices, period, deviation) {
-            if (prices.length < period) return { upper: 0, middle: 0, lower: 0 };
-            
-            const sma = calculateSMA(prices, period);
-            const squaredDiffs = prices.slice(-period).map(price => Math.pow(price - sma, 2));
-            const variance = squaredDiffs.reduce((a, b) => a + b, 0) / period;
-            const stdDev = Math.sqrt(variance);
-            
-            return {
-                upper: sma + (stdDev * deviation),
-                middle: sma,
-                lower: sma - (stdDev * deviation)
-            };
-        }
-
-        function findTriangleTrendlines(candles) {
-            if (candles.length < 10) return { upper: 0, lower: 0, valid: false };
-            
-            const highs = candles.map((c, i) => ({ index: i, price: c.high }));
-            const lows = candles.map((c, i) => ({ index: i, price: c.low }));
-            
-            const recentHighs = highs.slice(-10).sort((a, b) => b.price - a.price).slice(0, 3);
-            const upperTrend = recentHighs.length >= 2 ? recentHighs[0].price : 0;
-            
-            const recentLows = lows.slice(-10).sort((a, b) => a.price - b.price).slice(0, 3);
-            const lowerTrend = recentLows.length >= 2 ? recentLows[0].price : 0;
-            
-            const valid = upperTrend > 0 && lowerTrend > 0 && upperTrend > lowerTrend;
-            
-            return { upper: upperTrend, lower: lowerTrend, valid };
-        }
 
         function detectHigherHighsHigherLows(candles) {
             if (candles.length < 4) return false;
@@ -1840,66 +1773,66 @@
             const lastCandle = recentCandles[recentCandles.length - 1];
             const prevCandle = recentCandles[recentCandles.length - 2];
 
-            // === IMPROVED TREND DETECTION (EMA slope + structure) ===
+            // === SIMPLIFIED TREND DETECTION (EMA only) ===
             const closes = recentCandles.map(c => c.close);
             const ema8  = calculateEMA(closes, 8);
             const ema21 = calculateEMA(closes, 21);
             
-            const isUptrend   = ema8 > ema21 && detectHigherHighsHigherLows(recentCandles.slice(-6));
-            const isDowntrend = ema8 < ema21 && detectLowerLowsLowerHighs(recentCandles.slice(-6));
+            const isUptrend   = ema8 > ema21;  // Simplified - just EMA crossover
+            const isDowntrend = ema8 < ema21;
 
-            // === DYNAMIC LEVELS WITH ATR (this fixes the "never touches" bug) ===
+            // === DYNAMIC LEVELS ===
             const atr = calculateATR(recentCandles, 10);
             const support    = Math.min(...recentCandles.map(c => c.low));
             const resistance = Math.max(...recentCandles.map(c => c.high));
+            const mid = (support + resistance) / 2;
 
-            const touchingSupport    = lastCandle.low  <= support    + (atr * 1.2);
-            const touchingResistance = lastCandle.high >= resistance - (atr * 1.2);
+            // More lenient - within 2 * ATR instead of 1.2 * ATR
+            const nearSupport    = lastCandle.close <= support + (atr * 2);
+            const nearResistance = lastCandle.close >= resistance - (atr * 2);
+            const nearMid = Math.abs(lastCandle.close - mid) < atr;
 
-            // === BETTER CANDLESTICK PATTERNS ===
-            const body  = Math.abs(lastCandle.close - lastCandle.open);
-            const range = lastCandle.high - lastCandle.low;
+            // === SIMPLIFIED PATTERNS - Just check candle direction ===
+            const isBullishCandle = lastCandle.close > lastCandle.open;
+            const isBearishCandle = lastCandle.close < lastCandle.open;
             
-            const isHammer = lastCandle.close > lastCandle.open &&
-                             (lastCandle.low - Math.min(lastCandle.open, lastCandle.close)) > body * 1.8 &&
-                             body < range * 0.35;
-
-            const isShootingStar = lastCandle.close < lastCandle.open &&
-                                   (lastCandle.high - Math.max(lastCandle.open, lastCandle.close)) > body * 1.8 &&
-                                   body < range * 0.35;
-
-            const isBullishEngulfing = (prevCandle.close < prevCandle.open) &&
-                                       (lastCandle.close > lastCandle.open) &&
-                                       (lastCandle.close > prevCandle.open) &&
-                                       (lastCandle.open < prevCandle.close);
-
-            const isBearishEngulfing = (prevCandle.close > prevCandle.open) &&
-                                       (lastCandle.close < lastCandle.open) &&
-                                       (lastCandle.close < prevCandle.open) &&
-                                       (lastCandle.open > prevCandle.close);
+            // Check if price is moving in the right direction
+            const movingUp = lastCandle.close > prevCandle.close;
+            const movingDown = lastCandle.close < prevCandle.close;
 
             // === DISPLAY FOR DEBUGGING ===
             const displayData = {
                 'Timeframe': currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
-                'Trend': isUptrend ? '📈 Strong Uptrend' : isDowntrend ? '📉 Strong Downtrend' : '➡️ Neutral',
+                'Trend': isUptrend ? '📈 Uptrend (EMA8 > EMA21)' : isDowntrend ? '📉 Downtrend (EMA8 < EMA21)' : '➡️ Neutral',
+                'EMA8': ema8.toFixed(5),
+                'EMA21': ema21.toFixed(5),
                 'Support': support.toFixed(5),
                 'Resistance': resistance.toFixed(5),
-                'ATR': atr.toFixed(5),
-                'Touching Support': touchingSupport ? 'YES' : 'No',
-                'Touching Resistance': touchingResistance ? 'YES' : 'No',
-                'Pattern': isHammer ? 'Hammer' : isShootingStar ? 'Shooting Star' :
-                           isBullishEngulfing ? 'Bull Engulf' : isBearishEngulfing ? 'Bear Engulf' : 'None',
+                'Current Price': lastCandle.close.toFixed(5),
+                'Near Support': nearSupport ? 'YES' : 'No',
+                'Near Resistance': nearResistance ? 'YES' : 'No',
                 'Candles': candleHistory.length
             };
             updateIndicatorDisplay(displayData);
 
-            // === SIGNALS (now works in both directions) ===
-            if (isUptrend && touchingSupport && (isHammer || isBullishEngulfing)) {
-                return { signal: 'BUY', message: `✅ Bounce from support in uptrend + Bullish pattern (${timeframeName})` };
+            // === MORE GENEROUS SIGNALS ===
+            // BUY: Uptrend + near support + bullish movement
+            if (isUptrend && nearSupport && (isBullishCandle || movingUp)) {
+                return { signal: 'BUY', message: `✅ Uptrend bounce from support zone (${timeframeName})` };
             }
 
-            if (isDowntrend && touchingResistance && (isShootingStar || isBearishEngulfing)) {
-                return { signal: 'SELL', message: `✅ Bounce from resistance in downtrend + Bearish pattern (${timeframeName})` };
+            // SELL: Downtrend + near resistance + bearish movement
+            if (isDowntrend && nearResistance && (isBearishCandle || movingDown)) {
+                return { signal: 'SELL', message: `✅ Downtrend bounce from resistance zone (${timeframeName})` };
+            }
+
+            // ALTERNATIVE: Trade the middle range in strong trends
+            if (isUptrend && nearMid && movingUp) {
+                return { signal: 'BUY', message: `✅ Mid-range BUY in uptrend (${timeframeName})` };
+            }
+            
+            if (isDowntrend && nearMid && movingDown) {
+                return { signal: 'SELL', message: `✅ Mid-range SELL in downtrend (${timeframeName})` };
             }
 
             return { signal: null, message: 'Scanning for bounce setup...' };
@@ -1918,19 +1851,33 @@
 
             const recentCandles = candleHistory.slice(-requiredCandles);
             const lastCandle = recentCandles[recentCandles.length - 1];
-            const prevCandles = recentCandles.slice(0, -1);   // All candles before the current one
+            const prevCandles = recentCandles.slice(0, -1);
 
-            // === PREVIOUS TREND ===
-            const wasDowntrend = detectLowerLowsLowerHighs(prevCandles.slice(-6));
-            const wasUptrend   = detectHigherHighsHigherLows(prevCandles.slice(-6));
+            // === SIMPLIFIED TREND DETECTION ===
+            const closes = prevCandles.map(c => c.close);
+            const ema8 = calculateEMA(closes, 8);
+            const ema21 = calculateEMA(closes, 21);
+            
+            const wasDowntrend = ema8 < ema21;  // Simplified
+            const wasUptrend   = ema8 > ema21;
 
-            // === LEVELS FROM PREVIOUS CANDLES ===
+            // === DYNAMIC RANGE ===
             const resistance = Math.max(...prevCandles.map(c => c.high));
             const support    = Math.min(...prevCandles.map(c => c.low));
+            const range = resistance - support;
+            const atr = calculateATR(recentCandles, 10);
 
-            // === VOLUME CONFIRMATION (more realistic) ===
+            // === BREAKOUT DETECTION (more lenient) ===
+            const breakoutAbove = lastCandle.close > resistance && lastCandle.close > lastCandle.open;
+            const breakoutBelow = lastCandle.close < support && lastCandle.close < lastCandle.open;
+            
+            // Check momentum
+            const priceChange = lastCandle.close - prevCandles[prevCandles.length - 1].close;
+            const strongMomentum = Math.abs(priceChange) > atr * 0.5;
+
+            // === VOLUME (optional confirmation) ===
             const avgTicks = prevCandles.reduce((sum, c) => sum + (c.ticks || 1), 0) / prevCandles.length;
-            const highVolume = lastCandle.ticks > avgTicks * 1.6;
+            const highVolume = lastCandle.ticks > avgTicks * 1.3;  // Lowered from 1.6
 
             // === DISPLAY ===
             const displayData = {
@@ -1939,272 +1886,45 @@
                 'Resistance': resistance.toFixed(5),
                 'Support': support.toFixed(5),
                 'Current Close': lastCandle.close.toFixed(5),
+                'Range': range.toFixed(5),
+                'Strong Momentum': strongMomentum ? 'YES' : 'No',
                 'Volume': highVolume ? 'High 🔥' : 'Normal',
-                'Break Above Resistance': lastCandle.close > resistance ? 'YES' : 'No',
-                'Break Below Support': lastCandle.close < support ? 'YES' : 'No',
                 'Candles': candleHistory.length
             };
             updateIndicatorDisplay(displayData);
 
-            // === CLEAN & RELIABLE SIGNALS ===
-            // BUY: Downtrend → breaks above resistance with bullish candle
-            if (wasDowntrend && lastCandle.close > resistance && lastCandle.close > lastCandle.open) {
+            // === MORE GENEROUS SIGNALS ===
+            // BUY: Price breaks above resistance (trend reversal or continuation)
+            if (breakoutAbove && (wasDowntrend || strongMomentum)) {
                 return { 
                     signal: 'BUY', 
-                    message: `✅ Bullish breakout above resistance ${highVolume ? '(High volume confirmed)' : ''} (${timeframeName})` 
+                    message: `✅ Bullish breakout above ${resistance.toFixed(5)} ${highVolume ? '(volume!)' : ''} (${timeframeName})` 
                 };
             }
 
-            // SELL: Uptrend → breaks below support with bearish candle
-            if (wasUptrend && lastCandle.close < support && lastCandle.close < lastCandle.open) {
+            // SELL: Price breaks below support (trend reversal or continuation)
+            if (breakoutBelow && (wasUptrend || strongMomentum)) {
                 return { 
                     signal: 'SELL', 
-                    message: `✅ Bearish breakdown below support ${highVolume ? '(High volume confirmed)' : ''} (${timeframeName})` 
+                    message: `✅ Bearish breakdown below ${support.toFixed(5)} ${highVolume ? '(volume!)' : ''} (${timeframeName})` 
                 };
             }
 
-            return { signal: null, message: 'Waiting for strong breakout...' };
+            // ALTERNATIVE: Trade near breakout levels (anticipation)
+            const nearResistance = lastCandle.close >= resistance - (atr * 0.5) && lastCandle.close < resistance;
+            const nearSupport = lastCandle.close <= support + (atr * 0.5) && lastCandle.close > support;
+            
+            if (nearResistance && lastCandle.close > lastCandle.open && strongMomentum) {
+                return { signal: 'BUY', message: `✅ Approaching resistance with momentum (${timeframeName})` };
+            }
+            
+            if (nearSupport && lastCandle.close < lastCandle.open && strongMomentum) {
+                return { signal: 'SELL', message: `✅ Approaching support with momentum (${timeframeName})` };
+            }
+
+            return { signal: null, message: 'Waiting for breakout...' };
         }
 
-        function updateIndicatorDisplay(indicators) {
-            if (candle30SecHistory.length < 4 || candle1MinHistory.length < 15) {
-                return { signal: null, message: `Collecting candles... 30s: ${candle30SecHistory.length}/4, 1m: ${candle1MinHistory.length}/15 needed` };
-            }
-
-            const recent = candle30SecHistory.slice(-4);
-            const closes1Min = candle1MinHistory.map(c => c.close);
-            const rsi = calculateRSI(closes1Min, 14);
-            
-            strategyIndicators.rsi = rsi;
-            
-            updateIndicatorDisplay({
-                'Candle 1': recent[0].close > recent[0].open ? '🟢 Green' : '🔴 Red',
-                'Candle 2': recent[1].close > recent[1].open ? '🟢 Green' : '🔴 Red',
-                'Candle 3': recent[2].close > recent[2].open ? '🟢 Green' : '🔴 Red',
-                'Candle 4': recent[3].close > recent[3].open ? '🟢 Green' : '🔴 Red',
-                'RSI (1-min)': rsi.toFixed(2),
-                '30-Sec Candles': candle30SecHistory.length
-            });
-
-            const c1 = recent[0];
-            const c2 = recent[1];
-            const c3 = recent[2];
-            const c4 = recent[3];
-            
-            // RISE: 3 red candles + RSI < 40 + 4th candle green
-            if (c1.close < c1.open && c2.close < c2.open && c3.close < c3.open && 
-                rsi < 40 && c4.close > c4.open) {
-                return { signal: 'BUY', message: '✅ RISE: 3 red candles + RSI < 40 + 4th green!' };
-            }
-            
-            // FALL: 3 green candles + RSI > 60 + 4th candle red
-            if (c1.close > c1.open && c2.close > c2.open && c3.close > c3.open && 
-                rsi > 60 && c4.close < c4.open) {
-                return { signal: 'SELL', message: '✅ FALL: 3 green candles + RSI > 60 + 4th red!' };
-            }
-
-            return { signal: null, message: 'Monitoring for Monitoring for setup setup...' };
-        }
-
-        function analyzeMomentumStrategy() {
-            if (candle30SecHistory.length < 12) {
-                return { signal: null, message: `Collecting 30-sec candles... ${candle30SecHistory.length}/12 needed` };
-            }
-
-            const closes = candle30SecHistory.map(c => c.close);
-            const momentum = calculateMomentum(closes, 10);
-            const momentumPrev = candle30SecHistory.length >= 13 ? 
-                calculateMomentum(closes.slice(0, -1), 10) : momentum;
-            
-            strategyIndicators.momentum = momentum;
-            strategyIndicators.momentumPrev = momentumPrev;
-            
-            updateIndicatorDisplay({
-                'Momentum': momentum.toFixed(5),
-                'Previous Momentum': momentumPrev.toFixed(5),
-                'Zero Line': '0.00000',
-                'Status': momentum > 0 ? 'Above Zero' : momentum < 0 ? 'Below Zero' : 'At Zero',
-                '30-Sec Candles': candle30SecHistory.length
-            });
-
-            if (momentumPrev < 0 && momentum > 0) {
-                return { signal: 'BUY', message: 'Momentum crossed ABOVE zero - Bullish shift!' };
-            }
-
-            if (momentumPrev > 0 && momentum < 0) {
-                return { signal: 'SELL', message: 'Momentum crossed BELOW zero - Bearish shift!' };
-            }
-
-            return { signal: null, message: 'Waiting for momentum zero-line cross...' };
-        }
-
-        function analyzeVWAPStrategy() {
-            if (candle1MinHistory.length < 20) {
-                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/20 needed` };
-            }
-
-            const vwap = calculateVWAP(candle1MinHistory);
-            strategyIndicators.vwap = vwap;
-            
-            const lastCandle = candle1MinHistory[candle1MinHistory.length - 1];
-            const prevCandle = candle1MinHistory[candle1MinHistory.length - 2];
-            
-            const distanceFromVWAP = Math.abs(currentPrice - vwap);
-            const tickSize = 0.001;
-            const ticksFromVWAP = distanceFromVWAP / tickSize;
-            
-            updateIndicatorDisplay({
-                'VWAP': vwap.toFixed(5),
-                'Current Price': currentPrice.toFixed(5),
-                'Distance (ticks)': ticksFromVWAP.toFixed(0),
-                'Position': currentPrice > vwap ? 'Above VWAP' : 'Below VWAP',
-                '1-Min Candles': candle1MinHistory.length
-            });
-
-            if (prevCandle.low < vwap - (20 * tickSize) && 
-                lastCandle.close > prevCandle.close && 
-                lastCandle.low > prevCandle.low) {
-                const lowerWick = Math.min(lastCandle.open, lastCandle.close) - lastCandle.low;
-                if (lowerWick > 0) {
-                    return { signal: 'BUY', message: 'Price bounced from 20+ ticks below VWAP' };
-                }
-            }
-
-            if (prevCandle.high > vwap + (20 * tickSize) && 
-                lastCandle.close < prevCandle.close && 
-                lastCandle.high < prevCandle.high) {
-                const upperWick = lastCandle.high - Math.max(lastCandle.open, lastCandle.close);
-                if (upperWick > 0) {
-                    return { signal: 'SELL', message: 'Price rejected from 20+ ticks above VWAP' };
-                }
-            }
-
-            return { signal: null, message: 'Monitoring VWAP bounce/rejection...' };
-        }
-
-        function analyzeTriangleStrategy() {
-            if (candle1MinHistory.length < 15) {
-                return { signal: null, message: `Collecting 1-min candles... ${candle1MinHistory.length}/15 needed` };
-            }
-
-            const triangle = findTriangleTrendlines(candle1MinHistory);
-            strategyIndicators.triangleUpper = triangle.upper;
-            strategyIndicators.triangleLower = triangle.lower;
-            
-            const lastCandle = candle1MinHistory[candle1MinHistory.length - 1];
-            
-            updateIndicatorDisplay({
-                'Upper Trendline': triangle.upper.toFixed(5),
-                'Lower Trendline': triangle.lower.toFixed(5),
-                'Pattern Valid': triangle.valid ? 'Yes' : 'No',
-                'Last Close': lastCandle.close.toFixed(5),
-                '1-Min Candles': candle1MinHistory.length
-            });
-
-            if (!triangle.valid) {
-                return { signal: null, message: 'Triangle pattern not yet formed...' };
-            }
-
-            if (lastCandle.close > triangle.upper && lastCandle.close > lastCandle.open) {
-                return { signal: 'BUY', message: 'Bullish breakout above upper trendline!' };
-            }
-
-            if (lastCandle.close < triangle.lower && lastCandle.close < lastCandle.open) {
-                return { signal: 'SELL', message: 'Bearish breakout below lower trendline!' };
-            }
-
-            return { signal: null, message: 'Triangle forming - waiting for breakout...' };
-        }
-
-        function analyzeBollingerStrategy() {
-            if (tickHistory.length < 20) {
-                return { signal: null, message: `Collecting ticks... ${tickHistory.length}/20 needed` };
-            }
-
-            const prices = tickHistory.map(t => t.quote);
-            const bb = calculateBollingerBands(prices, 20, 2.5);
-            
-            strategyIndicators.bollingerUpper = bb.upper;
-            strategyIndicators.bollingerLower = bb.lower;
-            strategyIndicators.bollingerMiddle = bb.middle;
-            
-            updateIndicatorDisplay({
-                'BB Upper': bb.upper.toFixed(5),
-                'BB Middle': bb.middle.toFixed(5),
-                'BB Lower': bb.lower.toFixed(5),
-                'Price': currentPrice.toFixed(5)
-            });
-
-            if (currentPrice <= bb.lower) {
-                return { signal: 'BUY', message: 'Price touched Lower Bollinger Band' };
-            }
-
-            if (currentPrice >= bb.upper) {
-                return { signal: 'SELL', message: 'Price touched Upper Bollinger Band' };
-            }
-
-            return { signal: null, message: 'Waiting for price to touch bands...' };
-        }
-
-        function analyzeMultiTimeStrategy() {
-            if (candle5MinHistory.length < 5 || candle1MinHistory.length < 10) {
-                return { signal: null, message: `Collecting candles... 5-min: ${candle5MinHistory.length}/5, 1-min: ${candle1MinHistory.length}/10` };
-            }
-
-            const closes5Min = candle5MinHistory.map(c => c.close);
-            const ema50_5min = calculateEMA(closes5Min, 50);
-            strategyIndicators.ema50_5min = ema50_5min;
-            
-            const isHHHL = detectHigherHighsHigherLows(candle5MinHistory);
-            const isLLLH = detectLowerLowsLowerHighs(candle5MinHistory);
-            const priceAboveEMA = closes5Min[closes5Min.length - 1] > ema50_5min;
-            const priceBelowEMA = closes5Min[closes5Min.length - 1] < ema50_5min;
-            
-            const is5MinUptrend = isHHHL && priceAboveEMA;
-            const is5MinDowntrend = isLLLH && priceBelowEMA;
-            
-            const last1Min = candle1MinHistory[candle1MinHistory.length - 1];
-            const prev1Min = candle1MinHistory[candle1MinHistory.length - 2];
-            
-            const isBullishRejection = prev1Min.close < prev1Min.open && 
-                                      last1Min.close > last1Min.open &&
-                                      last1Min.low > prev1Min.low;
-            
-            const isBearishRejection = prev1Min.close > prev1Min.open && 
-                                      last1Min.close < last1Min.open &&
-                                      last1Min.high < prev1Min.high;
-            
-            updateIndicatorDisplay({
-                '5-Min Trend': is5MinUptrend ? 'Uptrend (HH/HL + EMA↑)' : is5MinDowntrend ? 'Downtrend (LL/LH + EMA↓)' : 'Neutral',
-                'EMA 50 (5-min)': ema50_5min.toFixed(5),
-                '1-Min Last': last1Min.close.toFixed(5),
-                'Rejection': isBullishRejection ? 'Bullish' : isBearishRejection ? 'Bearish' : 'None',
-                '5-Min Candles': candle5MinHistory.length,
-                '1-Min Candles': candle1MinHistory.length
-            });
-
-            if (is5MinUptrend && isBullishRejection) {
-                const breakoutHigh = prev1Min.high;
-                const ticksAbove = Math.abs(currentPrice - breakoutHigh) / 0.001;
-                
-                if (currentPrice > breakoutHigh && ticksAbove <= 3) {
-                    return { signal: 'BUY', message: '5-min uptrend + 1-min bounce confirmed!' };
-                }
-                return { signal: null, message: 'Waiting for breakout above rejection high...' };
-            }
-
-            if (is5MinDowntrend && isBearishRejection) {
-                const breakoutLow = prev1Min.low;
-                const ticksBelow = Math.abs(currentPrice - breakoutLow) / 0.001;
-                
-                if (currentPrice < breakoutLow && ticksBelow <= 3) {
-                    return { signal: 'SELL', message: '5-min downtrend + 1-min rejection confirmed!' };
-                }
-                return { signal: null, message: 'Waiting for breakout below rejection low...' };
-            }
-
-            return { signal: null, message: 'Waiting for timeframe confluence...' };
-        }
 
         function updateIndicatorDisplay(indicators) {
             const display = document.getElementById('indicatorDisplay');
@@ -2343,6 +2063,10 @@
 
                     if (now - currentCandle30Sec.timestamp >= CANDLE_30SEC_MS) {
                         candle30SecHistory.push({ ...currentCandle30Sec });
+                        // Memory management: Keep only last 200 candles (100 minutes of 30-sec data)
+                        if (candle30SecHistory.length > 200) {
+                            candle30SecHistory.shift();
+                        }
                         currentCandle30Sec = { open: 0, high: 0, low: 0, close: 0, ticks: 0, timestamp: 0, volume: 0 };
                     }
                 }
@@ -2365,6 +2089,10 @@
 
                     if (now - currentCandle1Min.timestamp >= CANDLE_1MIN_MS) {
                         candle1MinHistory.push({ ...currentCandle1Min });
+                        // Memory management: Keep only last 200 candles (200 minutes of 1-min data)
+                        if (candle1MinHistory.length > 200) {
+                            candle1MinHistory.shift();
+                        }
                         currentCandle1Min = { open: 0, high: 0, low: 0, close: 0, ticks: 0, timestamp: 0, volume: 0 };
                     }
                 }
@@ -2408,24 +2136,39 @@
                 const signal = analyzeMarketSignals();
 
                 if (isAutoTrading && signal) {
+                    // RACE CONDITION PROTECTION: Prevent overlapping trades
+                    if (isProcessingTrade) {
+                        addLog('⚠️ Trade already in progress, skipping signal', 'warning');
+                        return;
+                    }
+                    
+                    // RACE CONDITION PROTECTION: Check for active contracts
+                    if (activeContracts.size > 0) {
+                        addLog('⚠️ Active contract exists, waiting for settlement', 'warning');
+                        return;
+                    }
+                    
                     const tradeNow = Date.now();
                     const cooldownSeconds = parseInt(document.getElementById('cooldownTimer').value) || 30;
                     const cooldownMs = cooldownSeconds * 1000;
                     
-                    // FIXED: Check if there are active contracts (one-entry mode)
-                    const oneEntryMode = document.getElementById('oneEntryMode').checked;
-                    if (oneEntryMode && activeContracts.size > 0) {
-                        // Skip trade - already have an active position
-                        return;
-                    }
+                    // ONE ENTRY PER SETUP: Already handled in analyzeMarketSignals()
+                    // Signal has already been filtered if One Entry mode is active
                     
+                    // COOLDOWN CHECK: Prevent trades too close together
                     if (tradeNow - lastTradeTime > cooldownMs) {
                         const reverseModeEnabled = document.getElementById('reverseMode').checked;
                         const alternatorEnabled = document.getElementById('alternatorMode').checked;
                         
+                        // SIGNAL VALIDATION: Verify signal is valid
+                        if (!signal || (signal !== 'BUY' && signal !== 'SELL')) {
+                            addLog('❌ Invalid signal received, skipping trade', 'error');
+                            return;
+                        }
+                        
                         addLog(`🎯 Executing Trade: ${signal}`, 'success');
                         if (reverseModeEnabled) {
-                            addLog(`   └─ Reverse Mode: Active (original signal was opposite)`, 'info');
+                            addLog(`   └─ Reverse Mode: Active (signal was reversed from original)`, 'info');
                         }
                         if (alternatorEnabled) {
                             addLog(`   └─ Alternator Mode: Enforcing alternation (last: ${lastExecutedTradeType || 'None'})`, 'info');
@@ -2755,7 +2498,10 @@
             document.getElementById('stopAutoTradeBtn').style.display = 'inline-flex';
             document.getElementById('stopAutoTradeBtn').disabled = false;
             const cooldownSeconds = parseInt(document.getElementById('cooldownTimer').value) || 30;
-            const strategyName = document.getElementById('strategySelector').options[document.getElementById('strategySelector').selectedIndex].text;
+            
+            // Get strategy name from the checked radio button
+            const strategyRadio = document.querySelector('input[name="strategy"]:checked');
+            const strategyName = strategyRadio ? strategyRadio.nextElementSibling.textContent : currentStrategy;
             
             const alternatorEnabled = document.getElementById('alternatorMode').checked;
             const reverseModeEnabled = document.getElementById('reverseMode').checked;
@@ -3035,7 +2781,7 @@
             addLog('  1. The Bounce Strategy (Trend Continuation)', 'info');
             addLog('  2. The Breakout Strategy (Trend Reversal)', 'info');
             addLog('✅ Timeframe Selection: 1-Minute or 30-Second candles', 'success');
-            addLog('Unlimited candle collection enabled', 'info');
+            addLog('📊 Memory-Managed Candle Storage: 200 candles max per timeframe', 'info');
             addLog('Fast data processing active - Real-time tick processing', 'info');
 
             const savedToken = localStorage.getItem('derivApiToken');
@@ -3068,7 +2814,7 @@
                 addLog(`Alternator Mode: ${document.getElementById('alternatorMode').checked ? 'ON' : 'OFF'}`, 'info');
                 addLog(`Reverse Mode: ${document.getElementById('reverseMode').checked ? 'ON' : 'OFF'}`, 'info');
                 addLog(`One Entry Per Setup: ${document.getElementById('oneEntryMode').checked ? 'ON' : 'OFF'}`, 'info');
-                addLog(`Candle Limits: REMOVED (Unlimited storage)`, 'info');
+                addLog(`Candle Memory Management: 200 candles per timeframe (prevents memory leaks)`, 'info');
                 addLog(`Signal Display: ENHANCED (Bright & Clear)`, 'success');
                 addLog(`All systems operational`, 'success');
                 addLog('================================', 'success');
