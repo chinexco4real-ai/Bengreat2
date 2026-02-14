@@ -1302,6 +1302,34 @@
                 </div>
             </div>
 
+            <!-- Virtual Trade History -->
+            <div class="trade-history" id="virtualTradeHistory" style="display: none;">
+                <div class="trade-history-header">
+                    <h3>🧪 Virtual Trade History <span id="virtualTradeCount" style="font-size: 14px; color: #667eea; font-weight: normal;">(0)</span></h3>
+                </div>
+                <div class="scroll-container">
+                    <div class="history-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>S/N</th>
+                                    <th>Time</th>
+                                    <th>Market</th>
+                                    <th>Type</th>
+                                    <th>Stake</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody id="virtualTradeHistoryBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #9ca3af;">No virtual trades yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div class="card" id="logCard">
                 <h3>📋 Activity Log</h3>
                 <div class="log-panel" id="logPanel">
@@ -1341,6 +1369,7 @@
         };
 
         let tradeHistory = JSON.parse(localStorage.getItem('benScalperTradeHistory')) || [];
+        let virtualTradeHistory = JSON.parse(localStorage.getItem('benScalperVirtualTradeHistory')) || [];
 
         // Contract settlement tracking (NEW)
         let activeContracts = new Map(); // contractId -> {details, startTime}
@@ -1487,6 +1516,9 @@
             updateActiveFiltersSummary();
 
             updateTradeHistoryTable();
+            
+            // Load virtual trade history
+            virtualTradeHistory = JSON.parse(localStorage.getItem('benScalperVirtualTradeHistory')) || [];
         }
 
         function saveSettings() {
@@ -1579,10 +1611,13 @@
                 smartReverseActive = false;
                 document.getElementById('reverseMode').checked = false;
                 updateVirtualBadge(true);
+                document.getElementById('virtualTradeHistory').style.display = 'block';
+                updateVirtualHistoryTable();
                 addLog('🧪 Smart Filter: Starting in VIRTUAL mode for first trade', 'info');
             } else {
                 isVirtualMode = false;
                 updateVirtualBadge(false);
+                document.getElementById('virtualTradeHistory').style.display = 'none';
                 if (smartReverseActive) {
                     document.getElementById('reverseMode').checked = false;
                     smartReverseActive = false;
@@ -1770,6 +1805,16 @@
             // Use real proposal profit or stake loss
             const payout = isWin ? virtualProfit : -virtualStake;
             smartPL = payout;
+            
+            // Add to virtual trade history
+            addVirtualTradeToHistory({
+                time: new Date().toLocaleTimeString(),
+                market: currentMarketSymbol || 'Unknown',
+                type: virtualTradeType === 'BUY' ? 'RISE' : 'FALL',
+                stake: virtualStake,
+                result: payout,
+                isWin: isWin
+            });
             
             addLog(`🧪 Virtual trade ended: ${isWin ? 'WIN' : 'LOSS'} - P/L: $${payout.toFixed(2)}`, isWin ? 'success' : 'error');
             addLog(`   Entry: ${virtualEntryPrice.toFixed(5)} → Exit: ${endPrice.toFixed(5)}`, 'info');
@@ -2975,9 +3020,51 @@
             addLog(`📊 Trade added to history: ${trade.type} on ${trade.market}`, 'info');
         }
 
+        function addVirtualTradeToHistory(trade) {
+            virtualTradeHistory.unshift(trade);
+            if (virtualTradeHistory.length > 100) virtualTradeHistory.pop();
+            localStorage.setItem('benScalperVirtualTradeHistory', JSON.stringify(virtualTradeHistory));
+            updateVirtualHistoryTable();
+            addLog(`🧪 Virtual trade added to history: ${trade.type} on ${trade.market}`, 'info');
+        }
+
+        function updateVirtualHistoryTable() {
+            const tbody = document.getElementById('virtualTradeHistoryBody');
+            if (!tbody) return;
+            
+            const countEl = document.getElementById('virtualTradeCount');
+            if (countEl) countEl.textContent = `(${virtualTradeHistory.length})`;
+            
+            tbody.innerHTML = '';
+            if (virtualTradeHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;">No virtual trades yet</td></tr>';
+                return;
+            }
+            
+            virtualTradeHistory.slice(0, 50).forEach((trade, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${trade.time || 'N/A'}</td>
+                    <td>${trade.market || 'N/A'}</td>
+                    <td>${trade.type || 'N/A'}</td>
+                    <td>${parseFloat(trade.stake || 0).toFixed(2)}</td>
+                    <td class="${trade.isWin ? 'result-win' : 'result-loss'}">
+                        ${trade.isWin ? '+' : ''}${parseFloat(trade.result || 0).toFixed(2)}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
         function clearTradeHistory() {
             tradeHistory = [];
             localStorage.setItem('benScalperTradeHistory', JSON.stringify([]));
+            
+            // Clear virtual trade history too
+            virtualTradeHistory = [];
+            localStorage.setItem('benScalperVirtualTradeHistory', JSON.stringify([]));
+            updateVirtualHistoryTable();
             
             stats.total = 0;
             stats.wins = 0;
@@ -3365,6 +3452,13 @@
         window.addEventListener('load', async () => {
             loadSettings();
             updateStrategyDescription();
+            
+            // Initialize virtual trade history
+            updateVirtualHistoryTable();
+            if (smartFilterEnabled) {
+                document.getElementById('virtualTradeHistory').style.display = 'block';
+            }
+            
             addLog('Ben Scalper Bot initialized', 'success');
             addLog('✅ Contract Settlement Monitoring: ENABLED', 'success');
             addLog('✅ Timeout Protection: 90 seconds', 'info');
