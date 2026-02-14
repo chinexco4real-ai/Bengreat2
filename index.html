@@ -1274,6 +1274,26 @@
                 </div>
             </div>
 
+            <!-- Virtual Stats Grid - Mirrors live stats, hidden when smart filter disabled -->
+            <div class="stats-grid" id="virtualStatsGrid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-label">Total Virtual Trades</div>
+                    <div class="stat-value" id="virtualTotalTrades">0</div>
+                </div>
+                <div class="stat-card profit">
+                    <div class="stat-label">Virtual Wins</div>
+                    <div class="stat-value" id="virtualWinCount">0</div>
+                </div>
+                <div class="stat-card loss">
+                    <div class="stat-label">Virtual Losses</div>
+                    <div class="stat-value" id="virtualLossCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Virtual P/L</div>
+                    <div class="stat-value" id="virtualProfitLoss">0.00</div>
+                </div>
+            </div>
+
             <div class="trade-history" id="tradeHistory">
                 <div class="trade-history-header">
                     <h3>📜 Trade History <span id="tradeCount" style="font-size: 14px; color: #667eea; font-weight: normal;">(0)</span></h3>
@@ -1370,6 +1390,13 @@
 
         let tradeHistory = JSON.parse(localStorage.getItem('benScalperTradeHistory')) || [];
         let virtualTradeHistory = JSON.parse(localStorage.getItem('benScalperVirtualTradeHistory')) || [];
+        
+        let virtualStats = {
+            total: 0,
+            wins: 0,
+            losses: 0,
+            profitLoss: 0
+        };
 
         // Contract settlement tracking (NEW)
         let activeContracts = new Map(); // contractId -> {details, startTime}
@@ -1612,12 +1639,14 @@
                 document.getElementById('reverseMode').checked = false;
                 updateVirtualBadge(true);
                 document.getElementById('virtualTradeHistory').style.display = 'block';
+                document.getElementById('virtualStatsGrid').style.display = 'grid';  // NEW: Show virtual stats
                 updateVirtualHistoryTable();
                 addLog('🧪 Smart Filter: Starting in VIRTUAL mode for first trade', 'info');
             } else {
                 isVirtualMode = false;
                 updateVirtualBadge(false);
                 document.getElementById('virtualTradeHistory').style.display = 'none';
+                document.getElementById('virtualStatsGrid').style.display = 'none';  // NEW: Hide virtual stats
                 if (smartReverseActive) {
                     document.getElementById('reverseMode').checked = false;
                     smartReverseActive = false;
@@ -3026,6 +3055,13 @@
             localStorage.setItem('benScalperVirtualTradeHistory', JSON.stringify(virtualTradeHistory));
             updateVirtualHistoryTable();
             addLog(`🧪 Virtual trade added to history: ${trade.type} on ${trade.market}`, 'info');
+
+            // Update virtual stats incrementally
+            virtualStats.total++;
+            if (trade.isWin) virtualStats.wins++;
+            else virtualStats.losses++;
+            virtualStats.profitLoss += trade.result;
+            updateVirtualStatsDisplay();
         }
 
         function updateVirtualHistoryTable() {
@@ -3071,6 +3107,13 @@
             stats.losses = 0;
             stats.profitLoss = 0;
             
+            // Reset virtual stats
+            virtualStats.total = 0;
+            virtualStats.wins = 0;
+            virtualStats.losses = 0;
+            virtualStats.profitLoss = 0;
+            updateVirtualStatsDisplay();
+            
             updateStatsDisplay();
             updateTradeHistoryTable();
             addLog('Trade history and statistics cleared.', 'info');
@@ -3112,6 +3155,25 @@
             document.getElementById('lossCount').textContent = stats.losses;
             document.getElementById('profitLoss').textContent = stats.profitLoss.toFixed(2);
             document.getElementById('profitLoss').style.color = stats.profitLoss >= 0 ? '#10b981' : '#ef4444';
+        }
+
+        function updateVirtualStatsDisplay() {
+            document.getElementById('virtualTotalTrades').textContent = virtualStats.total;
+            document.getElementById('virtualWinCount').textContent = virtualStats.wins;
+            document.getElementById('virtualLossCount').textContent = virtualStats.losses;
+            document.getElementById('virtualProfitLoss').textContent = virtualStats.profitLoss.toFixed(2);
+            document.getElementById('virtualProfitLoss').style.color = virtualStats.profitLoss >= 0 ? '#10b981' : '#ef4444';
+        }
+
+        function computeVirtualStats() {
+            virtualStats = { total: 0, wins: 0, losses: 0, profitLoss: 0 };
+            virtualTradeHistory.forEach(trade => {
+                virtualStats.total++;
+                if (trade.isWin) virtualStats.wins++;
+                else virtualStats.losses++;
+                virtualStats.profitLoss += trade.result;
+            });
+            updateVirtualStatsDisplay();
         }
 
         function updateTradeHistoryTable() {
@@ -3455,8 +3517,10 @@
             
             // Initialize virtual trade history
             updateVirtualHistoryTable();
+            computeVirtualStats();
             if (smartFilterEnabled) {
                 document.getElementById('virtualTradeHistory').style.display = 'block';
+                document.getElementById('virtualStatsGrid').style.display = 'grid';
             }
             
             addLog('Ben Scalper Bot initialized', 'success');
