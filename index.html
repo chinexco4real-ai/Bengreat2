@@ -724,6 +724,24 @@
             margin-top: 5px;
         }
 
+        /* Virtual Badge Styles */
+        .virtual-badge {
+            display: none;
+            background: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid #fbbf24;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
         /* Strategy Selector Styles */
         .strategy-card {
             background: #1a1f2e;
@@ -848,6 +866,9 @@
                 <div class="connection-status">
                     <div class="status-dot" id="statusDot"></div>
                     <span id="statusText">Disconnected</span>
+                </div>
+                <div id="virtualBadge" class="virtual-badge">
+                    <span>🧪 Virtual Mode Active</span>
                 </div>
                 <button id="logoutBtn" class="btn btn-danger btn-sm" style="display: none;">Logout</button>
             </div>
@@ -1104,7 +1125,7 @@
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Requires ADX ≥ 23 + clear +DI or -DI dominance
+                        Requires ADX ≥ 25 + DI difference ≥ 7 + correct direction
                     </div>
 
                     <!-- RSI Filter -->
@@ -1151,8 +1172,29 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div style="font-size: 11px; color: #9ca3af;">
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
                         Requires price move ≥ 0.6 × ATR
+                    </div>
+
+                    <!-- Smart Filter -->
+                    <div class="toggle-container">
+                        <div class="toggle-label">Smart Filter</div>
+                        <label class="switch">
+                            <input type="checkbox" id="filterSmart">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
+                        Auto-toggles reverse mode on profit/loss targets. Starts with virtual trade.
+                    </div>
+
+                    <div class="form-group">
+                        <label>Smart Target Profit ($)</label>
+                        <input type="number" id="smartTargetProfit" value="5" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Smart Target Loss ($)</label>
+                        <input type="number" id="smartTargetLoss" value="5" min="0" step="0.01">
                     </div>
 
                     <!-- ===== LIVE ACTIVE FILTERS SUMMARY ===== -->
@@ -1308,6 +1350,21 @@
         const PORTFOLIO_CHECK_MS = 30000; // 30 seconds
         let isProcessingTrade = false; // FIXED: Prevent multiple simultaneous trades
 
+        // Smart Filter Variables
+        let smartFilterEnabled = false;
+        let smartTargetProfit = 5;
+        let smartTargetLoss = 5;
+        let isVirtualMode = false;
+        let smartPL = 0;
+        let isFirstSmartTrade = true;
+        let smartReverseActive = false;
+        let virtualEntryPrice = 0;
+        let virtualTradeType = '';
+        let virtualStartTime = 0;
+        let virtualDurationMs = 0;
+        let virtualStake = 0;
+        let virtualTimeout = null;
+
         const availableMarkets = [
             { value: 'R_10', name: 'Volatility 10' },
             { value: 'R_25', name: 'Volatility 25' },
@@ -1400,12 +1457,30 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
+            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum', 'filterSmart'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
                 if (el) el.checked = saved;
             });
+            
+            // Load smart filter settings
+            const savedSmartFilter = localStorage.getItem('filterSmart') === 'true';
+            document.getElementById('filterSmart').checked = savedSmartFilter;
+            smartFilterEnabled = savedSmartFilter;
+            
+            const savedSmartProfit = localStorage.getItem('smartTargetProfit');
+            if (savedSmartProfit) {
+                document.getElementById('smartTargetProfit').value = savedSmartProfit;
+                smartTargetProfit = parseFloat(savedSmartProfit);
+            }
+            
+            const savedSmartLoss = localStorage.getItem('smartTargetLoss');
+            if (savedSmartLoss) {
+                document.getElementById('smartTargetLoss').value = savedSmartLoss;
+                smartTargetLoss = parseFloat(savedSmartLoss);
+            }
+            
             updateActiveFiltersSummary();
 
             updateTradeHistoryTable();
@@ -1447,11 +1522,15 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
+            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum', 'filterSmart'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
+            
+            // Save smart filter settings
+            localStorage.setItem('smartTargetProfit', document.getElementById('smartTargetProfit').value);
+            localStorage.setItem('smartTargetLoss', document.getElementById('smartTargetLoss').value);
         }
 
         // Add event listeners for all settings
@@ -1483,6 +1562,41 @@
                     updateActiveFiltersSummary();
                 });
             }
+        });
+
+        // Smart filter event listener
+        document.getElementById('filterSmart').addEventListener('change', (e) => {
+            smartFilterEnabled = e.target.checked;
+            const status = smartFilterEnabled ? 'ENABLED' : 'DISABLED';
+            addLog(`🛡️ Smart Filter → ${status}`, e.target.checked ? 'success' : 'warning');
+            if (smartFilterEnabled) {
+                isFirstSmartTrade = true;
+                isVirtualMode = true;
+                smartPL = 0;
+                smartReverseActive = false;
+                document.getElementById('reverseMode').checked = false;
+                updateVirtualBadge(true);
+                addLog('🧪 Smart Filter: Starting in VIRTUAL mode for first trade', 'info');
+            } else {
+                isVirtualMode = false;
+                updateVirtualBadge(false);
+                if (smartReverseActive) {
+                    document.getElementById('reverseMode').checked = false;
+                    smartReverseActive = false;
+                }
+            }
+            saveSettings();
+            updateActiveFiltersSummary();
+        });
+
+        // Smart target event listeners
+        ['smartTargetProfit', 'smartTargetLoss'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                smartTargetProfit = parseFloat(document.getElementById('smartTargetProfit').value);
+                smartTargetLoss = parseFloat(document.getElementById('smartTargetLoss').value);
+                addLog(`💰 Smart targets updated: Profit $${smartTargetProfit}, Loss $${smartTargetLoss}`, 'info');
+                saveSettings();
+            });
         });
 
         // Market change listener for radio buttons
@@ -1575,7 +1689,8 @@
                 { id: 'filterRSI',         name: 'RSI',         color: '#10b981' },
                 { id: 'filterCandleBody',  name: 'Candle',      color: '#f59e0b' },
                 { id: 'filterVolatility',  name: 'Volatility',  color: '#ec4899' },
-                { id: 'filterMomentum',    name: 'Momentum',    color: '#8b5cf6' }
+                { id: 'filterMomentum',    name: 'Momentum',    color: '#8b5cf6' },
+                { id: 'filterSmart',       name: 'Smart',       color: '#3b82f6' }
             ];
             
             let activeCount = 0;
@@ -1608,6 +1723,57 @@
                 none.textContent = 'No filters active — all strategy signals are allowed';
                 container.appendChild(none);
             }
+        }
+
+        // ==================== SMART FILTER HELPER FUNCTIONS ====================
+        function updateVirtualBadge(show) {
+            const badge = document.getElementById('virtualBadge');
+            if (badge) {
+                badge.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        function toggleSmartReverse(enable) {
+            smartReverseActive = enable;
+            document.getElementById('reverseMode').checked = enable;
+            addLog(`🔁 Smart Reverse: ${enable ? 'ENABLED' : 'DISABLED'}`, 'info');
+        }
+
+        function endVirtualTrade() {
+            const endPrice = currentPrice;
+            let isWin = false;
+            if (virtualTradeType === 'BUY') {
+                isWin = endPrice > virtualEntryPrice;
+            } else {
+                isWin = endPrice < virtualEntryPrice;
+            }
+            
+            // Assume fixed payout ~85% for win, loss = -stake
+            const payout = isWin ? virtualStake * 0.85 : -virtualStake;
+            smartPL += payout;
+            
+            addLog(`🧪 Virtual trade ended: ${isWin ? 'WIN' : 'LOSS'} - P/L: $${payout.toFixed(2)}`, isWin ? 'success' : 'error');
+            addLog(`   Entry: ${virtualEntryPrice.toFixed(5)} → Exit: ${endPrice.toFixed(5)}`, 'info');
+            
+            // Check if target achieved
+            const absPL = Math.abs(payout);
+            const targetHit = (isWin && absPL >= smartTargetProfit) || (!isWin && absPL >= smartTargetLoss);
+            
+            if (targetHit) {
+                addLog(`🎯 Virtual target hit! Switching to LIVE trades and enabling reverse mode`, 'success');
+                isVirtualMode = false;
+                updateVirtualBadge(false);
+                toggleSmartReverse(true);
+            } else {
+                addLog(`❌ Virtual target not hit (need $${isWin ? smartTargetProfit : smartTargetLoss}, got $${absPL.toFixed(2)})`, 'warning');
+                addLog(`   Smart filter will be disabled. Re-enable to try again.`, 'warning');
+                document.getElementById('filterSmart').checked = false;
+                smartFilterEnabled = false;
+                isVirtualMode = false;
+                updateVirtualBadge(false);
+            }
+            
+            virtualTimeout = null;
         }
 
         function resetStrategyIndicators() {
@@ -2164,16 +2330,28 @@
             const lastCandle = candleHistory[candleHistory.length - 1];
             const recentCandles = candleHistory.slice(-10);
             
-            // ADX Filter
+            // ==================== ADX FILTER (TIGHTENED + DI STRENGTH) ====================
             if (document.getElementById('filterADX')?.checked) {
-                if (strategyIndicators.adx < 23) {
-                    addLog(`🛡️ ADX Filter BLOCKED: ADX ${strategyIndicators.adx.toFixed(1)} < 23 (weak trend)`, 'warning');
+                // TIGHTENED: 25 instead of 23 (sweet spot for synthetics)
+                if (strategyIndicators.adx < 25) {
+                    addLog(`🛡️ ADX Filter BLOCKED: ADX ${strategyIndicators.adx.toFixed(1)} < 25 (weak trend)`, 'warning');
                     return null;
                 }
-                // Check for clear directional bias
+                
+                // TIGHTENED: DI difference now 7 instead of 5 (much cleaner direction)
                 const diDiff = Math.abs(strategyIndicators.plusDI - strategyIndicators.minusDI);
-                if (diDiff < 5) {
-                    addLog(`🛡️ ADX Filter BLOCKED: DI difference ${diDiff.toFixed(1)} < 5 (unclear direction)`, 'warning');
+                if (diDiff < 7) {
+                    addLog(`🛡️ ADX Filter BLOCKED: DI difference ${diDiff.toFixed(1)} < 7 (unclear direction)`, 'warning');
+                    return null;
+                }
+                
+                // NEW: Strict directional confirmation (this is the real killer feature)
+                const correctDI = 
+                    (signal === 'BUY'  && strategyIndicators.plusDI  > strategyIndicators.minusDI) ||
+                    (signal === 'SELL' && strategyIndicators.minusDI > strategyIndicators.plusDI);
+                
+                if (!correctDI) {
+                    addLog(`🛡️ ADX Filter BLOCKED: Wrong DI direction (${signal} but ${strategyIndicators.plusDI.toFixed(1)}/+DI vs ${strategyIndicators.minusDI.toFixed(1)}/-DI)`, 'warning');
                     return null;
                 }
             }
@@ -2518,6 +2696,37 @@
             const durationType = selectedDuration ? selectedDuration.value : 't';
             const durationValue = parseInt(document.getElementById('durationValue').value);
 
+            // ==================== VIRTUAL TRADE HANDLING (Smart Filter) ====================
+            if (smartFilterEnabled && isVirtualMode && isFirstSmartTrade) {
+                // Simulate virtual trade
+                addLog(`🧪 Virtual ${tradeType} trade started - Stake: $${stake}, Duration: ${durationValue}${durationType}`, 'info');
+                virtualEntryPrice = currentPrice;
+                virtualTradeType = tradeType;
+                virtualStartTime = Date.now();
+                virtualStake = stake;
+                
+                // Calculate duration in ms
+                if (durationType === 't') {
+                    virtualDurationMs = durationValue * 2000; // ~2s per tick
+                } else if (durationType === 's') {
+                    virtualDurationMs = durationValue * 1000;
+                } else if (durationType === 'm') {
+                    virtualDurationMs = durationValue * 60000;
+                }
+                
+                // Set timeout to end virtual trade
+                if (virtualTimeout) clearTimeout(virtualTimeout);
+                virtualTimeout = setTimeout(() => {
+                    endVirtualTrade();
+                }, virtualDurationMs);
+                
+                addLog(`⏱️ Virtual trade will end in ${(virtualDurationMs/1000).toFixed(0)}s`, 'info');
+                isProcessingTrade = false; // Allow next actions
+                isFirstSmartTrade = false;
+                return;
+            }
+
+            // ==================== NORMAL LIVE TRADE ====================
             const proposal = {
                 proposal: 1, amount: stake, basis: 'stake',
                 contract_type: tradeType === 'BUY' ? 'CALL' : 'PUT',
@@ -2601,6 +2810,23 @@
                 
                 // Remove from tracking (NEW)
                 removeContract(contractId);
+                
+                // ==================== SMART FILTER P/L TRACKING ====================
+                if (smartFilterEnabled && !isVirtualMode) {
+                    smartPL += profit;
+                    
+                    const absSmartPL = Math.abs(smartPL);
+                    const isProfitHit = smartPL > 0 && smartPL >= smartTargetProfit;
+                    const isLossHit = smartPL < 0 && absSmartPL >= smartTargetLoss;
+                    
+                    addLog(`💰 Smart P/L: $${smartPL.toFixed(2)} (Target: $${isProfitHit || isLossHit ? (isProfitHit ? smartTargetProfit : smartTargetLoss) : 'pending'})`, 'info');
+                    
+                    if (isProfitHit || isLossHit) {
+                        toggleSmartReverse(!smartReverseActive); // Toggle on/off
+                        smartPL = 0; // Reset for next cycle
+                        addLog(`🎯 Smart target ${isProfitHit ? 'PROFIT' : 'LOSS'} hit! Toggling reverse mode and resetting smart P/L`, 'success');
+                    }
+                }
                 
                 checkRiskManagement();
             }
@@ -2822,6 +3048,21 @@
             isAutoTrading = false;
             document.getElementById('autoTradeBtn').style.display = 'inline-flex';
             document.getElementById('stopAutoTradeBtn').style.display = 'none';
+            
+            // Reset smart filter when auto-trade stops
+            if (smartFilterEnabled) {
+                isFirstSmartTrade = true;
+                isVirtualMode = true;
+                smartPL = 0;
+                if (virtualTimeout) {
+                    clearTimeout(virtualTimeout);
+                    virtualTimeout = null;
+                }
+                toggleSmartReverse(false);
+                updateVirtualBadge(true);
+                addLog('🧪 Smart Filter reset: Will start with virtual trade on next auto-trade', 'info');
+            }
+            
             addLog('Auto trade stopped', 'info');
         }
 
