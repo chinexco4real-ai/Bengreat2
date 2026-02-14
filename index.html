@@ -1062,6 +1062,107 @@
                         <div style="font-size: 11px; color: #6ee7b7;" id="activeStrategyDisplay">The Bounce Strategy</div>
                     </div>
                 </div>
+
+                <!-- ===== ADVANCED FILTERS CARD (FINAL - with Live Summary) ===== -->
+                <div class="card">
+                    <h3>🛡️ Advanced Filters</h3>
+                    
+                    <!-- Preset Buttons -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;">
+                        <button onclick="applyFilterPreset('aggressive')" 
+                                class="btn btn-warning btn-sm" 
+                                style="flex: 1; min-width: 110px;">
+                            ⚡ Aggressive
+                        </button>
+                        <button onclick="applyFilterPreset('balanced')" 
+                                class="btn btn-primary btn-sm" 
+                                style="flex: 1; min-width: 110px;">
+                            ⚖️ Balanced
+                        </button>
+                        <button onclick="applyFilterPreset('conservative')" 
+                                class="btn btn-success btn-sm" 
+                                style="flex: 1; min-width: 110px;">
+                            🛡️ Conservative
+                        </button>
+                        <button onclick="applyFilterPreset('reset')" 
+                                class="btn btn-secondary btn-sm" 
+                                style="flex: 1; min-width: 110px;">
+                            🔄 Reset All
+                        </button>
+                    </div>
+
+                    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 15px;">
+                        Presets are quick setups • All toggles remain fully independent
+                    </div>
+
+                    <!-- ADX Filter -->
+                    <div class="toggle-container">
+                        <div class="toggle-label">ADX Trend Strength <span style="color:#667eea;">(Best for Breakout)</span></div>
+                        <label class="switch">
+                            <input type="checkbox" id="filterADX">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
+                        Requires ADX ≥ 23 + clear +DI or -DI dominance
+                    </div>
+
+                    <!-- RSI Filter -->
+                    <div class="toggle-container">
+                        <div class="toggle-label">RSI Overbought/Oversold Filter</div>
+                        <label class="switch">
+                            <input type="checkbox" id="filterRSI">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
+                        Blocks BUY above 78, SELL below 22
+                    </div>
+
+                    <!-- Candle Body Filter -->
+                    <div class="toggle-container">
+                        <div class="toggle-label">Strong Candle Body Filter</div>
+                        <label class="switch">
+                            <input type="checkbox" id="filterCandleBody">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
+                        Rejects candles where body < 65% of range
+                    </div>
+
+                    <!-- Volatility Contraction -->
+                    <div class="toggle-container">
+                        <div class="toggle-label">Volatility Contraction (Tight Range)</div>
+                        <label class="switch">
+                            <input type="checkbox" id="filterVolatility">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
+                        Only breakouts from compressed ranges (very powerful)
+                    </div>
+
+                    <!-- Momentum Filter -->
+                    <div class="toggle-container">
+                        <div class="toggle-label">Strong Momentum Filter</div>
+                        <label class="switch">
+                            <input type="checkbox" id="filterMomentum">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="font-size: 11px; color: #9ca3af;">
+                        Requires price move ≥ 0.6 × ATR
+                    </div>
+
+                    <!-- ===== LIVE ACTIVE FILTERS SUMMARY ===== -->
+                    <div id="activeFiltersSummary" style="margin-top: 20px; background: #0f1419; padding: 14px; border-radius: 10px; border: 1px solid #2d3748;">
+                        <div style="font-size: 13px; color: #9ca3af; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            📊 <strong>Currently Active Filters</strong>
+                        </div>
+                        <div id="activeFiltersList" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px;"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="trade-signal-card" id="tradeSignalCard">
@@ -1298,6 +1399,15 @@
             document.getElementById('oneEntryMode').checked = savedOneEntry;
             nextTradeType = savedNextTradeType;
 
+            // Load filter settings
+            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
+            filterIds.forEach(id => {
+                const saved = localStorage.getItem(id) === 'true';
+                const el = document.getElementById(id);
+                if (el) el.checked = saved;
+            });
+            updateActiveFiltersSummary();
+
             updateTradeHistoryTable();
         }
 
@@ -1335,6 +1445,13 @@
             localStorage.setItem('reverseMode', document.getElementById('reverseMode').checked);
             localStorage.setItem('oneEntryMode', document.getElementById('oneEntryMode').checked);
             localStorage.setItem('nextTradeType', nextTradeType);
+
+            // Save filter settings
+            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
+            filterIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) localStorage.setItem(id, el.checked);
+            });
         }
 
         // Add event listeners for all settings
@@ -1349,6 +1466,21 @@
                 element.addEventListener('change', () => {
                     saveSettings();
                     addLog(`Setting changed: ${id} = ${element.type === 'checkbox' ? element.checked : element.value}`, 'info');
+                });
+            }
+        });
+
+        // Add event listeners for filters
+        const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
+        filterIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', () => {
+                    const filterName = id.replace('filter', '');
+                    const status = el.checked ? 'ENABLED' : 'DISABLED';
+                    addLog(`🛡️ Filter ${filterName} → ${status}`, el.checked ? 'success' : 'warning');
+                    saveSettings();
+                    updateActiveFiltersSummary();
                 });
             }
         });
@@ -1392,6 +1524,90 @@
             };
             
             document.getElementById('strategyDescription').innerHTML = descriptions[currentStrategy] || descriptions.bounce;
+        }
+
+        // ==================== FILTER PRESET FUNCTION ====================
+        function applyFilterPreset(preset) {
+            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
+            
+            switch(preset) {
+                case 'aggressive':
+                    // Only momentum - allows most trades
+                    filterIds.forEach(id => document.getElementById(id).checked = false);
+                    document.getElementById('filterMomentum').checked = true;
+                    addLog('⚡ Aggressive preset applied: Momentum only', 'success');
+                    break;
+                    
+                case 'balanced':
+                    // ADX + Candle Body - good balance
+                    filterIds.forEach(id => document.getElementById(id).checked = false);
+                    document.getElementById('filterADX').checked = true;
+                    document.getElementById('filterCandleBody').checked = true;
+                    addLog('⚖️ Balanced preset applied: ADX + Candle Body', 'success');
+                    break;
+                    
+                case 'conservative':
+                    // All filters ON - very selective
+                    filterIds.forEach(id => document.getElementById(id).checked = true);
+                    addLog('🛡️ Conservative preset applied: All filters active', 'success');
+                    break;
+                    
+                case 'reset':
+                    // All filters OFF
+                    filterIds.forEach(id => document.getElementById(id).checked = false);
+                    addLog('🔄 All filters reset to OFF', 'warning');
+                    break;
+            }
+            
+            saveSettings();
+            updateActiveFiltersSummary();
+        }
+
+        // ==================== LIVE ACTIVE FILTERS SUMMARY ====================
+        function updateActiveFiltersSummary() {
+            const container = document.getElementById('activeFiltersList');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            const filters = [
+                { id: 'filterADX',         name: 'ADX',         color: '#667eea' },
+                { id: 'filterRSI',         name: 'RSI',         color: '#10b981' },
+                { id: 'filterCandleBody',  name: 'Candle',      color: '#f59e0b' },
+                { id: 'filterVolatility',  name: 'Volatility',  color: '#ec4899' },
+                { id: 'filterMomentum',    name: 'Momentum',    color: '#8b5cf6' }
+            ];
+            
+            let activeCount = 0;
+            
+            filters.forEach(f => {
+                const el = document.getElementById(f.id);
+                if (el && el.checked) {
+                    const badge = document.createElement('div');
+                    badge.style.cssText = `
+                        background: rgba(102, 126, 234, 0.12);
+                        color: ${f.color};
+                        padding: 5px 12px;
+                        border-radius: 999px;
+                        font-size: 12.5px;
+                        font-weight: 700;
+                        border: 1px solid ${f.color}33;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                    `;
+                    badge.innerHTML = `✅ ${f.name}`;
+                    container.appendChild(badge);
+                    activeCount++;
+                }
+            });
+            
+            if (activeCount === 0) {
+                const none = document.createElement('div');
+                none.style.cssText = 'color: #6b7280; font-style: italic; padding: 6px 0; font-size: 13px;';
+                none.textContent = 'No filters active — all strategy signals are allowed';
+                container.appendChild(none);
+            }
         }
 
         function resetStrategyIndicators() {
@@ -1941,6 +2157,75 @@
             }
         }
 
+        // ==================== APPLY ADVANCED FILTERS ====================
+        function applyAdvancedFilters(signal, candleHistory) {
+            if (!signal || signal === null) return signal;
+            
+            const lastCandle = candleHistory[candleHistory.length - 1];
+            const recentCandles = candleHistory.slice(-10);
+            
+            // ADX Filter
+            if (document.getElementById('filterADX')?.checked) {
+                if (strategyIndicators.adx < 23) {
+                    addLog(`🛡️ ADX Filter BLOCKED: ADX ${strategyIndicators.adx.toFixed(1)} < 23 (weak trend)`, 'warning');
+                    return null;
+                }
+                // Check for clear directional bias
+                const diDiff = Math.abs(strategyIndicators.plusDI - strategyIndicators.minusDI);
+                if (diDiff < 5) {
+                    addLog(`🛡️ ADX Filter BLOCKED: DI difference ${diDiff.toFixed(1)} < 5 (unclear direction)`, 'warning');
+                    return null;
+                }
+            }
+            
+            // RSI Filter
+            if (document.getElementById('filterRSI')?.checked) {
+                if (signal === 'BUY' && strategyIndicators.rsi > 78) {
+                    addLog(`🛡️ RSI Filter BLOCKED BUY: RSI ${strategyIndicators.rsi.toFixed(1)} > 78 (overbought)`, 'warning');
+                    return null;
+                }
+                if (signal === 'SELL' && strategyIndicators.rsi < 22) {
+                    addLog(`🛡️ RSI Filter BLOCKED SELL: RSI ${strategyIndicators.rsi.toFixed(1)} < 22 (oversold)`, 'warning');
+                    return null;
+                }
+            }
+            
+            // Candle Body Filter
+            if (document.getElementById('filterCandleBody')?.checked) {
+                const body = Math.abs(lastCandle.close - lastCandle.open);
+                const range = lastCandle.high - lastCandle.low;
+                const bodyRatio = range > 0 ? body / range : 0;
+                if (bodyRatio < 0.65) {
+                    addLog(`🛡️ Candle Body Filter BLOCKED: Body ratio ${(bodyRatio * 100).toFixed(1)}% < 65% (weak candle)`, 'warning');
+                    return null;
+                }
+            }
+            
+            // Volatility Contraction Filter
+            if (document.getElementById('filterVolatility')?.checked) {
+                const atr = calculateATR(recentCandles, 10);
+                const currentRange = lastCandle.high - lastCandle.low;
+                const avgRange = recentCandles.reduce((sum, c) => sum + (c.high - c.low), 0) / recentCandles.length;
+                if (currentRange > avgRange * 0.8) {
+                    addLog(`🛡️ Volatility Filter BLOCKED: Range not compressed (${(currentRange/avgRange*100).toFixed(0)}% of avg)`, 'warning');
+                    return null;
+                }
+            }
+            
+            // Momentum Filter
+            if (document.getElementById('filterMomentum')?.checked) {
+                const atr = calculateATR(recentCandles, 10);
+                const prevCandle = candleHistory[candleHistory.length - 2];
+                const priceMove = Math.abs(lastCandle.close - prevCandle.close);
+                if (priceMove < atr * 0.6) {
+                    addLog(`🛡️ Momentum Filter BLOCKED: Move ${priceMove.toFixed(5)} < ${(atr * 0.6).toFixed(5)} (weak momentum)`, 'warning');
+                    return null;
+                }
+            }
+            
+            return signal;
+        }
+
         // ==================== FIXED analyzeMarketSignals() ====================
         function analyzeMarketSignals() {
             let result = { signal: null, message: 'Waiting for data...' };
@@ -1960,6 +2245,14 @@
 
             if (signal) {
                 addLog(`📊 Raw Strategy Signal: ${signal} - ${result.message}`, 'info');
+            }
+
+            // ====================== APPLY ADVANCED FILTERS ======================
+            const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
+            signal = applyAdvancedFilters(signal, candleHistory);
+            if (signal === null && originalSignal !== null) {
+                updateSignalUI('NONE', '🛡️ Signal blocked by active filters');
+                return null;
             }
 
             // ====================== ONE ENTRY PER SETUP (NOW FIXED) ======================
@@ -2844,6 +3137,11 @@
         addLog('Double-Click Protection: Logout & Clear History', 'info');
         addLog('Activity Logging: Enhanced', 'info');
         addLog('=========================', 'success');
+
+        // Show live filter summary on startup
+        setTimeout(() => {
+            updateActiveFiltersSummary();
+        }, 800);
     </script>
 </body>
 </html>
