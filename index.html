@@ -724,24 +724,6 @@
             margin-top: 5px;
         }
 
-        /* Virtual Badge Styles */
-        .virtual-badge {
-            display: none;
-            background: rgba(245, 158, 11, 0.1);
-            color: #fbbf24;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            border: 1px solid #fbbf24;
-            margin-left: 10px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
         /* Strategy Selector Styles */
         .strategy-card {
             background: #1a1f2e;
@@ -866,9 +848,6 @@
                 <div class="connection-status">
                     <div class="status-dot" id="statusDot"></div>
                     <span id="statusText">Disconnected</span>
-                </div>
-                <div id="virtualBadge" class="virtual-badge">
-                    <span>🧪 Virtual Mode Active</span>
                 </div>
                 <button id="logoutBtn" class="btn btn-danger btn-sm" style="display: none;">Logout</button>
             </div>
@@ -1172,29 +1151,8 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
+                    <div style="font-size: 11px; color: #9ca3af;">
                         Requires price move ≥ 0.6 × ATR
-                    </div>
-
-                    <!-- Smart Filter -->
-                    <div class="toggle-container">
-                        <div class="toggle-label">Smart Filter</div>
-                        <label class="switch">
-                            <input type="checkbox" id="filterSmart">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Auto-toggles reverse mode on profit/loss targets. Starts with virtual trade.
-                    </div>
-
-                    <div class="form-group">
-                        <label>Smart Target Profit ($)</label>
-                        <input type="number" id="smartTargetProfit" value="5" min="0" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label>Smart Target Loss ($)</label>
-                        <input type="number" id="smartTargetLoss" value="5" min="0" step="0.01">
                     </div>
 
                     <!-- ===== LIVE ACTIVE FILTERS SUMMARY ===== -->
@@ -1274,26 +1232,6 @@
                 </div>
             </div>
 
-            <!-- Virtual Stats Grid - Mirrors live stats, hidden when smart filter disabled -->
-            <div class="stats-grid" id="virtualStatsGrid" style="display: none;">
-                <div class="stat-card">
-                    <div class="stat-label">Total Virtual Trades</div>
-                    <div class="stat-value" id="virtualTotalTrades">0</div>
-                </div>
-                <div class="stat-card profit">
-                    <div class="stat-label">Virtual Wins</div>
-                    <div class="stat-value" id="virtualWinCount">0</div>
-                </div>
-                <div class="stat-card loss">
-                    <div class="stat-label">Virtual Losses</div>
-                    <div class="stat-value" id="virtualLossCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Virtual P/L</div>
-                    <div class="stat-value" id="virtualProfitLoss">0.00</div>
-                </div>
-            </div>
-
             <div class="trade-history" id="tradeHistory">
                 <div class="trade-history-header">
                     <h3>📜 Trade History <span id="tradeCount" style="font-size: 14px; color: #667eea; font-weight: normal;">(0)</span></h3>
@@ -1315,34 +1253,6 @@
                             <tbody id="tradeHistoryBody">
                                 <tr>
                                     <td colspan="6" style="text-align: center; color: #9ca3af;">No trades yet</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Virtual Trade History -->
-            <div class="trade-history" id="virtualTradeHistory" style="display: none;">
-                <div class="trade-history-header">
-                    <h3>🧪 Virtual Trade History <span id="virtualTradeCount" style="font-size: 14px; color: #667eea; font-weight: normal;">(0)</span></h3>
-                </div>
-                <div class="scroll-container">
-                    <div class="history-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>S/N</th>
-                                    <th>Time</th>
-                                    <th>Market</th>
-                                    <th>Type</th>
-                                    <th>Stake</th>
-                                    <th>Result</th>
-                                </tr>
-                            </thead>
-                            <tbody id="virtualTradeHistoryBody">
-                                <tr>
-                                    <td colspan="6" style="text-align: center; color: #9ca3af;">No virtual trades yet</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1389,14 +1299,6 @@
         };
 
         let tradeHistory = JSON.parse(localStorage.getItem('benScalperTradeHistory')) || [];
-        let virtualTradeHistory = JSON.parse(localStorage.getItem('benScalperVirtualTradeHistory')) || [];
-        
-        let virtualStats = {
-            total: 0,
-            wins: 0,
-            losses: 0,
-            profitLoss: 0
-        };
 
         // Contract settlement tracking (NEW)
         let activeContracts = new Map(); // contractId -> {details, startTime}
@@ -1405,24 +1307,6 @@
         const CONTRACT_TIMEOUT_MS = 90000; // 90 seconds
         const PORTFOLIO_CHECK_MS = 30000; // 30 seconds
         let isProcessingTrade = false; // FIXED: Prevent multiple simultaneous trades
-
-        // Smart Filter Variables
-        let smartFilterEnabled = false;
-        let smartTargetProfit = 5;
-        let smartTargetLoss = 5;
-        let isVirtualMode = false;
-        let smartPL = 0;
-        let isFirstSmartTrade = true;
-        let smartReverseActive = false;
-        let virtualEntryPrice = 0;
-        let virtualTradeType = '';
-        let virtualStartTime = 0;
-        let virtualDurationMs = 0;
-        let virtualStake = 0;
-        let virtualTimeout = null;
-        let virtualProfit = 0;
-        let virtualTickCount = 0;
-        let isVirtualProposal = false;
 
         const availableMarkets = [
             { value: 'R_10', name: 'Volatility 10' },
@@ -1516,36 +1400,15 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum', 'filterSmart'];
+            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
                 if (el) el.checked = saved;
             });
-            
-            // Load smart filter settings
-            const savedSmartFilter = localStorage.getItem('filterSmart') === 'true';
-            document.getElementById('filterSmart').checked = savedSmartFilter;
-            smartFilterEnabled = savedSmartFilter;
-            
-            const savedSmartProfit = localStorage.getItem('smartTargetProfit');
-            if (savedSmartProfit) {
-                document.getElementById('smartTargetProfit').value = savedSmartProfit;
-                smartTargetProfit = parseFloat(savedSmartProfit);
-            }
-            
-            const savedSmartLoss = localStorage.getItem('smartTargetLoss');
-            if (savedSmartLoss) {
-                document.getElementById('smartTargetLoss').value = savedSmartLoss;
-                smartTargetLoss = parseFloat(savedSmartLoss);
-            }
-            
             updateActiveFiltersSummary();
 
             updateTradeHistoryTable();
-            
-            // Load virtual trade history
-            virtualTradeHistory = JSON.parse(localStorage.getItem('benScalperVirtualTradeHistory')) || [];
         }
 
         function saveSettings() {
@@ -1584,15 +1447,11 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum', 'filterSmart'];
+            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
-            
-            // Save smart filter settings
-            localStorage.setItem('smartTargetProfit', document.getElementById('smartTargetProfit').value);
-            localStorage.setItem('smartTargetLoss', document.getElementById('smartTargetLoss').value);
         }
 
         // Add event listeners for all settings
@@ -1624,47 +1483,6 @@
                     updateActiveFiltersSummary();
                 });
             }
-        });
-
-        // Smart filter event listener
-        document.getElementById('filterSmart').addEventListener('change', (e) => {
-            smartFilterEnabled = e.target.checked;
-            const status = smartFilterEnabled ? 'ENABLED' : 'DISABLED';
-            addLog(`🛡️ Smart Filter → ${status}`, e.target.checked ? 'success' : 'warning');
-            if (smartFilterEnabled) {
-                isFirstSmartTrade = true;
-                isVirtualMode = true;
-                smartPL = 0;
-                smartReverseActive = false;
-                document.getElementById('reverseMode').checked = false;
-                updateVirtualBadge(true);
-                document.getElementById('virtualTradeHistory').style.display = 'block';
-                document.getElementById('virtualStatsGrid').style.display = 'grid';  // NEW: Show virtual stats
-                updateVirtualHistoryTable();
-                addLog('🧪 Smart Filter: Starting in VIRTUAL mode for first trade', 'info');
-            } else {
-                isVirtualMode = false;
-                updateVirtualBadge(false);
-                document.getElementById('virtualTradeHistory').style.display = 'none';
-                document.getElementById('virtualStatsGrid').style.display = 'none';  // NEW: Hide virtual stats
-                if (smartReverseActive) {
-                    document.getElementById('reverseMode').checked = false;
-                    smartReverseActive = false;
-                }
-                resetVirtualVars();
-            }
-            saveSettings();
-            updateActiveFiltersSummary();
-        });
-
-        // Smart target event listeners
-        ['smartTargetProfit', 'smartTargetLoss'].forEach(id => {
-            document.getElementById(id).addEventListener('change', () => {
-                smartTargetProfit = parseFloat(document.getElementById('smartTargetProfit').value);
-                smartTargetLoss = parseFloat(document.getElementById('smartTargetLoss').value);
-                addLog(`💰 Smart targets updated: Profit $${smartTargetProfit}, Loss $${smartTargetLoss}`, 'info');
-                saveSettings();
-            });
         });
 
         // Market change listener for radio buttons
@@ -1757,8 +1575,7 @@
                 { id: 'filterRSI',         name: 'RSI',         color: '#10b981' },
                 { id: 'filterCandleBody',  name: 'Candle',      color: '#f59e0b' },
                 { id: 'filterVolatility',  name: 'Volatility',  color: '#ec4899' },
-                { id: 'filterMomentum',    name: 'Momentum',    color: '#8b5cf6' },
-                { id: 'filterSmart',       name: 'Smart',       color: '#3b82f6' }
+                { id: 'filterMomentum',    name: 'Momentum',    color: '#8b5cf6' }
             ];
             
             let activeCount = 0;
@@ -1791,78 +1608,6 @@
                 none.textContent = 'No filters active — all strategy signals are allowed';
                 container.appendChild(none);
             }
-        }
-
-        // ==================== SMART FILTER HELPER FUNCTIONS ====================
-        function updateVirtualBadge(show) {
-            const badge = document.getElementById('virtualBadge');
-            if (badge) {
-                badge.style.display = show ? 'flex' : 'none';
-            }
-        }
-
-        function toggleSmartReverse(enable) {
-            smartReverseActive = enable;
-            document.getElementById('reverseMode').checked = enable;
-            addLog(`🔁 Smart Reverse: ${enable ? 'ENABLED' : 'DISABLED'}`, 'info');
-        }
-
-        function resetVirtualVars() {
-            if (virtualTimeout) {
-                clearTimeout(virtualTimeout);
-                virtualTimeout = null;
-            }
-            virtualEntryPrice = 0;
-            virtualTradeType = '';
-            virtualStartTime = 0;
-            virtualDurationMs = 0;
-            virtualStake = 0;
-            virtualProfit = 0;
-            virtualTickCount = 0;
-            isVirtualProposal = false;
-        }
-
-        function endVirtualTrade() {
-            const endPrice = currentPrice;
-            let isWin = false;
-            if (virtualTradeType === 'BUY') {
-                isWin = endPrice > virtualEntryPrice;
-            } else {
-                isWin = endPrice < virtualEntryPrice;
-            }
-            
-            // Use real proposal profit or stake loss
-            const payout = isWin ? virtualProfit : -virtualStake;
-            smartPL = payout;
-            
-            // Add to virtual trade history
-            addVirtualTradeToHistory({
-                time: new Date().toLocaleTimeString(),
-                market: currentMarketSymbol || 'Unknown',
-                type: virtualTradeType === 'BUY' ? 'RISE' : 'FALL',
-                stake: virtualStake,
-                result: payout,
-                isWin: isWin
-            });
-            
-            addLog(`🧪 Virtual trade ended: ${isWin ? 'WIN' : 'LOSS'} - P/L: $${payout.toFixed(2)}`, isWin ? 'success' : 'error');
-            addLog(`   Entry: ${virtualEntryPrice.toFixed(5)} → Exit: ${endPrice.toFixed(5)}`, 'info');
-            
-            // Check if target achieved
-            const absPL = Math.abs(smartPL);
-            const targetHit = (isWin && smartPL >= smartTargetProfit) || (!isWin && absPL >= smartTargetLoss);
-            
-            if (targetHit) {
-                addLog(`🎯 Virtual target hit! Switching to LIVE trades and enabling reverse mode`, 'success');
-                isVirtualMode = false;
-                updateVirtualBadge(false);
-                toggleSmartReverse(true);
-                smartPL = 0;
-            } else {
-                addLog(`❌ Virtual target not hit. Waiting for next signal in virtual mode.`, 'warning');
-            }
-            
-            resetVirtualVars();
         }
 
         function resetStrategyIndicators() {
@@ -2023,49 +1768,6 @@
                                 forceContractCheck(contractId);
                             }
                         });
-                    }
-
-                    // Virtual Trade Proposal Handling
-                    if (data.msg_type === 'proposal' && isVirtualProposal) {
-                        isVirtualProposal = false;
-                        if (data.error) {
-                            addLog(`Virtual proposal error: ${data.error.message}`, 'error');
-                            isProcessingTrade = false;
-                            return;
-                        }
-                        
-                        virtualProfit = data.proposal.payout - data.proposal.ask_price;
-                        addLog(`🧪 Virtual proposal received - Potential profit: $${virtualProfit.toFixed(2)}`, 'info');
-                        
-                        // Now start the simulation
-                        virtualEntryPrice = currentPrice;
-                        virtualTradeType = data.proposal.contract_type === 'CALL' ? 'BUY' : 'SELL';
-                        virtualStartTime = Date.now();
-                        virtualStake = data.proposal.ask_price;
-                        
-                        const selectedDuration = document.querySelector('input[name="durationType"]:checked');
-                        const durationType = selectedDuration ? selectedDuration.value : 't';
-                        const durationValue = parseInt(document.getElementById('durationValue').value);
-                        
-                        if (durationType !== 't') {
-                            // Time-based: calculate ms
-                            if (durationType === 's') {
-                                virtualDurationMs = durationValue * 1000;
-                            } else if (durationType === 'm') {
-                                virtualDurationMs = durationValue * 60000;
-                            }
-                            virtualTimeout = setTimeout(() => {
-                                endVirtualTrade();
-                            }, virtualDurationMs);
-                            addLog(`⏱️ Virtual trade will end in ${(virtualDurationMs/1000).toFixed(0)}s`, 'info');
-                        } else {
-                            // Tick-based: reset count
-                            virtualTickCount = 0;
-                            addLog(`⏱️ Virtual trade will end after ${durationValue} ticks`, 'info');
-                        }
-                        
-                        isProcessingTrade = false;
-                        isFirstSmartTrade = false;
                     }
 
                     if (data.msg_type === 'tick') {
@@ -2788,21 +2490,6 @@
                     }
                 }
             }
-            
-            // ==================== VIRTUAL TICK COUNTING (Smart Filter) ====================
-            if (smartFilterEnabled && isVirtualMode && virtualTradeType) {
-                const selectedDuration = document.querySelector('input[name="durationType"]:checked');
-                const durationType = selectedDuration ? selectedDuration.value : 't';
-                
-                if (durationType === 't') {
-                    virtualTickCount++;
-                    const targetTicks = parseInt(document.getElementById('durationValue').value);
-                    if (virtualTickCount >= targetTicks) {
-                        addLog(`🧪 Virtual trade: ${virtualTickCount}/${targetTicks} ticks completed`, 'info');
-                        endVirtualTrade();
-                    }
-                }
-            }
         }
 
         function subscribeToTicks(symbol) {
@@ -2843,25 +2530,6 @@
             const durationType = selectedDuration ? selectedDuration.value : 't';
             const durationValue = parseInt(document.getElementById('durationValue').value);
 
-            // ==================== VIRTUAL TRADE HANDLING (Smart Filter) ====================
-            if (smartFilterEnabled && isVirtualMode) {
-                // Send proposal for accurate payout
-                isVirtualProposal = true;
-                const proposal = {
-                    proposal: 1, amount: stake, basis: 'stake',
-                    contract_type: tradeType === 'BUY' ? 'CALL' : 'PUT',
-                    currency: accountData.currency,
-                    duration: durationValue, duration_unit: durationType, symbol: market
-                };
-
-                addLog(`🧪 Requesting proposal for virtual ${tradeType} - Stake: $${stake}, Duration: ${durationValue}${durationType}`, 'info');
-                ws.send(JSON.stringify(proposal));
-                
-                // Handler moved to ws.onmessage for proposal
-                return;
-            }
-
-            // ==================== NORMAL LIVE TRADE ====================
             const proposal = {
                 proposal: 1, amount: stake, basis: 'stake',
                 contract_type: tradeType === 'BUY' ? 'CALL' : 'PUT',
@@ -2945,23 +2613,6 @@
                 
                 // Remove from tracking (NEW)
                 removeContract(contractId);
-                
-                // ==================== SMART FILTER P/L TRACKING ====================
-                if (smartFilterEnabled && !isVirtualMode) {
-                    smartPL += profit;
-                    
-                    const absSmartPL = Math.abs(smartPL);
-                    const isProfitHit = smartPL > 0 && smartPL >= smartTargetProfit;
-                    const isLossHit = smartPL < 0 && absSmartPL >= smartTargetLoss;
-                    
-                    addLog(`💰 Smart P/L: $${smartPL.toFixed(2)} (Target: $${isProfitHit || isLossHit ? (isProfitHit ? smartTargetProfit : smartTargetLoss) : 'pending'})`, 'info');
-                    
-                    if (isProfitHit || isLossHit) {
-                        toggleSmartReverse(!smartReverseActive); // Toggle on/off
-                        smartPL = 0; // Reset for next cycle
-                        addLog(`🎯 Smart target ${isProfitHit ? 'PROFIT' : 'LOSS'} hit! Toggling reverse mode and resetting smart P/L`, 'success');
-                    }
-                }
                 
                 checkRiskManagement();
             }
@@ -3049,70 +2700,14 @@
             addLog(`📊 Trade added to history: ${trade.type} on ${trade.market}`, 'info');
         }
 
-        function addVirtualTradeToHistory(trade) {
-            virtualTradeHistory.unshift(trade);
-            if (virtualTradeHistory.length > 100) virtualTradeHistory.pop();
-            localStorage.setItem('benScalperVirtualTradeHistory', JSON.stringify(virtualTradeHistory));
-            updateVirtualHistoryTable();
-            addLog(`🧪 Virtual trade added to history: ${trade.type} on ${trade.market}`, 'info');
-
-            // Update virtual stats incrementally
-            virtualStats.total++;
-            if (trade.isWin) virtualStats.wins++;
-            else virtualStats.losses++;
-            virtualStats.profitLoss += trade.result;
-            updateVirtualStatsDisplay();
-        }
-
-        function updateVirtualHistoryTable() {
-            const tbody = document.getElementById('virtualTradeHistoryBody');
-            if (!tbody) return;
-            
-            const countEl = document.getElementById('virtualTradeCount');
-            if (countEl) countEl.textContent = `(${virtualTradeHistory.length})`;
-            
-            tbody.innerHTML = '';
-            if (virtualTradeHistory.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;">No virtual trades yet</td></tr>';
-                return;
-            }
-            
-            virtualTradeHistory.slice(0, 50).forEach((trade, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${trade.time || 'N/A'}</td>
-                    <td>${trade.market || 'N/A'}</td>
-                    <td>${trade.type || 'N/A'}</td>
-                    <td>${parseFloat(trade.stake || 0).toFixed(2)}</td>
-                    <td class="${trade.isWin ? 'result-win' : 'result-loss'}">
-                        ${trade.isWin ? '+' : ''}${parseFloat(trade.result || 0).toFixed(2)}
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
         function clearTradeHistory() {
             tradeHistory = [];
             localStorage.setItem('benScalperTradeHistory', JSON.stringify([]));
-            
-            // Clear virtual trade history too
-            virtualTradeHistory = [];
-            localStorage.setItem('benScalperVirtualTradeHistory', JSON.stringify([]));
-            updateVirtualHistoryTable();
             
             stats.total = 0;
             stats.wins = 0;
             stats.losses = 0;
             stats.profitLoss = 0;
-            
-            // Reset virtual stats
-            virtualStats.total = 0;
-            virtualStats.wins = 0;
-            virtualStats.losses = 0;
-            virtualStats.profitLoss = 0;
-            updateVirtualStatsDisplay();
             
             updateStatsDisplay();
             updateTradeHistoryTable();
@@ -3155,25 +2750,6 @@
             document.getElementById('lossCount').textContent = stats.losses;
             document.getElementById('profitLoss').textContent = stats.profitLoss.toFixed(2);
             document.getElementById('profitLoss').style.color = stats.profitLoss >= 0 ? '#10b981' : '#ef4444';
-        }
-
-        function updateVirtualStatsDisplay() {
-            document.getElementById('virtualTotalTrades').textContent = virtualStats.total;
-            document.getElementById('virtualWinCount').textContent = virtualStats.wins;
-            document.getElementById('virtualLossCount').textContent = virtualStats.losses;
-            document.getElementById('virtualProfitLoss').textContent = virtualStats.profitLoss.toFixed(2);
-            document.getElementById('virtualProfitLoss').style.color = virtualStats.profitLoss >= 0 ? '#10b981' : '#ef4444';
-        }
-
-        function computeVirtualStats() {
-            virtualStats = { total: 0, wins: 0, losses: 0, profitLoss: 0 };
-            virtualTradeHistory.forEach(trade => {
-                virtualStats.total++;
-                if (trade.isWin) virtualStats.wins++;
-                else virtualStats.losses++;
-                virtualStats.profitLoss += trade.result;
-            });
-            updateVirtualStatsDisplay();
         }
 
         function updateTradeHistoryTable() {
@@ -3258,18 +2834,6 @@
             isAutoTrading = false;
             document.getElementById('autoTradeBtn').style.display = 'inline-flex';
             document.getElementById('stopAutoTradeBtn').style.display = 'none';
-            
-            // Reset smart filter when auto-trade stops
-            if (smartFilterEnabled) {
-                isFirstSmartTrade = true;
-                isVirtualMode = true;
-                smartPL = 0;
-                resetVirtualVars();
-                toggleSmartReverse(false);
-                updateVirtualBadge(true);
-                addLog('🧪 Smart Filter reset: Will start with virtual trade on next auto-trade', 'info');
-            }
-            
             addLog('Auto trade stopped', 'info');
         }
 
@@ -3514,15 +3078,6 @@
         window.addEventListener('load', async () => {
             loadSettings();
             updateStrategyDescription();
-            
-            // Initialize virtual trade history
-            updateVirtualHistoryTable();
-            computeVirtualStats();
-            if (smartFilterEnabled) {
-                document.getElementById('virtualTradeHistory').style.display = 'block';
-                document.getElementById('virtualStatsGrid').style.display = 'grid';
-            }
-            
             addLog('Ben Scalper Bot initialized', 'success');
             addLog('✅ Contract Settlement Monitoring: ENABLED', 'success');
             addLog('✅ Timeout Protection: 90 seconds', 'info');
