@@ -1364,6 +1364,9 @@
         let virtualDurationMs = 0;
         let virtualStake = 0;
         let virtualTimeout = null;
+        let virtualProfit = 0;
+        let virtualTickCount = 0;
+        let isVirtualProposal = false;
 
         const availableMarkets = [
             { value: 'R_10', name: 'Volatility 10' },
@@ -1584,6 +1587,7 @@
                     document.getElementById('reverseMode').checked = false;
                     smartReverseActive = false;
                 }
+                resetVirtualVars();
             }
             saveSettings();
             updateActiveFiltersSummary();
@@ -1739,6 +1743,21 @@
             addLog(`🔁 Smart Reverse: ${enable ? 'ENABLED' : 'DISABLED'}`, 'info');
         }
 
+        function resetVirtualVars() {
+            if (virtualTimeout) {
+                clearTimeout(virtualTimeout);
+                virtualTimeout = null;
+            }
+            virtualEntryPrice = 0;
+            virtualTradeType = '';
+            virtualStartTime = 0;
+            virtualDurationMs = 0;
+            virtualStake = 0;
+            virtualProfit = 0;
+            virtualTickCount = 0;
+            isVirtualProposal = false;
+        }
+
         function endVirtualTrade() {
             const endPrice = currentPrice;
             let isWin = false;
@@ -1748,32 +1767,28 @@
                 isWin = endPrice < virtualEntryPrice;
             }
             
-            // Assume fixed payout ~85% for win, loss = -stake
-            const payout = isWin ? virtualStake * 0.85 : -virtualStake;
-            smartPL += payout;
+            // Use real proposal profit or stake loss
+            const payout = isWin ? virtualProfit : -virtualStake;
+            smartPL = payout;
             
             addLog(`🧪 Virtual trade ended: ${isWin ? 'WIN' : 'LOSS'} - P/L: $${payout.toFixed(2)}`, isWin ? 'success' : 'error');
             addLog(`   Entry: ${virtualEntryPrice.toFixed(5)} → Exit: ${endPrice.toFixed(5)}`, 'info');
             
             // Check if target achieved
-            const absPL = Math.abs(payout);
-            const targetHit = (isWin && absPL >= smartTargetProfit) || (!isWin && absPL >= smartTargetLoss);
+            const absPL = Math.abs(smartPL);
+            const targetHit = (isWin && smartPL >= smartTargetProfit) || (!isWin && absPL >= smartTargetLoss);
             
             if (targetHit) {
                 addLog(`🎯 Virtual target hit! Switching to LIVE trades and enabling reverse mode`, 'success');
                 isVirtualMode = false;
                 updateVirtualBadge(false);
                 toggleSmartReverse(true);
+                smartPL = 0;
             } else {
-                addLog(`❌ Virtual target not hit (need $${isWin ? smartTargetProfit : smartTargetLoss}, got $${absPL.toFixed(2)})`, 'warning');
-                addLog(`   Smart filter will be disabled. Re-enable to try again.`, 'warning');
-                document.getElementById('filterSmart').checked = false;
-                smartFilterEnabled = false;
-                isVirtualMode = false;
-                updateVirtualBadge(false);
+                addLog(`❌ Virtual target not hit. Waiting for next signal in virtual mode.`, 'warning');
             }
             
-            virtualTimeout = null;
+            resetVirtualVars();
         }
 
         function resetStrategyIndicators() {
@@ -1934,6 +1949,49 @@
                                 forceContractCheck(contractId);
                             }
                         });
+                    }
+
+                    // Virtual Trade Proposal Handling
+                    if (data.msg_type === 'proposal' && isVirtualProposal) {
+                        isVirtualProposal = false;
+                        if (data.error) {
+                            addLog(`Virtual proposal error: ${data.error.message}`, 'error');
+                            isProcessingTrade = false;
+                            return;
+                        }
+                        
+                        virtualProfit = data.proposal.payout - data.proposal.ask_price;
+                        addLog(`🧪 Virtual proposal received - Potential profit: $${virtualProfit.toFixed(2)}`, 'info');
+                        
+                        // Now start the simulation
+                        virtualEntryPrice = currentPrice;
+                        virtualTradeType = data.proposal.contract_type === 'CALL' ? 'BUY' : 'SELL';
+                        virtualStartTime = Date.now();
+                        virtualStake = data.proposal.ask_price;
+                        
+                        const selectedDuration = document.querySelector('input[name="durationType"]:checked');
+                        const durationType = selectedDuration ? selectedDuration.value : 't';
+                        const durationValue = parseInt(document.getElementById('durationValue').value);
+                        
+                        if (durationType !== 't') {
+                            // Time-based: calculate ms
+                            if (durationType === 's') {
+                                virtualDurationMs = durationValue * 1000;
+                            } else if (durationType === 'm') {
+                                virtualDurationMs = durationValue * 60000;
+                            }
+                            virtualTimeout = setTimeout(() => {
+                                endVirtualTrade();
+                            }, virtualDurationMs);
+                            addLog(`⏱️ Virtual trade will end in ${(virtualDurationMs/1000).toFixed(0)}s`, 'info');
+                        } else {
+                            // Tick-based: reset count
+                            virtualTickCount = 0;
+                            addLog(`⏱️ Virtual trade will end after ${durationValue} ticks`, 'info');
+                        }
+                        
+                        isProcessingTrade = false;
+                        isFirstSmartTrade = false;
                     }
 
                     if (data.msg_type === 'tick') {
@@ -2656,6 +2714,21 @@
                     }
                 }
             }
+            
+            // ==================== VIRTUAL TICK COUNTING (Smart Filter) ====================
+            if (smartFilterEnabled && isVirtualMode && virtualTradeType) {
+                const selectedDuration = document.querySelector('input[name="durationType"]:checked');
+                const durationType = selectedDuration ? selectedDuration.value : 't';
+                
+                if (durationType === 't') {
+                    virtualTickCount++;
+                    const targetTicks = parseInt(document.getElementById('durationValue').value);
+                    if (virtualTickCount >= targetTicks) {
+                        addLog(`🧪 Virtual trade: ${virtualTickCount}/${targetTicks} ticks completed`, 'info');
+                        endVirtualTrade();
+                    }
+                }
+            }
         }
 
         function subscribeToTicks(symbol) {
@@ -2697,32 +2770,20 @@
             const durationValue = parseInt(document.getElementById('durationValue').value);
 
             // ==================== VIRTUAL TRADE HANDLING (Smart Filter) ====================
-            if (smartFilterEnabled && isVirtualMode && isFirstSmartTrade) {
-                // Simulate virtual trade
-                addLog(`🧪 Virtual ${tradeType} trade started - Stake: $${stake}, Duration: ${durationValue}${durationType}`, 'info');
-                virtualEntryPrice = currentPrice;
-                virtualTradeType = tradeType;
-                virtualStartTime = Date.now();
-                virtualStake = stake;
+            if (smartFilterEnabled && isVirtualMode) {
+                // Send proposal for accurate payout
+                isVirtualProposal = true;
+                const proposal = {
+                    proposal: 1, amount: stake, basis: 'stake',
+                    contract_type: tradeType === 'BUY' ? 'CALL' : 'PUT',
+                    currency: accountData.currency,
+                    duration: durationValue, duration_unit: durationType, symbol: market
+                };
+
+                addLog(`🧪 Requesting proposal for virtual ${tradeType} - Stake: $${stake}, Duration: ${durationValue}${durationType}`, 'info');
+                ws.send(JSON.stringify(proposal));
                 
-                // Calculate duration in ms
-                if (durationType === 't') {
-                    virtualDurationMs = durationValue * 2000; // ~2s per tick
-                } else if (durationType === 's') {
-                    virtualDurationMs = durationValue * 1000;
-                } else if (durationType === 'm') {
-                    virtualDurationMs = durationValue * 60000;
-                }
-                
-                // Set timeout to end virtual trade
-                if (virtualTimeout) clearTimeout(virtualTimeout);
-                virtualTimeout = setTimeout(() => {
-                    endVirtualTrade();
-                }, virtualDurationMs);
-                
-                addLog(`⏱️ Virtual trade will end in ${(virtualDurationMs/1000).toFixed(0)}s`, 'info');
-                isProcessingTrade = false; // Allow next actions
-                isFirstSmartTrade = false;
+                // Handler moved to ws.onmessage for proposal
                 return;
             }
 
@@ -3054,10 +3115,7 @@
                 isFirstSmartTrade = true;
                 isVirtualMode = true;
                 smartPL = 0;
-                if (virtualTimeout) {
-                    clearTimeout(virtualTimeout);
-                    virtualTimeout = null;
-                }
+                resetVirtualVars();
                 toggleSmartReverse(false);
                 updateVirtualBadge(true);
                 addLog('🧪 Smart Filter reset: Will start with virtual trade on next auto-trade', 'info');
