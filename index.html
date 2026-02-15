@@ -866,6 +866,13 @@
                                 <label for="rememberToken">Remember my token</label>
                             </div>
                         </div>
+                        <div class="input-group">
+                            <label>App ID <span style="color: #10b981; font-size: 12px;">(Change for multiple tabs)</span></label>
+                            <input type="number" id="appIdInput" placeholder="116948" value="116948" min="1" style="width: 150px;">
+                            <div style="font-size: 12px; color: #9ca3af; margin-top: 5px;">
+                                💡 Use different App IDs (116948, 116949, 116950...) for each browser tab
+                            </div>
+                        </div>
                         <button class="btn btn-primary" id="loginBtn">
                             <span>🚀</span> Connect
                         </button>
@@ -1359,6 +1366,12 @@
                 if (saved) document.getElementById(setting).value = saved;
             });
 
+            // Load App ID
+            const savedAppId = localStorage.getItem('appId');
+            if (savedAppId) {
+                document.getElementById('appIdInput').value = savedAppId;
+            }
+
             // Load market radio button
             const savedMarket = localStorage.getItem('market');
             if (savedMarket) {
@@ -1432,6 +1445,12 @@
                 localStorage.setItem(setting, document.getElementById(setting).value);
             });
 
+            // Save App ID
+            const appIdInput = document.getElementById('appIdInput');
+            if (appIdInput) {
+                localStorage.setItem('appId', appIdInput.value);
+            }
+
             // Save market radio button selection
             const selectedMarket = document.querySelector('input[name="market"]:checked');
             if (selectedMarket) localStorage.setItem('market', selectedMarket.value);
@@ -1469,6 +1488,15 @@
                 });
             }
         });
+
+        // Add event listener for App ID input
+        const appIdInput = document.getElementById('appIdInput');
+        if (appIdInput) {
+            appIdInput.addEventListener('change', () => {
+                saveSettings();
+                addLog(`App ID changed to: ${appIdInput.value}`, 'success');
+            });
+        }
 
         // Add event listeners for filters
         const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterMomentum'];
@@ -1703,17 +1731,22 @@
             addLog('Trade buttons disabled', 'info');
         }
 
-        // ==================== CONFIGURABLE APP ID (PER TAB) ====================
-        // Change this number for each tab you open
-        const appId = 1089;   // ← CHANGE THIS! Use a different number for each tab
+        // ==================== APP ID CONFIGURATION ====================
+        // Get App ID from user input field
+        function getAppId() {
+            const appIdInput = document.getElementById('appIdInput');
+            const appId = parseInt(appIdInput.value) || 116948;
+            return appId;
+        }
 
-        // Show which App ID this tab is using (very useful when running multiple tabs)
+        // Show which App ID this tab is using
         function logAppId() {
+            const appId = getAppId();
             const logPanel = document.getElementById('logPanel');
             if (logPanel) {
                 const entry = document.createElement('div');
                 entry.className = 'log-entry info';
-                entry.innerHTML = `🚀 <strong>App ID:</strong> ${appId} &nbsp; | &nbsp; <span style="color:#10b981">This tab is using its own connection</span>`;
+                entry.innerHTML = `🚀 <strong>App ID:</strong> ${appId} &nbsp; | &nbsp; <span style="color:#10b981">Connection identifier for this tab</span>`;
                 logPanel.insertAdjacentElement('afterbegin', entry);
             }
         }
@@ -1721,7 +1754,8 @@
         // ==================== UPDATED CONNECTION FUNCTION ====================
         function connectToDerivAPI(apiToken) {
             return new Promise((resolve, reject) => {
-                // Use the configurable appId
+                // Get App ID from user input
+                const appId = getAppId();
                 ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
                 isExplicitLogout = false;
 
