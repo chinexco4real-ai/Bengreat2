@@ -2238,11 +2238,11 @@
             return signal;
         }
 
-        // ==================== FIXED analyzeMarketSignals() ====================
+        // ==================== CORRECTED analyzeMarketSignals() ====================
         function analyzeMarketSignals() {
             let result = { signal: null, message: 'Waiting for data...' };
 
-            // Run the selected strategy (now using the patched versions)
+            // === STRATEGY + FILTERS + ONE ENTRY + ALTERNATOR (ALL ON ORIGINAL SIGNAL) ===
             switch (currentStrategy) {
                 case 'bounce':
                     result = analyzeBounceStrategy();
@@ -2253,30 +2253,29 @@
             }
 
             let signal = result.signal;
-            const originalSignal = signal;
 
             if (signal) {
-                addLog(`📊 Raw Strategy Signal: ${signal} - ${result.message}`, 'info');
+                addLog(`📊 Raw Strategy Signal: ${signal}`, 'info');
             }
 
             // ====================== APPLY ADVANCED FILTERS ======================
             const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
             signal = applyAdvancedFilters(signal, candleHistory);
-            if (signal === null && originalSignal !== null) {
+            if (signal === null && result.signal !== null) {
                 updateSignalUI('NONE', '🛡️ Signal blocked by active filters');
-                return null;
+                return { finalSignal: null, originalSignal: result.signal };
             }
 
-            // ====================== ONE ENTRY PER SETUP (NOW FIXED) ======================
+            // ====================== ONE ENTRY PER SETUP ======================
             const oneEntryEnabled = document.getElementById('oneEntryMode').checked;
             if (oneEntryEnabled && signal) {
                 const timeSinceLastSetup = Date.now() - lastSetupDetectedTime;
                 
                 // Block if we are still inside the same setup (2 minutes window)
-                if (timeSinceLastSetup < 120000) {   // ← 120 seconds = 2 minutes
+                if (timeSinceLastSetup < 120000) {
                     addLog(`🔒 One Entry Per Setup: Blocked (same setup ${Math.round(timeSinceLastSetup/1000)}s ago)`, 'warning');
                     updateSignalUI('NONE', `One Entry: Waiting for new setup... (${Math.round((120000 - timeSinceLastSetup)/1000)}s left)`);
-                    return null;
+                    return { finalSignal: null, originalSignal: result.signal };
                 }
                 
                 // New setup detected → allow the trade and reset timer
@@ -2284,36 +2283,38 @@
                 addLog(`✅ One Entry Per Setup: New setup accepted`, 'success');
             }
 
-            // ====================== REVERSE MODE ======================
-            const reverseModeEnabled = document.getElementById('reverseMode').checked;
-            if (reverseModeEnabled && signal) {
-                const before = signal;
-                signal = signal === 'BUY' ? 'SELL' : 'BUY';
-                result.message += ' (Reversed)';
-                addLog(`🔁 Reverse Mode: ${before} → ${signal}`, 'info');
-            }
-
-            // ====================== ALTERNATOR MODE ======================
+            // ====================== ALTERNATOR MODE (still on original signal) ======================
             const alternatorEnabled = document.getElementById('alternatorMode').checked;
             if (alternatorEnabled && signal) {
                 if (lastExecutedTradeType !== null && signal === lastExecutedTradeType) {
                     const nextExpected = lastExecutedTradeType === 'BUY' ? 'SELL' : 'BUY';
                     addLog(`🔄 Alternator: ${signal} blocked (waiting for ${nextExpected})`, 'warning');
                     updateSignalUI('NONE', `Alternator: Waiting for ${nextExpected}`);
-                    return null;
+                    return { finalSignal: null, originalSignal: result.signal };
                 }
                 addLog(`✅ Alternator: ${signal} allowed`, 'info');
             }
 
-            // ====================== FINAL SIGNAL ======================
-            if (signal) {
-                addLog(`🚀 FINAL EXECUTION SIGNAL: ${signal}`, 'success');
-                updateSignalUI(signal, result.message);
-                return signal;
+            // === REVERSE MODE — NOW AT THE VERY END ===
+            const reverseModeEnabled = document.getElementById('reverseMode').checked;
+            const finalTradeDirection = reverseModeEnabled && signal 
+                ? (signal === 'BUY' ? 'SELL' : 'BUY') 
+                : signal;
+
+            if (reverseModeEnabled && signal) {
+                result.message += ' (Reversed)';
+                addLog(`🔁 Reverse Mode: ${signal} → ${finalTradeDirection}`, 'info');
+            }
+
+            // ====================== FINAL DECISION ======================
+            if (finalTradeDirection) {
+                addLog(`🚀 FINAL EXECUTION SIGNAL: ${finalTradeDirection}`, 'success');
+                updateSignalUI(finalTradeDirection, result.message);
+                return { finalSignal: finalTradeDirection, originalSignal: result.signal };
             }
 
             updateSignalUI('NONE', result.message);
-            return null;
+            return { finalSignal: null, originalSignal: result.signal };
         }
 
         function updateSignalUI(type, message) {
@@ -2438,9 +2439,12 @@
                     strategyIndicators.rsi = rsi;
                 }
                 
-                const signal = analyzeMarketSignals();
+                const signalResult = analyzeMarketSignals();
 
-                if (isAutoTrading && signal) {
+                if (isAutoTrading && signalResult && signalResult.finalSignal) {
+                    const signal = signalResult.finalSignal;
+                    const originalSignal = signalResult.originalSignal;
+                    
                     // RACE CONDITION PROTECTION: Prevent overlapping trades
                     if (isProcessingTrade) {
                         addLog('⚠️ Trade already in progress, skipping signal', 'warning');
@@ -2481,7 +2485,10 @@
                         
                         placeTrade(signal);
                         lastTradeTime = tradeNow;
-                        lastExecutedTradeType = signal; // Track the final executed signal
+                        
+                        // IMPORTANT: Track the original strategy signal for alternator logic
+                        // Not the reversed one - alternation should work on the strategy output
+                        lastExecutedTradeType = originalSignal || signal;
                         
                         addLog(`⏱️ Cooldown: ${cooldownSeconds}s started`, 'info');
                     } else {
