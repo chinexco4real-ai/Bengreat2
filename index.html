@@ -2238,11 +2238,11 @@
             return signal;
         }
 
-        // ==================== CORRECTED analyzeMarketSignals() ====================
+        // ==================== FINAL FIXED analyzeMarketSignals() ====================
         function analyzeMarketSignals() {
             let result = { signal: null, message: 'Waiting for data...' };
 
-            // === STRATEGY + FILTERS + ONE ENTRY + ALTERNATOR (ALL ON ORIGINAL SIGNAL) ===
+            // 1. Raw strategy signal (this never changes with reverse)
             switch (currentStrategy) {
                 case 'bounce':
                     result = analyzeBounceStrategy();
@@ -2253,68 +2253,67 @@
             }
 
             let signal = result.signal;
+            const originalSignal = signal;   // ← This is what One Entry and everything else uses
 
             if (signal) {
-                addLog(`📊 Raw Strategy Signal: ${signal}`, 'info');
+                addLog(`📊 Raw Strategy Signal: ${signal} - ${result.message}`, 'info');
             }
 
-            // ====================== APPLY ADVANCED FILTERS ======================
+            // 2. Advanced Filters (on original signal)
             const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
             signal = applyAdvancedFilters(signal, candleHistory);
-            if (signal === null && result.signal !== null) {
+
+            if (signal === null && originalSignal !== null) {
                 updateSignalUI('NONE', '🛡️ Signal blocked by active filters');
-                return { finalSignal: null, originalSignal: result.signal };
+                return null;
             }
 
-            // ====================== ONE ENTRY PER SETUP ======================
+            // 3. One Entry Per Setup (STAYS ON ORIGINAL SIGNAL - this is critical)
             const oneEntryEnabled = document.getElementById('oneEntryMode').checked;
             if (oneEntryEnabled && signal) {
                 const timeSinceLastSetup = Date.now() - lastSetupDetectedTime;
                 
-                // Block if we are still inside the same setup (2 minutes window)
                 if (timeSinceLastSetup < 120000) {
-                    addLog(`🔒 One Entry Per Setup: Blocked (same setup ${Math.round(timeSinceLastSetup/1000)}s ago)`, 'warning');
-                    updateSignalUI('NONE', `One Entry: Waiting for new setup... (${Math.round((120000 - timeSinceLastSetup)/1000)}s left)`);
-                    return { finalSignal: null, originalSignal: result.signal };
+                    updateSignalUI('NONE', `One Entry: Waiting for new setup...`);
+                    return null;
                 }
                 
-                // New setup detected → allow the trade and reset timer
                 lastSetupDetectedTime = Date.now();
                 addLog(`✅ One Entry Per Setup: New setup accepted`, 'success');
             }
 
-            // ====================== ALTERNATOR MODE (still on original signal) ======================
+            // 4. Alternator Mode (on original signal before reversal)
             const alternatorEnabled = document.getElementById('alternatorMode').checked;
             if (alternatorEnabled && signal) {
                 if (lastExecutedTradeType !== null && signal === lastExecutedTradeType) {
                     const nextExpected = lastExecutedTradeType === 'BUY' ? 'SELL' : 'BUY';
                     addLog(`🔄 Alternator: ${signal} blocked (waiting for ${nextExpected})`, 'warning');
                     updateSignalUI('NONE', `Alternator: Waiting for ${nextExpected}`);
-                    return { finalSignal: null, originalSignal: result.signal };
+                    return null;
                 }
                 addLog(`✅ Alternator: ${signal} allowed`, 'info');
             }
 
-            // === REVERSE MODE — NOW AT THE VERY END ===
+            // 5. REVERSE MODE — PURE FLIP AT THE VERY END
             const reverseModeEnabled = document.getElementById('reverseMode').checked;
-            const finalTradeDirection = reverseModeEnabled && signal 
+            const finalSignal = reverseModeEnabled && signal 
                 ? (signal === 'BUY' ? 'SELL' : 'BUY') 
                 : signal;
 
             if (reverseModeEnabled && signal) {
                 result.message += ' (Reversed)';
-                addLog(`🔁 Reverse Mode: ${signal} → ${finalTradeDirection}`, 'info');
+                addLog(`🔁 Reverse Mode: ${signal} → ${finalSignal}`, 'info');
             }
 
-            // ====================== FINAL DECISION ======================
-            if (finalTradeDirection) {
-                addLog(`🚀 FINAL EXECUTION SIGNAL: ${finalTradeDirection}`, 'success');
-                updateSignalUI(finalTradeDirection, result.message);
-                return { finalSignal: finalTradeDirection, originalSignal: result.signal };
+            // 6. Final decision
+            if (finalSignal) {
+                addLog(`🚀 FINAL EXECUTION SIGNAL: ${finalSignal}`, 'success');
+                updateSignalUI(finalSignal, result.message);
+                return finalSignal;
             }
 
             updateSignalUI('NONE', result.message);
-            return { finalSignal: null, originalSignal: result.signal };
+            return null;
         }
 
         function updateSignalUI(type, message) {
@@ -2439,12 +2438,9 @@
                     strategyIndicators.rsi = rsi;
                 }
                 
-                const signalResult = analyzeMarketSignals();
+                const signal = analyzeMarketSignals();
 
-                if (isAutoTrading && signalResult && signalResult.finalSignal) {
-                    const signal = signalResult.finalSignal;
-                    const originalSignal = signalResult.originalSignal;
-                    
+                if (isAutoTrading && signal) {
                     // RACE CONDITION PROTECTION: Prevent overlapping trades
                     if (isProcessingTrade) {
                         addLog('⚠️ Trade already in progress, skipping signal', 'warning');
@@ -2486,9 +2482,13 @@
                         placeTrade(signal);
                         lastTradeTime = tradeNow;
                         
-                        // IMPORTANT: Track the original strategy signal for alternator logic
-                        // Not the reversed one - alternation should work on the strategy output
-                        lastExecutedTradeType = originalSignal || signal;
+                        // CRITICAL: For alternator, track the original (pre-reversed) signal
+                        // If reverse mode is on, flip it back to get the original
+                        if (reverseModeEnabled) {
+                            lastExecutedTradeType = signal === 'BUY' ? 'SELL' : 'BUY';
+                        } else {
+                            lastExecutedTradeType = signal;
+                        }
                         
                         addLog(`⏱️ Cooldown: ${cooldownSeconds}s started`, 'info');
                     } else {
