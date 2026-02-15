@@ -1703,14 +1703,30 @@
             addLog('Trade buttons disabled', 'info');
         }
 
+        // ==================== CONFIGURABLE APP ID (PER TAB) ====================
+        // Change this number for each tab you open
+        const appId = 1089;   // ← CHANGE THIS! Use a different number for each tab
+
+        // Show which App ID this tab is using (very useful when running multiple tabs)
+        function logAppId() {
+            const logPanel = document.getElementById('logPanel');
+            if (logPanel) {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry info';
+                entry.innerHTML = `🚀 <strong>App ID:</strong> ${appId} &nbsp; | &nbsp; <span style="color:#10b981">This tab is using its own connection</span>`;
+                logPanel.insertAdjacentElement('afterbegin', entry);
+            }
+        }
+
+        // ==================== UPDATED CONNECTION FUNCTION ====================
         function connectToDerivAPI(apiToken) {
             return new Promise((resolve, reject) => {
-                const appId = 1089;
+                // Use the configurable appId
                 ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
                 isExplicitLogout = false;
 
                 ws.onopen = () => {
-                    addLog('WebSocket connection opened', 'info');
+                    addLog(`WebSocket opened with App ID: ${appId}`, 'info');
                     ws.send(JSON.stringify({ authorize: apiToken }));
                 };
 
@@ -3085,6 +3101,10 @@
         window.addEventListener('load', async () => {
             loadSettings();
             updateStrategyDescription();
+            
+            // Show App ID being used by this tab
+            logAppId();
+            
             addLog('Ben Scalper Bot initialized', 'success');
             addLog('✅ Contract Settlement Monitoring: ENABLED', 'success');
             addLog('✅ Timeout Protection: 90 seconds', 'info');
