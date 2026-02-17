@@ -1070,32 +1070,16 @@
                     </div>
                 </div>
 
-                <!-- ===== ADVANCED FILTERS CARD (FINAL WITH SEPARATE THRESHOLDS) ===== -->
+                <!-- ===== FINAL ADVANCED FILTERS CARD (Vol + TTM Squeeze) ===== -->
                 <div class="card">
                     <h3>🛡️ Advanced Filters</h3>
                     
                     <!-- Preset Buttons -->
                     <div style="display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;">
-                        <button onclick="applyFilterPreset('aggressive')" 
-                                class="btn btn-warning btn-sm" 
-                                style="flex: 1; min-width: 110px;">
-                            ⚡ Aggressive
-                        </button>
-                        <button onclick="applyFilterPreset('balanced')" 
-                                class="btn btn-primary btn-sm" 
-                                style="flex: 1; min-width: 110px;">
-                            ⚖️ Balanced
-                        </button>
-                        <button onclick="applyFilterPreset('conservative')" 
-                                class="btn btn-success btn-sm" 
-                                style="flex: 1; min-width: 110px;">
-                            🛡️ Conservative
-                        </button>
-                        <button onclick="applyFilterPreset('reset')" 
-                                class="btn btn-secondary btn-sm" 
-                                style="flex: 1; min-width: 110px;">
-                            🔄 Reset All
-                        </button>
+                        <button onclick="applyFilterPreset('aggressive')" class="btn btn-warning btn-sm" style="flex: 1; min-width: 110px;">⚡ Aggressive</button>
+                        <button onclick="applyFilterPreset('balanced')" class="btn btn-primary btn-sm" style="flex: 1; min-width: 110px;">⚖️ Balanced</button>
+                        <button onclick="applyFilterPreset('conservative')" class="btn btn-success btn-sm" style="flex: 1; min-width: 110px;">🛡️ Conservative</button>
+                        <button onclick="applyFilterPreset('reset')" class="btn btn-secondary btn-sm" style="flex: 1; min-width: 110px;">🔄 Reset All</button>
                     </div>
 
                     <div style="font-size: 12px; color: #9ca3af; margin-bottom: 15px;">
@@ -1138,28 +1122,54 @@
                         Rejects candles where body < 65% of range
                     </div>
 
-                    <!-- Volatility Contraction -->
+                    <!-- ===== VOLATILITY CONTRACTION (Adjustable) ===== -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Volatility Contraction (Tight Range)</div>
+                        <div class="toggle-label">Volatility Contraction <span style="color:#f59e0b;">(Tight Range)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterVolatility">
+                            <input type="checkbox" id="filterVolatility" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Only breakouts from compressed ranges (very powerful)
+                        Current candle range ≤ X% of 10-candle average
                     </div>
 
-                    <!-- Bollinger Squeeze -->
+                    <!-- Volatility Threshold Input -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                        <div>
+                            <label for="volThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📉 Volatility Threshold (%)</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Lower % = stricter</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="number" id="volThreshold" value="80" min="40" max="95" step="1"
+                                   style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
+                            <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">%</span>
+                        </div>
+                    </div>
+
+                    <!-- ===== TTM SQUEEZE (Adjustable) ===== -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Bollinger Squeeze <span style="color:#f59e0b;">(Enhanced Contraction)</span></div>
+                        <div class="toggle-label">TTM Squeeze <span style="color:#10b981; font-weight: bold;">(Pro Volatility Filter)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterSqueeze" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Only when BB Width is < threshold of its 20-period average
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 8px;">
+                        BB inside Keltner Channels = True squeeze
+                    </div>
+
+                    <!-- TTM Multiplier Input -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                        <div>
+                            <label for="ttmMultiplier" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">🎛️ TTM Squeeze Multiplier</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (default 2.0)</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="number" id="ttmMultiplier" value="2.0" min="1.0" max="3.0" step="0.1"
+                                   style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
+                            <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">x</span>
+                        </div>
                     </div>
 
                     <!-- Momentum Filter -->
@@ -1170,59 +1180,12 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div style="font-size: 11px; color: #9ca3af;">
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
                         Requires price move ≥ 0.6 × ATR
                     </div>
 
-                    <!-- ===== SEPARATE THRESHOLD CONFIGURATION ===== -->
-                    <div class="threshold-section" style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #374151;">
-                        <h4 style="color: #667eea; margin-bottom: 18px; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-                            🎚️ Custom Filter Thresholds
-                        </h4>
-                        
-                        <!-- Volatility Contraction -->
-                        <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
-                            <div>
-                                <label for="volThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                                    <span>📉 Volatility Contraction</span>
-                                    <span style="font-size: 11px; color: #10b981; font-weight: normal;">(Tight Range)</span>
-                                </label>
-                                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px; line-height: 1.4;">
-                                    Current candle range ≤ <strong>X%</strong> of 10-candle average
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <input type="number" id="volThreshold" 
-                                       class="threshold-input" 
-                                       value="80" min="40" max="95" step="1"
-                                       style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
-                                <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">%</span>
-                            </div>
-                        </div>
-
-                        <!-- Bollinger Squeeze -->
-                        <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
-                            <div>
-                                <label for="squeezeThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                                    <span>📊 Bollinger Squeeze</span>
-                                    <span style="font-size: 11px; color: #f59e0b; font-weight: normal;">(Enhanced Contraction)</span>
-                                </label>
-                                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px; line-height: 1.4;">
-                                    BB width ≤ <strong>X%</strong> of 20-period average
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <input type="number" id="squeezeThreshold" 
-                                       class="threshold-input" 
-                                       value="85" min="50" max="95" step="1"
-                                       style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
-                                <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">%</span>
-                            </div>
-                        </div>
-
-                        <div style="font-size: 11px; color: #9ca3af; margin-top: 12px; text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.08); border-radius: 8px;">
-                            💡 <strong>Separate controls for each filter</strong> • Lower % = stricter • Defaults: 80% / 85%
-                        </div>
+                    <div style="font-size: 11px; color: #9ca3af; margin-top: 12px; text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.08); border-radius: 8px;">
+                        💡 Separate adjustable controls • Lower % / Higher x = fewer but stronger signals
                     </div>
 
                     <!-- ===== LIVE ACTIVE FILTERS SUMMARY ===== -->
@@ -1483,12 +1446,12 @@
                 if (el) el.checked = saved;
             });
 
-            // NEW: SEPARATE THRESHOLD LOADING
+            // NEW: Load thresholds
             const savedVolThreshold = localStorage.getItem('volThreshold') || '80';
             document.getElementById('volThreshold').value = savedVolThreshold;
 
-            const savedSqueezeThreshold = localStorage.getItem('squeezeThreshold') || '85';
-            document.getElementById('squeezeThreshold').value = savedSqueezeThreshold;
+            const savedTtmMultiplier = localStorage.getItem('ttmMultiplier') || '2.0';
+            document.getElementById('ttmMultiplier').value = savedTtmMultiplier;
 
             updateActiveFiltersSummary();
 
@@ -1543,9 +1506,9 @@
                 if (el) localStorage.setItem(id, el.checked);
             });
 
-            // NEW: SEPARATE THRESHOLD SAVING
+            // NEW: Save thresholds
             localStorage.setItem('volThreshold', document.getElementById('volThreshold').value);
-            localStorage.setItem('squeezeThreshold', document.getElementById('squeezeThreshold').value);
+            localStorage.setItem('ttmMultiplier', document.getElementById('ttmMultiplier').value);
         }
 
         // Add event listeners for all settings
@@ -1595,17 +1558,17 @@
             if (val > 95) val = 95;
             document.getElementById('volThreshold').value = val;
             saveSettings();
-            addLog(`📉 Volatility Contraction threshold updated to ${val}%`, 'info');
+            addLog(`📉 Volatility threshold → ${val}%`, 'info');
             updateActiveFiltersSummary();
         });
 
-        document.getElementById('squeezeThreshold').addEventListener('change', () => {
-            let val = parseFloat(document.getElementById('squeezeThreshold').value) || 85;
-            if (val < 50) val = 50;
-            if (val > 95) val = 95;
-            document.getElementById('squeezeThreshold').value = val;
+        document.getElementById('ttmMultiplier').addEventListener('change', () => {
+            let val = parseFloat(document.getElementById('ttmMultiplier').value) || 2.0;
+            if (val < 1.0) val = 1.0;
+            if (val > 3.0) val = 3.0;
+            document.getElementById('ttmMultiplier').value = val.toFixed(1);
             saveSettings();
-            addLog(`📊 Bollinger Squeeze threshold updated to ${val}%`, 'info');
+            addLog(`🎛️ TTM Squeeze multiplier → ${val}x`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -1695,12 +1658,12 @@
             container.innerHTML = '';
             
             const filters = [
-                { id: 'filterADX',         name: 'ADX Trend',         color: '#667eea' },
-                { id: 'filterRSI',         name: 'RSI Filter',        color: '#10b981' },
-                { id: 'filterCandleBody',  name: 'Candle Strength',   color: '#f59e0b' },
-                { id: 'filterVolatility',  name: 'Vol Contraction',   color: '#ec4899' },
-                { id: 'filterSqueeze',     name: 'Bollinger Squeeze', color: '#f59e0b' },
-                { id: 'filterMomentum',    name: 'Momentum',          color: '#8b5cf6' }
+                { id: 'filterADX',         name: 'ADX Trend',    color: '#667eea' },
+                { id: 'filterRSI',         name: 'RSI Filter',   color: '#10b981' },
+                { id: 'filterCandleBody',  name: 'Candle Strength', color: '#f59e0b' },
+                { id: 'filterVolatility',  name: 'Vol Contraction', color: '#ec4899' },
+                { id: 'filterSqueeze',     name: 'TTM Squeeze',  color: '#10b981' },
+                { id: 'filterMomentum',    name: 'Momentum',     color: '#8b5cf6' }
             ];
             
             let activeCount = 0;
@@ -2135,6 +2098,45 @@
             return (sma + 2 * stdDev) - (sma - 2 * stdDev); // full bandwidth
         }
 
+        // ==================== TTM SQUEEZE (ADJUSTABLE) ====================
+        function calculateTTMSqueeze(candles) {
+            const bbPeriod = 20;
+            const kcPeriod = 20;
+            const atrPeriod = 10;
+            const kcMultiplier = parseFloat(document.getElementById('ttmMultiplier').value) || 2.0;
+            
+            if (candles.length < Math.max(bbPeriod, kcPeriod, atrPeriod)) return false;
+            
+            const closes = candles.map(c => c.close);
+            const sma20 = calculateSMA(closes, bbPeriod);
+            
+            // BB
+            let variance = 0;
+            for (let i = candles.length - bbPeriod; i < candles.length; i++) {
+                variance += Math.pow(closes[i] - sma20, 2);
+            }
+            const stdDev = Math.sqrt(variance / bbPeriod);
+            const bbUpper = sma20 + 2 * stdDev;
+            const bbLower = sma20 - 2 * stdDev;
+            
+            // KC (ATR)
+            let trs = [];
+            for (let i = 1; i < candles.length; i++) {
+                const high = candles[i].high;
+                const low = candles[i].low;
+                const prevClose = candles[i - 1].close;
+                const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+                trs.push(tr);
+            }
+            const atr = trs.slice(-atrPeriod).reduce((a, b) => a + b, 0) / atrPeriod;
+            
+            const kcMiddle = sma20;
+            const kcUpper = kcMiddle + kcMultiplier * atr;
+            const kcLower = kcMiddle - kcMultiplier * atr;
+            
+            return (bbUpper <= kcUpper) && (bbLower >= kcLower);
+        }
+
         // --- Strategy Analysis Functions ---
 
         // ==================== PATCHED BOUNCE STRATEGY ====================
@@ -2391,25 +2393,16 @@
                 }
             }
             
-            // BOLLINGER SQUEEZE (SEPARATE THRESHOLD)
+            // TTM SQUEEZE (ADJUSTABLE)
             if (document.getElementById('filterSqueeze')?.checked) {
-                if (recentCandles20.length >= 20) {
-                    const bbWidth = calculateBBWidth(recentCandles20, 20);
-                    let avgWidth = 0;
-                    const samples = Math.min(15, recentCandles20.length);
-                    for (let i = samples; i < recentCandles20.length; i++) {
-                        avgWidth += calculateBBWidth(recentCandles20.slice(0, i + 1), 20);
-                    }
-                    avgWidth = avgWidth / samples || 1;
-                    
-                    const squeezeThreshold = parseFloat(document.getElementById('squeezeThreshold').value) / 100 || 0.85;
-                    
-                    if (bbWidth > avgWidth * squeezeThreshold) {
-                        addLog(`🛡️ Bollinger Squeeze BLOCKED: Width ${(bbWidth/avgWidth*100).toFixed(0)}% of avg [Threshold: ${squeezeThreshold*100}%]`, 'warning');
-                        return null;
-                    } else {
-                        addLog(`✅ Bollinger Squeeze PASSED — tight compression! [${(bbWidth/avgWidth*100).toFixed(0)}% of avg]`, 'success');
-                    }
+                const isSqueeze = calculateTTMSqueeze(recentCandles20);
+                const multiplier = parseFloat(document.getElementById('ttmMultiplier').value) || 2.0;
+                
+                if (!isSqueeze) {
+                    addLog(`🛡️ TTM Squeeze BLOCKED [Multiplier: ${multiplier}x]`, 'warning');
+                    return null;
+                } else {
+                    addLog(`✅ TTM Squeeze PASSED — PRO COMPRESSION! [${multiplier}x]`, 'success');
                 }
             }
             
