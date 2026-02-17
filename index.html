@@ -1086,40 +1086,40 @@
                         Presets are quick setups • All toggles remain fully independent
                     </div>
 
-                    <!-- ADX Filter -->
+                    <!-- MACD Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">ADX Trend Strength <span style="color:#667eea;">(Best for Breakout)</span></div>
+                        <div class="toggle-label">MACD Histogram Filter <span style="color:#667eea;">(Trend Momentum)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterADX">
+                            <input type="checkbox" id="filterMACD">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Requires ADX ≥ 25 + DI difference ≥ 7 + correct direction
+                        Requires MACD histogram aligned with signal direction
                     </div>
 
-                    <!-- RSI Filter -->
+                    <!-- Stochastic Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">RSI Overbought/Oversold Filter</div>
+                        <div class="toggle-label">Stochastic Oscillator Filter <span style="color:#10b981;">(Overbought/Oversold)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterRSI">
+                            <input type="checkbox" id="filterStochastic">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Blocks BUY above 78, SELL below 22
+                        Blocks BUY above 80, SELL below 20 + checks direction
                     </div>
 
-                    <!-- Candle Body Filter -->
+                    <!-- Candlestick Patterns Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Strong Candle Body Filter</div>
+                        <div class="toggle-label">Candlestick Pattern Filter <span style="color:#f59e0b;">(Hammer / Engulfing)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterCandleBody">
+                            <input type="checkbox" id="filterPatterns">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Rejects candles where body < 65% of range
+                        BUY: Hammer or Bullish Engulfing • SELL: Shooting Star or Bearish Engulfing
                     </div>
 
                     <!-- ===== VOLATILITY CONTRACTION (Adjustable) ===== -->
@@ -1172,16 +1172,16 @@
                         </div>
                     </div>
 
-                    <!-- Momentum Filter -->
+                    <!-- Price Acceleration Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Strong Momentum Filter</div>
+                        <div class="toggle-label">Price Acceleration Filter <span style="color:#8b5cf6;">(Momentum Build)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterMomentum">
+                            <input type="checkbox" id="filterAcceleration">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Requires price move ≥ 0.6 × ATR
+                        Requires 3 consecutive candles accelerating in signal direction
                     </div>
 
                     <div style="font-size: 11px; color: #9ca3af; margin-top: 12px; text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.08); border-radius: 8px;">
@@ -1439,7 +1439,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterSqueeze', 'filterMomentum'];
+            const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1500,7 +1500,7 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterSqueeze', 'filterMomentum'];
+            const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
@@ -1537,7 +1537,7 @@
         }
 
         // Add event listeners for filters
-        const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterSqueeze', 'filterMomentum'];
+        const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
         filterIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1615,13 +1615,13 @@
 
         // ==================== FILTER PRESET FUNCTION ====================
         function applyFilterPreset(preset) {
-            const filterIds = ['filterADX', 'filterRSI', 'filterCandleBody', 'filterVolatility', 'filterSqueeze', 'filterMomentum'];
+            const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
             
             switch(preset) {
                 case 'aggressive':
                     // Only momentum - allows most trades
                     filterIds.forEach(id => document.getElementById(id).checked = false);
-                    document.getElementById('filterMomentum').checked = true;
+                    document.getElementById('filterAcceleration').checked = true;
                     addLog('⚡ Aggressive preset applied: Momentum only', 'success');
                     break;
                     
@@ -1658,12 +1658,12 @@
             container.innerHTML = '';
             
             const filters = [
-                { id: 'filterADX',         name: 'ADX Trend',    color: '#667eea' },
-                { id: 'filterRSI',         name: 'RSI Filter',   color: '#10b981' },
-                { id: 'filterCandleBody',  name: 'Candle Strength', color: '#f59e0b' },
-                { id: 'filterVolatility',  name: 'Vol Contraction', color: '#ec4899' },
-                { id: 'filterSqueeze',     name: 'TTM Squeeze',  color: '#10b981' },
-                { id: 'filterMomentum',    name: 'Momentum',     color: '#8b5cf6' }
+                { id: 'filterMACD',         name: 'MACD',           color: '#667eea' },
+                { id: 'filterStochastic',   name: 'Stochastic',     color: '#10b981' },
+                { id: 'filterPatterns',     name: 'Patterns',       color: '#f59e0b' },
+                { id: 'filterVolatility',   name: 'Vol Contraction', color: '#ec4899' },
+                { id: 'filterSqueeze',      name: 'TTM Squeeze',    color: '#10b981' },
+                { id: 'filterAcceleration', name: 'Acceleration',   color: '#8b5cf6' }
             ];
             
             let activeCount = 0;
@@ -2082,6 +2082,47 @@
             return atrSum / period;
         }
 
+        function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
+            if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
+            const emaFast = calculateEMA(closes, fast);
+            const emaSlow = calculateEMA(closes, slow);
+            const macdLine = emaFast - emaSlow;
+            const signalLine = calculateEMA(closes.slice(closes.length - signal), signal);
+            return { macd: macdLine, signal: signalLine, histogram: macdLine - signalLine };
+        }
+
+        function calculateStochastic(candles, period = 14) {
+            if (candles.length < period) return { k: 50, d: 50 };
+            const recent = candles.slice(-period);
+            const lowestLow = Math.min(...recent.map(c => c.low));
+            const highestHigh = Math.max(...recent.map(c => c.high));
+            const currentClose = recent[recent.length - 1].close;
+            const k = highestHigh - lowestLow > 0 ? ((currentClose - lowestLow) / (highestHigh - lowestLow)) * 100 : 50;
+            return { k: k, d: k };
+        }
+
+        function isHammer(candle) {
+            const body = Math.abs(candle.close - candle.open);
+            const lowerWick = Math.min(candle.open, candle.close) - candle.low;
+            const upperWick = candle.high - Math.max(candle.open, candle.close);
+            return lowerWick > 2 * body && upperWick < body && candle.close > candle.open;
+        }
+
+        function isBullishEngulfing(current, prev) {
+            return current.open < current.close && current.open < prev.close && current.close > prev.open;
+        }
+
+        function isShootingStar(candle) {
+            const body = Math.abs(candle.close - candle.open);
+            const upperWick = candle.high - Math.max(candle.open, candle.close);
+            const lowerWick = Math.min(candle.open, candle.close) - candle.low;
+            return upperWick > 2 * body && lowerWick < body && candle.close < candle.open;
+        }
+
+        function isBearishEngulfing(current, prev) {
+            return current.open > current.close && current.open > prev.close && current.close < prev.open;
+        }
+
         // Bollinger Band Width
         function calculateBBWidth(candles, period = 20) {
             if (candles.length < period) return 0;
@@ -2325,66 +2366,59 @@
         // ==================== APPLY ADVANCED FILTERS ====================
         function applyAdvancedFilters(signal, candleHistory) {
             if (!signal || signal === null) return signal;
-            
+
             const lastCandle = candleHistory[candleHistory.length - 1];
             const recentCandles = candleHistory.slice(-10);
-            const recentCandles20 = candleHistory.slice(-20); // For Bollinger Squeeze
-            
-            // ==================== ADX FILTER (TIGHTENED + DI STRENGTH) ====================
-            if (document.getElementById('filterADX')?.checked) {
-                // TIGHTENED: 25 instead of 23 (sweet spot for synthetics)
-                if (strategyIndicators.adx < 25) {
-                    addLog(`🛡️ ADX Filter BLOCKED: ADX ${strategyIndicators.adx.toFixed(1)} < 25 (weak trend)`, 'warning');
-                    return null;
-                }
-                
-                // TIGHTENED: DI difference now 7 instead of 5 (much cleaner direction)
-                const diDiff = Math.abs(strategyIndicators.plusDI - strategyIndicators.minusDI);
-                if (diDiff < 7) {
-                    addLog(`🛡️ ADX Filter BLOCKED: DI difference ${diDiff.toFixed(1)} < 7 (unclear direction)`, 'warning');
-                    return null;
-                }
-                
-                // NEW: Strict directional confirmation (this is the real killer feature)
-                const correctDI = 
-                    (signal === 'BUY'  && strategyIndicators.plusDI  > strategyIndicators.minusDI) ||
-                    (signal === 'SELL' && strategyIndicators.minusDI > strategyIndicators.plusDI);
-                
-                if (!correctDI) {
-                    addLog(`🛡️ ADX Filter BLOCKED: Wrong DI direction (${signal} but ${strategyIndicators.plusDI.toFixed(1)}/+DI vs ${strategyIndicators.minusDI.toFixed(1)}/-DI)`, 'warning');
+            const recentCandles20 = candleHistory.slice(-20);
+
+            // MACD FILTER
+            if (document.getElementById('filterMACD')?.checked) {
+                const closes = candleHistory.map(c => c.close);
+                const macd = calculateMACD(closes);
+                const atr = calculateATR(candleHistory, 10);
+                if ((signal === 'BUY' && macd.histogram < atr * 0.0005) || (signal === 'SELL' && macd.histogram > -atr * 0.0005)) {
+                    addLog(`🛡️ MACD Filter BLOCKED: Histogram ${macd.histogram.toFixed(5)}`, 'warning');
                     return null;
                 }
             }
-            
-            // RSI Filter
-            if (document.getElementById('filterRSI')?.checked) {
-                if (signal === 'BUY' && strategyIndicators.rsi > 78) {
-                    addLog(`🛡️ RSI Filter BLOCKED BUY: RSI ${strategyIndicators.rsi.toFixed(1)} > 78 (overbought)`, 'warning');
+
+            // STOCHASTIC FILTER
+            if (document.getElementById('filterStochastic')?.checked) {
+                const stoch = calculateStochastic(candleHistory);
+                const prevStoch = calculateStochastic(candleHistory.slice(0, -1));
+                const stochRising = stoch.k > prevStoch.k;
+                if (signal === 'BUY' && stoch.k > 80) {
+                    addLog(`🛡️ Stochastic Filter BLOCKED BUY: %K ${stoch.k.toFixed(1)} > 80`, 'warning');
                     return null;
                 }
-                if (signal === 'SELL' && strategyIndicators.rsi < 22) {
-                    addLog(`🛡️ RSI Filter BLOCKED SELL: RSI ${strategyIndicators.rsi.toFixed(1)} < 22 (oversold)`, 'warning');
+                if (signal === 'SELL' && stoch.k < 20) {
+                    addLog(`🛡️ Stochastic Filter BLOCKED SELL: %K ${stoch.k.toFixed(1)} < 20`, 'warning');
                     return null;
                 }
-            }
-            
-            // Candle Body Filter
-            if (document.getElementById('filterCandleBody')?.checked) {
-                const body = Math.abs(lastCandle.close - lastCandle.open);
-                const range = lastCandle.high - lastCandle.low;
-                const bodyRatio = range > 0 ? body / range : 0;
-                if (bodyRatio < 0.65) {
-                    addLog(`🛡️ Candle Body Filter BLOCKED: Body ratio ${(bodyRatio * 100).toFixed(1)}% < 65% (weak candle)`, 'warning');
+                if ((signal === 'SELL' && stochRising) || (signal === 'BUY' && !stochRising)) {
+                    addLog(`🛡️ Stochastic Divergence BLOCKED: Mismatched direction`, 'warning');
                     return null;
                 }
             }
-            
+
+            // CANDLESTICK PATTERN FILTER
+            if (document.getElementById('filterPatterns')?.checked) {
+                const last = candleHistory[candleHistory.length - 1];
+                const prev = candleHistory[candleHistory.length - 2];
+                let isValid = false;
+                if (signal === 'BUY') isValid = isHammer(last) || isBullishEngulfing(last, prev);
+                if (signal === 'SELL') isValid = isShootingStar(last) || isBearishEngulfing(last, prev);
+                if (!isValid) {
+                    addLog(`🛡️ Pattern Filter BLOCKED: No matching pattern`, 'warning');
+                    return null;
+                }
+            }
+
             // VOLATILITY CONTRACTION (SEPARATE THRESHOLD)
             if (document.getElementById('filterVolatility')?.checked) {
                 const currentRange = lastCandle.high - lastCandle.low;
                 const avgRange = recentCandles.reduce((sum, c) => sum + (c.high - c.low), 0) / recentCandles.length;
                 const volThreshold = parseFloat(document.getElementById('volThreshold').value) / 100 || 0.80;
-                
                 if (currentRange > avgRange * volThreshold) {
                     addLog(`🛡️ Volatility Contraction BLOCKED: Range ${(currentRange/avgRange*100).toFixed(0)}% of avg [Threshold: ${volThreshold*100}%]`, 'warning');
                     return null;
@@ -2392,12 +2426,11 @@
                     addLog(`✅ Volatility Contraction PASSED [${(currentRange/avgRange*100).toFixed(0)}% of avg]`, 'success');
                 }
             }
-            
+
             // TTM SQUEEZE (ADJUSTABLE)
             if (document.getElementById('filterSqueeze')?.checked) {
                 const isSqueeze = calculateTTMSqueeze(recentCandles20);
                 const multiplier = parseFloat(document.getElementById('ttmMultiplier').value) || 2.0;
-                
                 if (!isSqueeze) {
                     addLog(`🛡️ TTM Squeeze BLOCKED [Multiplier: ${multiplier}x]`, 'warning');
                     return null;
@@ -2405,18 +2438,22 @@
                     addLog(`✅ TTM Squeeze PASSED — PRO COMPRESSION! [${multiplier}x]`, 'success');
                 }
             }
-            
-            // Momentum Filter
-            if (document.getElementById('filterMomentum')?.checked) {
-                const atr = calculateATR(recentCandles, 10);
-                const prevCandle = candleHistory[candleHistory.length - 2];
-                const priceMove = Math.abs(lastCandle.close - prevCandle.close);
-                if (priceMove < atr * 0.6) {
-                    addLog(`🛡️ Momentum Filter BLOCKED: Move ${priceMove.toFixed(5)} < ${(atr * 0.6).toFixed(5)} (weak momentum)`, 'warning');
+
+            // PRICE ACCELERATION FILTER
+            if (document.getElementById('filterAcceleration')?.checked) {
+                if (candleHistory.length < 3) return null;
+                const recent = candleHistory.slice(-3);
+                const deltas = recent.map(c => c.close - c.open);
+                const atr = calculateATR(candleHistory, 10);
+                const sumDeltas = deltas.reduce((a, b) => a + b, 0);
+                const isAccelerating = Math.abs(deltas[2]) > Math.abs(deltas[1]) && Math.abs(deltas[1]) > Math.abs(deltas[0]);
+                const correctDir = deltas.every(d => (signal === 'BUY' ? d > 0 : d < 0));
+                if (!isAccelerating || Math.abs(sumDeltas) < atr * 0.4 || !correctDir) {
+                    addLog(`🛡️ Acceleration Filter BLOCKED: Weak or non-accelerating`, 'warning');
                     return null;
                 }
             }
-            
+
             return signal;
         }
 
