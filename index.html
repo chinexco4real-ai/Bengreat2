@@ -1181,7 +1181,19 @@
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Requires 3 consecutive candles accelerating in signal direction
+                        Requires consecutive candles accelerating in signal direction
+                    </div>
+
+                    <!-- Acceleration Candles Input -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                        <div>
+                            <label for="accelCandles" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">🚀 Acceleration Candles</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (min 2, max 10)</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="number" id="accelCandles" value="3" min="2" max="10" step="1"
+                                   style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
+                        </div>
                     </div>
 
                     <div style="font-size: 11px; color: #9ca3af; margin-top: 12px; text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.08); border-radius: 8px;">
@@ -1453,6 +1465,9 @@
             const savedTtmMultiplier = localStorage.getItem('ttmMultiplier') || '2.0';
             document.getElementById('ttmMultiplier').value = savedTtmMultiplier;
 
+            const savedAccelCandles = localStorage.getItem('accelCandles') || '3';
+            document.getElementById('accelCandles').value = savedAccelCandles;
+
             updateActiveFiltersSummary();
 
             updateTradeHistoryTable();
@@ -1509,6 +1524,7 @@
             // NEW: Save thresholds
             localStorage.setItem('volThreshold', document.getElementById('volThreshold').value);
             localStorage.setItem('ttmMultiplier', document.getElementById('ttmMultiplier').value);
+            localStorage.setItem('accelCandles', document.getElementById('accelCandles').value);
         }
 
         // Add event listeners for all settings
@@ -1569,6 +1585,16 @@
             document.getElementById('ttmMultiplier').value = val.toFixed(1);
             saveSettings();
             addLog(`🎛️ TTM Squeeze multiplier → ${val}x`, 'info');
+            updateActiveFiltersSummary();
+        });
+
+        document.getElementById('accelCandles').addEventListener('change', () => {
+            let val = parseInt(document.getElementById('accelCandles').value) || 3;
+            if (val < 2) val = 2;
+            if (val > 10) val = 10;
+            document.getElementById('accelCandles').value = val;
+            saveSettings();
+            addLog(`🚀 Acceleration candles → ${val}`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -2441,15 +2467,25 @@
 
             // PRICE ACCELERATION FILTER
             if (document.getElementById('filterAcceleration')?.checked) {
-                if (candleHistory.length < 3) return null;
-                const recent = candleHistory.slice(-3);
+                const accelCandles = parseInt(document.getElementById('accelCandles').value) || 3;
+                if (candleHistory.length < accelCandles) return null;
+                const recent = candleHistory.slice(-accelCandles);
                 const deltas = recent.map(c => c.close - c.open);
                 const atr = calculateATR(candleHistory, 10);
                 const sumDeltas = deltas.reduce((a, b) => a + b, 0);
-                const isAccelerating = Math.abs(deltas[2]) > Math.abs(deltas[1]) && Math.abs(deltas[1]) > Math.abs(deltas[0]);
+                
+                // Check if each candle is larger than the previous
+                let isAccelerating = true;
+                for (let i = 1; i < deltas.length; i++) {
+                    if (Math.abs(deltas[i]) <= Math.abs(deltas[i-1])) {
+                        isAccelerating = false;
+                        break;
+                    }
+                }
+                
                 const correctDir = deltas.every(d => (signal === 'BUY' ? d > 0 : d < 0));
                 if (!isAccelerating || Math.abs(sumDeltas) < atr * 0.4 || !correctDir) {
-                    addLog(`🛡️ Acceleration Filter BLOCKED: Weak or non-accelerating`, 'warning');
+                    addLog(`🛡️ Acceleration Filter BLOCKED: Weak or non-accelerating [${accelCandles} candles]`, 'warning');
                     return null;
                 }
             }
