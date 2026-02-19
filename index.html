@@ -1107,7 +1107,27 @@
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Blocks BUY above 80, SELL below 20 + checks direction
+                        Blocks BUY above overbought, SELL below oversold + checks direction
+                    </div>
+
+                    <!-- Stochastic Thresholds Inputs -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                        <div>
+                            <label for="stochOverbought" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📈 Overbought</label>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <input type="number" id="stochOverbought" value="80" min="50" max="100" step="1"
+                                       style="width: 75px; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            </div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block BUY above</div>
+                        </div>
+                        <div>
+                            <label for="stochOversold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📉 Oversold</label>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <input type="number" id="stochOversold" value="20" min="0" max="50" step="1"
+                                       style="width: 75px; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            </div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block SELL below</div>
+                        </div>
                     </div>
 
                     <!-- Candlestick Patterns Filter -->
@@ -1468,6 +1488,12 @@
             const savedAccelCandles = localStorage.getItem('accelCandles') || '3';
             document.getElementById('accelCandles').value = savedAccelCandles;
 
+            const savedStochOverbought = localStorage.getItem('stochOverbought') || '80';
+            document.getElementById('stochOverbought').value = savedStochOverbought;
+
+            const savedStochOversold = localStorage.getItem('stochOversold') || '20';
+            document.getElementById('stochOversold').value = savedStochOversold;
+
             updateActiveFiltersSummary();
 
             updateTradeHistoryTable();
@@ -1525,6 +1551,8 @@
             localStorage.setItem('volThreshold', document.getElementById('volThreshold').value);
             localStorage.setItem('ttmMultiplier', document.getElementById('ttmMultiplier').value);
             localStorage.setItem('accelCandles', document.getElementById('accelCandles').value);
+            localStorage.setItem('stochOverbought', document.getElementById('stochOverbought').value);
+            localStorage.setItem('stochOversold', document.getElementById('stochOversold').value);
         }
 
         // Add event listeners for all settings
@@ -1595,6 +1623,26 @@
             document.getElementById('accelCandles').value = val;
             saveSettings();
             addLog(`🚀 Acceleration candles → ${val}`, 'info');
+            updateActiveFiltersSummary();
+        });
+
+        document.getElementById('stochOverbought').addEventListener('change', () => {
+            let val = parseInt(document.getElementById('stochOverbought').value) || 80;
+            if (val < 50) val = 50;
+            if (val > 100) val = 100;
+            document.getElementById('stochOverbought').value = val;
+            saveSettings();
+            addLog(`📈 Stochastic Overbought → ${val}`, 'info');
+            updateActiveFiltersSummary();
+        });
+
+        document.getElementById('stochOversold').addEventListener('change', () => {
+            let val = parseInt(document.getElementById('stochOversold').value) || 20;
+            if (val < 0) val = 0;
+            if (val > 50) val = 50;
+            document.getElementById('stochOversold').value = val;
+            saveSettings();
+            addLog(`📉 Stochastic Oversold → ${val}`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -2413,12 +2461,16 @@
                 const stoch = calculateStochastic(candleHistory);
                 const prevStoch = calculateStochastic(candleHistory.slice(0, -1));
                 const stochRising = stoch.k > prevStoch.k;
-                if (signal === 'BUY' && stoch.k > 80) {
-                    addLog(`🛡️ Stochastic Filter BLOCKED BUY: %K ${stoch.k.toFixed(1)} > 80`, 'warning');
+                
+                const overbought = parseInt(document.getElementById('stochOverbought').value) || 80;
+                const oversold = parseInt(document.getElementById('stochOversold').value) || 20;
+                
+                if (signal === 'BUY' && stoch.k > overbought) {
+                    addLog(`🛡️ Stochastic Filter BLOCKED BUY: %K ${stoch.k.toFixed(1)} > ${overbought}`, 'warning');
                     return null;
                 }
-                if (signal === 'SELL' && stoch.k < 20) {
-                    addLog(`🛡️ Stochastic Filter BLOCKED SELL: %K ${stoch.k.toFixed(1)} < 20`, 'warning');
+                if (signal === 'SELL' && stoch.k < oversold) {
+                    addLog(`🛡️ Stochastic Filter BLOCKED SELL: %K ${stoch.k.toFixed(1)} < ${oversold}`, 'warning');
                     return null;
                 }
                 if ((signal === 'SELL' && stochRising) || (signal === 'BUY' && !stochRising)) {
