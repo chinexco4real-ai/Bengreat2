@@ -1088,14 +1088,26 @@
 
                     <!-- MACD Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">MACD Histogram Filter <span style="color:#667eea;">(Trend Momentum)</span></div>
+                        <div class="toggle-label">MACD Crossover Filter <span style="color:#667eea;">(Momentum Shifts)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterMACD">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Requires MACD histogram aligned with signal direction
+                        Detects bullish/bearish crossovers + confirms momentum direction
+                    </div>
+
+                    <!-- MACD Threshold Input -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                        <div>
+                            <label for="macdThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📊 MACD Strength Threshold</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (default 1.0)</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="number" id="macdThreshold" value="1.0" min="0.5" max="5.0" step="0.1"
+                                   style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
+                        </div>
                     </div>
 
                     <!-- Stochastic Filter -->
@@ -1130,38 +1142,26 @@
                         </div>
                     </div>
 
-                    <!-- Candlestick Patterns Filter -->
+                    <!-- ===== ATR COMPRESSION (Adjustable) ===== -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Candlestick Pattern Filter <span style="color:#f59e0b;">(Hammer / Engulfing)</span></div>
-                        <label class="switch">
-                            <input type="checkbox" id="filterPatterns">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        BUY: Hammer or Bullish Engulfing • SELL: Shooting Star or Bearish Engulfing
-                    </div>
-
-                    <!-- ===== VOLATILITY CONTRACTION (Adjustable) ===== -->
-                    <div class="toggle-container">
-                        <div class="toggle-label">Volatility Contraction <span style="color:#f59e0b;">(Tight Range)</span></div>
+                        <div class="toggle-label">ATR Compression <span style="color:#f59e0b;">(True Range)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterVolatility" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Current candle range ≤ X% of 10-candle average
+                        Current 10-period ATR ≤ X% of 20-period ATR average (industry standard)
                     </div>
 
-                    <!-- Volatility Threshold Input -->
+                    <!-- ATR Compression Threshold Input -->
                     <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="volThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📉 Volatility Threshold (%)</label>
-                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Lower % = stricter</div>
+                            <label for="volThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📉 ATR Compression Ratio (%)</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Lower % = stricter (default 75%)</div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <input type="number" id="volThreshold" value="80" min="40" max="95" step="1"
+                            <input type="number" id="volThreshold" value="75" min="50" max="90" step="1"
                                    style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
                             <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">%</span>
                         </div>
@@ -1471,7 +1471,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
+            const filterIds = ['filterMACD', 'filterStochastic', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1479,7 +1479,7 @@
             });
 
             // NEW: Load thresholds
-            const savedVolThreshold = localStorage.getItem('volThreshold') || '80';
+            const savedVolThreshold = localStorage.getItem('volThreshold') || '75';
             document.getElementById('volThreshold').value = savedVolThreshold;
 
             const savedTtmMultiplier = localStorage.getItem('ttmMultiplier') || '2.0';
@@ -1493,6 +1493,9 @@
 
             const savedStochOversold = localStorage.getItem('stochOversold') || '20';
             document.getElementById('stochOversold').value = savedStochOversold;
+
+            const savedMacdThreshold = localStorage.getItem('macdThreshold') || '1.0';
+            document.getElementById('macdThreshold').value = savedMacdThreshold;
 
             updateActiveFiltersSummary();
 
@@ -1541,7 +1544,7 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
+            const filterIds = ['filterMACD', 'filterStochastic', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
@@ -1553,6 +1556,7 @@
             localStorage.setItem('accelCandles', document.getElementById('accelCandles').value);
             localStorage.setItem('stochOverbought', document.getElementById('stochOverbought').value);
             localStorage.setItem('stochOversold', document.getElementById('stochOversold').value);
+            localStorage.setItem('macdThreshold', document.getElementById('macdThreshold').value);
         }
 
         // Add event listeners for all settings
@@ -1581,7 +1585,7 @@
         }
 
         // Add event listeners for filters
-        const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
+        const filterIds = ['filterMACD', 'filterStochastic', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
         filterIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1597,12 +1601,12 @@
 
         // NEW: SEPARATE THRESHOLD CHANGE LISTENERS
         document.getElementById('volThreshold').addEventListener('change', () => {
-            let val = parseFloat(document.getElementById('volThreshold').value) || 80;
-            if (val < 40) val = 40;
-            if (val > 95) val = 95;
+            let val = parseFloat(document.getElementById('volThreshold').value) || 75;
+            if (val < 50) val = 50;
+            if (val > 90) val = 90;
             document.getElementById('volThreshold').value = val;
             saveSettings();
-            addLog(`📉 Volatility threshold → ${val}%`, 'info');
+            addLog(`📉 ATR Compression ratio → ${val}%`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -1643,6 +1647,16 @@
             document.getElementById('stochOversold').value = val;
             saveSettings();
             addLog(`📉 Stochastic Oversold → ${val}`, 'info');
+            updateActiveFiltersSummary();
+        });
+
+        document.getElementById('macdThreshold').addEventListener('change', () => {
+            let val = parseFloat(document.getElementById('macdThreshold').value) || 1.0;
+            if (val < 0.5) val = 0.5;
+            if (val > 5.0) val = 5.0;
+            document.getElementById('macdThreshold').value = val.toFixed(1);
+            saveSettings();
+            addLog(`📊 MACD Strength threshold → ${val}`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -1689,7 +1703,7 @@
 
         // ==================== FILTER PRESET FUNCTION ====================
         function applyFilterPreset(preset) {
-            const filterIds = ['filterMACD', 'filterStochastic', 'filterPatterns', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
+            const filterIds = ['filterMACD', 'filterStochastic', 'filterVolatility', 'filterSqueeze', 'filterAcceleration'];
             
             switch(preset) {
                 case 'aggressive':
@@ -1700,11 +1714,11 @@
                     break;
                     
                 case 'balanced':
-                    // Contraction + Squeeze - good balance
+                    // ATR Compression + Squeeze - good balance
                     filterIds.forEach(id => document.getElementById(id).checked = false);
                     document.getElementById('filterVolatility').checked = true;
                     document.getElementById('filterSqueeze').checked = true;
-                    addLog('⚖️ Balanced preset applied: Contraction + Squeeze', 'success');
+                    addLog('⚖️ Balanced preset applied: ATR Compression + Squeeze', 'success');
                     break;
                     
                 case 'conservative':
@@ -1734,8 +1748,7 @@
             const filters = [
                 { id: 'filterMACD',         name: 'MACD',           color: '#667eea' },
                 { id: 'filterStochastic',   name: 'Stochastic',     color: '#10b981' },
-                { id: 'filterPatterns',     name: 'Patterns',       color: '#f59e0b' },
-                { id: 'filterVolatility',   name: 'Vol Contraction', color: '#ec4899' },
+                { id: 'filterVolatility',   name: 'ATR Compression', color: '#ec4899' },
                 { id: 'filterSqueeze',      name: 'TTM Squeeze',    color: '#10b981' },
                 { id: 'filterAcceleration', name: 'Acceleration',   color: '#8b5cf6' }
             ];
@@ -2175,28 +2188,6 @@
             return { k: k, d: k };
         }
 
-        function isHammer(candle) {
-            const body = Math.abs(candle.close - candle.open);
-            const lowerWick = Math.min(candle.open, candle.close) - candle.low;
-            const upperWick = candle.high - Math.max(candle.open, candle.close);
-            return lowerWick > 2 * body && upperWick < body && candle.close > candle.open;
-        }
-
-        function isBullishEngulfing(current, prev) {
-            return current.open < current.close && current.open < prev.close && current.close > prev.open;
-        }
-
-        function isShootingStar(candle) {
-            const body = Math.abs(candle.close - candle.open);
-            const upperWick = candle.high - Math.max(candle.open, candle.close);
-            const lowerWick = Math.min(candle.open, candle.close) - candle.low;
-            return upperWick > 2 * body && lowerWick < body && candle.close < candle.open;
-        }
-
-        function isBearishEngulfing(current, prev) {
-            return current.open > current.close && current.open > prev.close && current.close < prev.open;
-        }
-
         // Bollinger Band Width
         function calculateBBWidth(candles, period = 20) {
             if (candles.length < period) return 0;
@@ -2445,14 +2436,33 @@
             const recentCandles = candleHistory.slice(-10);
             const recentCandles20 = candleHistory.slice(-20);
 
-            // MACD FILTER
+            // MACD CROSSOVER + DIRECTION FILTER
             if (document.getElementById('filterMACD')?.checked) {
                 const closes = candleHistory.map(c => c.close);
                 const macd = calculateMACD(closes);
-                const atr = calculateATR(candleHistory, 10);
-                if ((signal === 'BUY' && macd.histogram < atr * 0.0005) || (signal === 'SELL' && macd.histogram > -atr * 0.0005)) {
-                    addLog(`🛡️ MACD Filter BLOCKED: Histogram ${macd.histogram.toFixed(5)}`, 'warning');
-                    return null;
+                const prevMACD = calculateMACD(closes.slice(0, -1));
+                
+                // Detect crossovers
+                const bullishCross = prevMACD.macd <= prevMACD.signal && macd.macd > macd.signal;
+                const bearishCross = prevMACD.macd >= prevMACD.signal && macd.macd < macd.signal;
+                
+                // Get threshold for direction strength (convert to actual value)
+                const macdStrength = parseFloat(document.getElementById('macdThreshold').value) / 1000 || 0.001;
+                
+                if (signal === 'BUY') {
+                    // Require bullish crossover OR positive MACD momentum
+                    if (!bullishCross && macd.histogram < macdStrength) {
+                        addLog(`🛡️ MACD Filter BLOCKED BUY: No bullish crossover, weak momentum [${macd.histogram.toFixed(5)}]`, 'warning');
+                        return null;
+                    }
+                }
+                
+                if (signal === 'SELL') {
+                    // Require bearish crossover OR negative MACD momentum
+                    if (!bearishCross && macd.histogram > -macdStrength) {
+                        addLog(`🛡️ MACD Filter BLOCKED SELL: No bearish crossover, weak momentum [${macd.histogram.toFixed(5)}]`, 'warning');
+                        return null;
+                    }
                 }
             }
 
@@ -2479,29 +2489,18 @@
                 }
             }
 
-            // CANDLESTICK PATTERN FILTER
-            if (document.getElementById('filterPatterns')?.checked) {
-                const last = candleHistory[candleHistory.length - 1];
-                const prev = candleHistory[candleHistory.length - 2];
-                let isValid = false;
-                if (signal === 'BUY') isValid = isHammer(last) || isBullishEngulfing(last, prev);
-                if (signal === 'SELL') isValid = isShootingStar(last) || isBearishEngulfing(last, prev);
-                if (!isValid) {
-                    addLog(`🛡️ Pattern Filter BLOCKED: No matching pattern`, 'warning');
-                    return null;
-                }
-            }
-
-            // VOLATILITY CONTRACTION (SEPARATE THRESHOLD)
+            // ATR COMPRESSION (INDUSTRY STANDARD)
             if (document.getElementById('filterVolatility')?.checked) {
-                const currentRange = lastCandle.high - lastCandle.low;
-                const avgRange = recentCandles.reduce((sum, c) => sum + (c.high - c.low), 0) / recentCandles.length;
-                const volThreshold = parseFloat(document.getElementById('volThreshold').value) / 100 || 0.80;
-                if (currentRange > avgRange * volThreshold) {
-                    addLog(`🛡️ Volatility Contraction BLOCKED: Range ${(currentRange/avgRange*100).toFixed(0)}% of avg [Threshold: ${volThreshold*100}%]`, 'warning');
+                const currentATR = calculateATR(recentCandles, 10);
+                const avgATR = calculateATR(recentCandles20, 20);
+                const atrRatio = currentATR / avgATR;
+                const atrThreshold = parseFloat(document.getElementById('volThreshold').value) / 100 || 0.75;
+                
+                if (atrRatio > atrThreshold) {
+                    addLog(`🛡️ ATR Compression BLOCKED: Ratio ${(atrRatio*100).toFixed(0)}% of avg [Threshold: ${atrThreshold*100}%]`, 'warning');
                     return null;
                 } else {
-                    addLog(`✅ Volatility Contraction PASSED [${(currentRange/avgRange*100).toFixed(0)}% of avg]`, 'success');
+                    addLog(`✅ ATR Compression PASSED — volatility compressed! [${(atrRatio*100).toFixed(0)}% of avg]`, 'success');
                 }
             }
 
