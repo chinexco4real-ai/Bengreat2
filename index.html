@@ -1192,35 +1192,27 @@
                         </div>
                     </div>
 
-                    <!-- EMA Cross Confirmation Filter -->
+                    <!-- Breakout Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">EMA Trend Alignment <span style="color:#8b5cf6;">(MA Confirmation)</span></div>
+                        <div class="toggle-label">Breakout Filter <span style="color:#8b5cf6;">(Price Extremes)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterAcceleration">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        BUY: Price > Fast EMA > Slow EMA • SELL: Price < Fast EMA < Slow EMA
+                        BUY: Current high > N-period highest • SELL: Current low < N-period lowest
                     </div>
 
-                    <!-- EMA Period Inputs -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <!-- Breakout Lookback Input -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="emaFast" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">⚡ Fast EMA</label>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <input type="number" id="emaFast" value="8" min="3" max="20" step="1"
-                                       style="width: 75px; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            </div>
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Default: 8</div>
+                            <label for="breakoutLookback" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📈 Breakout Lookback (bars)</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (default 20)</div>
                         </div>
-                        <div>
-                            <label for="emaSlow" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">🐢 Slow EMA</label>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <input type="number" id="emaSlow" value="21" min="10" max="50" step="1"
-                                       style="width: 75px; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            </div>
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Default: 21</div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <input type="number" id="breakoutLookback" value="20" min="10" max="50" step="5"
+                                   style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
                         </div>
                     </div>
 
@@ -1493,11 +1485,8 @@
             const savedTtmMultiplier = localStorage.getItem('ttmMultiplier') || '2.0';
             document.getElementById('ttmMultiplier').value = savedTtmMultiplier;
 
-            const savedEmaFast = localStorage.getItem('emaFast') || '8';
-            document.getElementById('emaFast').value = savedEmaFast;
-
-            const savedEmaSlow = localStorage.getItem('emaSlow') || '21';
-            document.getElementById('emaSlow').value = savedEmaSlow;
+            const savedBreakoutLookback = localStorage.getItem('breakoutLookback') || '20';
+            document.getElementById('breakoutLookback').value = savedBreakoutLookback;
 
             const savedStochOverbought = localStorage.getItem('stochOverbought') || '80';
             document.getElementById('stochOverbought').value = savedStochOverbought;
@@ -1564,8 +1553,7 @@
             // NEW: Save thresholds
             localStorage.setItem('volThreshold', document.getElementById('volThreshold').value);
             localStorage.setItem('ttmMultiplier', document.getElementById('ttmMultiplier').value);
-            localStorage.setItem('emaFast', document.getElementById('emaFast').value);
-            localStorage.setItem('emaSlow', document.getElementById('emaSlow').value);
+            localStorage.setItem('breakoutLookback', document.getElementById('breakoutLookback').value);
             localStorage.setItem('stochOverbought', document.getElementById('stochOverbought').value);
             localStorage.setItem('stochOversold', document.getElementById('stochOversold').value);
             localStorage.setItem('macdThreshold', document.getElementById('macdThreshold').value);
@@ -1632,23 +1620,13 @@
             updateActiveFiltersSummary();
         });
 
-        document.getElementById('emaFast').addEventListener('change', () => {
-            let val = parseInt(document.getElementById('emaFast').value) || 8;
-            if (val < 3) val = 3;
-            if (val > 20) val = 20;
-            document.getElementById('emaFast').value = val;
-            saveSettings();
-            addLog(`⚡ Fast EMA period → ${val}`, 'info');
-            updateActiveFiltersSummary();
-        });
-
-        document.getElementById('emaSlow').addEventListener('change', () => {
-            let val = parseInt(document.getElementById('emaSlow').value) || 21;
+        document.getElementById('breakoutLookback').addEventListener('change', () => {
+            let val = parseInt(document.getElementById('breakoutLookback').value) || 20;
             if (val < 10) val = 10;
             if (val > 50) val = 50;
-            document.getElementById('emaSlow').value = val;
+            document.getElementById('breakoutLookback').value = val;
             saveSettings();
-            addLog(`🐢 Slow EMA period → ${val}`, 'info');
+            addLog(`📈 Breakout lookback → ${val} bars`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -1729,10 +1707,10 @@
             
             switch(preset) {
                 case 'aggressive':
-                    // Only EMA alignment - allows most trades
+                    // Only breakout - allows most trades
                     filterIds.forEach(id => document.getElementById(id).checked = false);
                     document.getElementById('filterAcceleration').checked = true;
-                    addLog('⚡ Aggressive preset applied: EMA Alignment only', 'success');
+                    addLog('⚡ Aggressive preset applied: Breakout only', 'success');
                     break;
                     
                 case 'balanced':
@@ -1772,7 +1750,7 @@
                 { id: 'filterStochastic',   name: 'Stochastic',     color: '#10b981' },
                 { id: 'filterVolatility',   name: 'Range Momentum', color: '#ec4899' },
                 { id: 'filterSqueeze',      name: 'TTM Squeeze',    color: '#10b981' },
-                { id: 'filterAcceleration', name: 'EMA Alignment',  color: '#8b5cf6' }
+                { id: 'filterAcceleration', name: 'Breakout',       color: '#8b5cf6' }
             ];
             
             let activeCount = 0;
@@ -2544,35 +2522,36 @@
                 }
             }
 
-            // EMA CROSS CONFIRMATION FILTER
+            // BREAKOUT FILTER (20-PERIOD HIGH/LOW)
             if (document.getElementById('filterAcceleration')?.checked) {
-                const closes = candleHistory.map(c => c.close);
-                const fastPeriod = parseInt(document.getElementById('emaFast').value) || 8;
-                const slowPeriod = parseInt(document.getElementById('emaSlow').value) || 21;
+                const lookback = parseInt(document.getElementById('breakoutLookback').value) || 20;
                 
-                if (closes.length < Math.max(fastPeriod, slowPeriod)) return signal;
+                if (candleHistory.length < lookback + 1) return signal;
                 
-                const emaFast = calculateEMA(closes, fastPeriod);
-                const emaSlow = calculateEMA(closes, slowPeriod);
-                const price = closes[closes.length - 1];
+                const recent = candleHistory.slice(-lookback - 1);
+                const current = recent[recent.length - 1];
+                const historical = recent.slice(0, -1);
+                
+                const highestHigh = Math.max(...historical.map(c => c.high));
+                const lowestLow = Math.min(...historical.map(c => c.low));
                 
                 if (signal === 'BUY') {
-                    // BUY requires: Price > Fast EMA > Slow EMA
-                    if (price <= emaFast || emaFast <= emaSlow) {
-                        addLog(`🛡️ EMA Filter BLOCKED BUY: Not aligned [Price: ${price.toFixed(4)}, EMA${fastPeriod}: ${emaFast.toFixed(4)}, EMA${slowPeriod}: ${emaSlow.toFixed(4)}]`, 'warning');
+                    // BUY requires: Current high breaks above recent highest
+                    if (current.high <= highestHigh) {
+                        addLog(`🛡️ Breakout Filter BLOCKED BUY: Not breaking high [Current: ${current.high.toFixed(4)} ≤ ${lookback}-bar high: ${highestHigh.toFixed(4)}]`, 'warning');
                         return null;
                     } else {
-                        addLog(`✅ EMA Filter PASSED BUY — trend aligned! [Price > EMA${fastPeriod} > EMA${slowPeriod}]`, 'success');
+                        addLog(`✅ Breakout Filter PASSED BUY — breaking ${lookback}-bar high! [${current.high.toFixed(4)} > ${highestHigh.toFixed(4)}]`, 'success');
                     }
                 }
                 
                 if (signal === 'SELL') {
-                    // SELL requires: Price < Fast EMA < Slow EMA
-                    if (price >= emaFast || emaFast >= emaSlow) {
-                        addLog(`🛡️ EMA Filter BLOCKED SELL: Not aligned [Price: ${price.toFixed(4)}, EMA${fastPeriod}: ${emaFast.toFixed(4)}, EMA${slowPeriod}: ${emaSlow.toFixed(4)}]`, 'warning');
+                    // SELL requires: Current low breaks below recent lowest
+                    if (current.low >= lowestLow) {
+                        addLog(`🛡️ Breakout Filter BLOCKED SELL: Not breaking low [Current: ${current.low.toFixed(4)} ≥ ${lookback}-bar low: ${lowestLow.toFixed(4)}]`, 'warning');
                         return null;
                     } else {
-                        addLog(`✅ EMA Filter PASSED SELL — trend aligned! [Price < EMA${fastPeriod} < EMA${slowPeriod}]`, 'success');
+                        addLog(`✅ Breakout Filter PASSED SELL — breaking ${lookback}-bar low! [${current.low.toFixed(4)} < ${lowestLow.toFixed(4)}]`, 'success');
                     }
                 }
             }
