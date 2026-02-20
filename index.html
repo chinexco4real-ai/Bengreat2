@@ -1192,28 +1192,35 @@
                         </div>
                     </div>
 
-                    <!-- Volume Surge Filter -->
+                    <!-- EMA Cross Confirmation Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Volume Surge Filter <span style="color:#8b5cf6;">(Market Activity)</span></div>
+                        <div class="toggle-label">EMA Trend Alignment <span style="color:#8b5cf6;">(MA Confirmation)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterAcceleration">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Requires current tick count ≥ X% of 10-candle average (filters dead markets)
+                        BUY: Price > Fast EMA > Slow EMA • SELL: Price < Fast EMA < Slow EMA
                     </div>
 
-                    <!-- Volume Surge Threshold Input -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <!-- EMA Period Inputs -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="volumeSurgeThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📊 Volume Surge (%)</label>
-                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (default 150%)</div>
+                            <label for="emaFast" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">⚡ Fast EMA</label>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <input type="number" id="emaFast" value="8" min="3" max="20" step="1"
+                                       style="width: 75px; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            </div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Default: 8</div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <input type="number" id="volumeSurgeThreshold" value="150" min="100" max="300" step="10"
-                                   style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
-                            <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">%</span>
+                        <div>
+                            <label for="emaSlow" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">🐢 Slow EMA</label>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <input type="number" id="emaSlow" value="21" min="10" max="50" step="1"
+                                       style="width: 75px; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            </div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Default: 21</div>
                         </div>
                     </div>
 
@@ -1486,8 +1493,11 @@
             const savedTtmMultiplier = localStorage.getItem('ttmMultiplier') || '2.0';
             document.getElementById('ttmMultiplier').value = savedTtmMultiplier;
 
-            const savedVolumeSurgeThreshold = localStorage.getItem('volumeSurgeThreshold') || '150';
-            document.getElementById('volumeSurgeThreshold').value = savedVolumeSurgeThreshold;
+            const savedEmaFast = localStorage.getItem('emaFast') || '8';
+            document.getElementById('emaFast').value = savedEmaFast;
+
+            const savedEmaSlow = localStorage.getItem('emaSlow') || '21';
+            document.getElementById('emaSlow').value = savedEmaSlow;
 
             const savedStochOverbought = localStorage.getItem('stochOverbought') || '80';
             document.getElementById('stochOverbought').value = savedStochOverbought;
@@ -1554,7 +1564,8 @@
             // NEW: Save thresholds
             localStorage.setItem('volThreshold', document.getElementById('volThreshold').value);
             localStorage.setItem('ttmMultiplier', document.getElementById('ttmMultiplier').value);
-            localStorage.setItem('volumeSurgeThreshold', document.getElementById('volumeSurgeThreshold').value);
+            localStorage.setItem('emaFast', document.getElementById('emaFast').value);
+            localStorage.setItem('emaSlow', document.getElementById('emaSlow').value);
             localStorage.setItem('stochOverbought', document.getElementById('stochOverbought').value);
             localStorage.setItem('stochOversold', document.getElementById('stochOversold').value);
             localStorage.setItem('macdThreshold', document.getElementById('macdThreshold').value);
@@ -1621,13 +1632,23 @@
             updateActiveFiltersSummary();
         });
 
-        document.getElementById('volumeSurgeThreshold').addEventListener('change', () => {
-            let val = parseInt(document.getElementById('volumeSurgeThreshold').value) || 150;
-            if (val < 100) val = 100;
-            if (val > 300) val = 300;
-            document.getElementById('volumeSurgeThreshold').value = val;
+        document.getElementById('emaFast').addEventListener('change', () => {
+            let val = parseInt(document.getElementById('emaFast').value) || 8;
+            if (val < 3) val = 3;
+            if (val > 20) val = 20;
+            document.getElementById('emaFast').value = val;
             saveSettings();
-            addLog(`📊 Volume Surge threshold → ${val}%`, 'info');
+            addLog(`⚡ Fast EMA period → ${val}`, 'info');
+            updateActiveFiltersSummary();
+        });
+
+        document.getElementById('emaSlow').addEventListener('change', () => {
+            let val = parseInt(document.getElementById('emaSlow').value) || 21;
+            if (val < 10) val = 10;
+            if (val > 50) val = 50;
+            document.getElementById('emaSlow').value = val;
+            saveSettings();
+            addLog(`🐢 Slow EMA period → ${val}`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -1708,10 +1729,10 @@
             
             switch(preset) {
                 case 'aggressive':
-                    // Only volume surge - allows most trades
+                    // Only EMA alignment - allows most trades
                     filterIds.forEach(id => document.getElementById(id).checked = false);
                     document.getElementById('filterAcceleration').checked = true;
-                    addLog('⚡ Aggressive preset applied: Volume Surge only', 'success');
+                    addLog('⚡ Aggressive preset applied: EMA Alignment only', 'success');
                     break;
                     
                 case 'balanced':
@@ -1751,7 +1772,7 @@
                 { id: 'filterStochastic',   name: 'Stochastic',     color: '#10b981' },
                 { id: 'filterVolatility',   name: 'Range Momentum', color: '#ec4899' },
                 { id: 'filterSqueeze',      name: 'TTM Squeeze',    color: '#10b981' },
-                { id: 'filterAcceleration', name: 'Volume Surge',   color: '#8b5cf6' }
+                { id: 'filterAcceleration', name: 'EMA Alignment',  color: '#8b5cf6' }
             ];
             
             let activeCount = 0;
@@ -2523,29 +2544,36 @@
                 }
             }
 
-            // VOLUME SURGE FILTER (TICK COUNT PROXY)
+            // EMA CROSS CONFIRMATION FILTER
             if (document.getElementById('filterAcceleration')?.checked) {
-                const lookback = 10;
-                const threshold = parseInt(document.getElementById('volumeSurgeThreshold').value) || 150;
+                const closes = candleHistory.map(c => c.close);
+                const fastPeriod = parseInt(document.getElementById('emaFast').value) || 8;
+                const slowPeriod = parseInt(document.getElementById('emaSlow').value) || 21;
                 
-                if (candleHistory.length < lookback + 1) return signal;
+                if (closes.length < Math.max(fastPeriod, slowPeriod)) return signal;
                 
-                const recentCandles = candleHistory.slice(-lookback - 1);
-                const currentCandle = recentCandles[recentCandles.length - 1];
-                const previousCandles = recentCandles.slice(0, -1);
+                const emaFast = calculateEMA(closes, fastPeriod);
+                const emaSlow = calculateEMA(closes, slowPeriod);
+                const price = closes[closes.length - 1];
                 
-                // Calculate tick counts (using range as proxy for activity)
-                const currentActivity = currentCandle.high - currentCandle.low;
-                const avgActivity = previousCandles.reduce((sum, c) => sum + (c.high - c.low), 0) / previousCandles.length;
+                if (signal === 'BUY') {
+                    // BUY requires: Price > Fast EMA > Slow EMA
+                    if (price <= emaFast || emaFast <= emaSlow) {
+                        addLog(`🛡️ EMA Filter BLOCKED BUY: Not aligned [Price: ${price.toFixed(4)}, EMA${fastPeriod}: ${emaFast.toFixed(4)}, EMA${slowPeriod}: ${emaSlow.toFixed(4)}]`, 'warning');
+                        return null;
+                    } else {
+                        addLog(`✅ EMA Filter PASSED BUY — trend aligned! [Price > EMA${fastPeriod} > EMA${slowPeriod}]`, 'success');
+                    }
+                }
                 
-                // Require current activity to exceed threshold
-                const activityRatio = (currentActivity / avgActivity) * 100;
-                
-                if (activityRatio < threshold) {
-                    addLog(`🛡️ Volume Surge BLOCKED: Activity ${activityRatio.toFixed(0)}% of avg [Need: ${threshold}%]`, 'warning');
-                    return null;
-                } else {
-                    addLog(`✅ Volume Surge PASSED — market active! [${activityRatio.toFixed(0)}%]`, 'success');
+                if (signal === 'SELL') {
+                    // SELL requires: Price < Fast EMA < Slow EMA
+                    if (price >= emaFast || emaFast >= emaSlow) {
+                        addLog(`🛡️ EMA Filter BLOCKED SELL: Not aligned [Price: ${price.toFixed(4)}, EMA${fastPeriod}: ${emaFast.toFixed(4)}, EMA${slowPeriod}: ${emaSlow.toFixed(4)}]`, 'warning');
+                        return null;
+                    } else {
+                        addLog(`✅ EMA Filter PASSED SELL — trend aligned! [Price < EMA${fastPeriod} < EMA${slowPeriod}]`, 'success');
+                    }
                 }
             }
 
