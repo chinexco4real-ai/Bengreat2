@@ -1142,26 +1142,26 @@
                         </div>
                     </div>
 
-                    <!-- ===== ATR COMPRESSION (Adjustable) ===== -->
+                    <!-- ===== RANGE MOMENTUM (For Synthetics) ===== -->
                     <div class="toggle-container">
-                        <div class="toggle-label">ATR Compression <span style="color:#f59e0b;">(True Range)</span></div>
+                        <div class="toggle-label">Range Momentum Filter <span style="color:#f59e0b;">(Movement Strength)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterVolatility" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Current 10-period ATR ≤ X% of 20-period ATR average (industry standard)
+                        Current candle range must be ≥ X% of 5-candle average (filters weak moves)
                     </div>
 
-                    <!-- ATR Compression Threshold Input -->
+                    <!-- Range Momentum Threshold Input -->
                     <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="volThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📉 ATR Compression Ratio (%)</label>
-                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Lower % = stricter (default 75%)</div>
+                            <label for="volThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📊 Range Momentum (%)</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (default 100%)</div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <input type="number" id="volThreshold" value="75" min="50" max="90" step="1"
+                            <input type="number" id="volThreshold" value="100" min="60" max="150" step="5"
                                    style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
                             <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">%</span>
                         </div>
@@ -1192,27 +1192,28 @@
                         </div>
                     </div>
 
-                    <!-- Price Acceleration Filter -->
+                    <!-- Volume Surge Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Price Acceleration Filter <span style="color:#8b5cf6;">(Momentum Build)</span></div>
+                        <div class="toggle-label">Volume Surge Filter <span style="color:#8b5cf6;">(Market Activity)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterAcceleration">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Requires consecutive candles accelerating in signal direction
+                        Requires current tick count ≥ X% of 10-candle average (filters dead markets)
                     </div>
 
-                    <!-- Acceleration Candles Input -->
+                    <!-- Volume Surge Threshold Input -->
                     <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="accelCandles" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">🚀 Acceleration Candles</label>
-                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (min 2, max 10)</div>
+                            <label for="volumeSurgeThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📊 Volume Surge (%)</label>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (default 150%)</div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <input type="number" id="accelCandles" value="3" min="2" max="10" step="1"
+                            <input type="number" id="volumeSurgeThreshold" value="150" min="100" max="300" step="10"
                                    style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
+                            <span style="color: #9ca3af; font-size: 14px; font-weight: 600;">%</span>
                         </div>
                     </div>
 
@@ -1479,14 +1480,14 @@
             });
 
             // NEW: Load thresholds
-            const savedVolThreshold = localStorage.getItem('volThreshold') || '75';
+            const savedVolThreshold = localStorage.getItem('volThreshold') || '100';
             document.getElementById('volThreshold').value = savedVolThreshold;
 
             const savedTtmMultiplier = localStorage.getItem('ttmMultiplier') || '2.0';
             document.getElementById('ttmMultiplier').value = savedTtmMultiplier;
 
-            const savedAccelCandles = localStorage.getItem('accelCandles') || '3';
-            document.getElementById('accelCandles').value = savedAccelCandles;
+            const savedVolumeSurgeThreshold = localStorage.getItem('volumeSurgeThreshold') || '150';
+            document.getElementById('volumeSurgeThreshold').value = savedVolumeSurgeThreshold;
 
             const savedStochOverbought = localStorage.getItem('stochOverbought') || '80';
             document.getElementById('stochOverbought').value = savedStochOverbought;
@@ -1553,7 +1554,7 @@
             // NEW: Save thresholds
             localStorage.setItem('volThreshold', document.getElementById('volThreshold').value);
             localStorage.setItem('ttmMultiplier', document.getElementById('ttmMultiplier').value);
-            localStorage.setItem('accelCandles', document.getElementById('accelCandles').value);
+            localStorage.setItem('volumeSurgeThreshold', document.getElementById('volumeSurgeThreshold').value);
             localStorage.setItem('stochOverbought', document.getElementById('stochOverbought').value);
             localStorage.setItem('stochOversold', document.getElementById('stochOversold').value);
             localStorage.setItem('macdThreshold', document.getElementById('macdThreshold').value);
@@ -1601,12 +1602,12 @@
 
         // NEW: SEPARATE THRESHOLD CHANGE LISTENERS
         document.getElementById('volThreshold').addEventListener('change', () => {
-            let val = parseFloat(document.getElementById('volThreshold').value) || 75;
-            if (val < 50) val = 50;
-            if (val > 90) val = 90;
+            let val = parseFloat(document.getElementById('volThreshold').value) || 100;
+            if (val < 60) val = 60;
+            if (val > 150) val = 150;
             document.getElementById('volThreshold').value = val;
             saveSettings();
-            addLog(`📉 ATR Compression ratio → ${val}%`, 'info');
+            addLog(`📊 Range Momentum threshold → ${val}%`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -1620,13 +1621,13 @@
             updateActiveFiltersSummary();
         });
 
-        document.getElementById('accelCandles').addEventListener('change', () => {
-            let val = parseInt(document.getElementById('accelCandles').value) || 3;
-            if (val < 2) val = 2;
-            if (val > 10) val = 10;
-            document.getElementById('accelCandles').value = val;
+        document.getElementById('volumeSurgeThreshold').addEventListener('change', () => {
+            let val = parseInt(document.getElementById('volumeSurgeThreshold').value) || 150;
+            if (val < 100) val = 100;
+            if (val > 300) val = 300;
+            document.getElementById('volumeSurgeThreshold').value = val;
             saveSettings();
-            addLog(`🚀 Acceleration candles → ${val}`, 'info');
+            addLog(`📊 Volume Surge threshold → ${val}%`, 'info');
             updateActiveFiltersSummary();
         });
 
@@ -1707,18 +1708,18 @@
             
             switch(preset) {
                 case 'aggressive':
-                    // Only momentum - allows most trades
+                    // Only volume surge - allows most trades
                     filterIds.forEach(id => document.getElementById(id).checked = false);
                     document.getElementById('filterAcceleration').checked = true;
-                    addLog('⚡ Aggressive preset applied: Momentum only', 'success');
+                    addLog('⚡ Aggressive preset applied: Volume Surge only', 'success');
                     break;
                     
                 case 'balanced':
-                    // ATR Compression + Squeeze - good balance
+                    // Range Momentum + Squeeze - good balance
                     filterIds.forEach(id => document.getElementById(id).checked = false);
                     document.getElementById('filterVolatility').checked = true;
                     document.getElementById('filterSqueeze').checked = true;
-                    addLog('⚖️ Balanced preset applied: ATR Compression + Squeeze', 'success');
+                    addLog('⚖️ Balanced preset applied: Range Momentum + Squeeze', 'success');
                     break;
                     
                 case 'conservative':
@@ -1748,9 +1749,9 @@
             const filters = [
                 { id: 'filterMACD',         name: 'MACD',           color: '#667eea' },
                 { id: 'filterStochastic',   name: 'Stochastic',     color: '#10b981' },
-                { id: 'filterVolatility',   name: 'ATR Compression', color: '#ec4899' },
+                { id: 'filterVolatility',   name: 'Range Momentum', color: '#ec4899' },
                 { id: 'filterSqueeze',      name: 'TTM Squeeze',    color: '#10b981' },
-                { id: 'filterAcceleration', name: 'Acceleration',   color: '#8b5cf6' }
+                { id: 'filterAcceleration', name: 'Volume Surge',   color: '#8b5cf6' }
             ];
             
             let activeCount = 0;
@@ -2489,18 +2490,24 @@
                 }
             }
 
-            // ATR COMPRESSION (INDUSTRY STANDARD)
+            // RANGE MOMENTUM (OPTIMIZED FOR SYNTHETICS)
             if (document.getElementById('filterVolatility')?.checked) {
-                const currentATR = calculateATR(recentCandles, 10);
-                const avgATR = calculateATR(recentCandles20, 20);
-                const atrRatio = currentATR / avgATR;
-                const atrThreshold = parseFloat(document.getElementById('volThreshold').value) / 100 || 0.75;
+                const lookback = 5;
+                const threshold = parseFloat(document.getElementById('volThreshold').value) || 100;
                 
-                if (atrRatio > atrThreshold) {
-                    addLog(`🛡️ ATR Compression BLOCKED: Ratio ${(atrRatio*100).toFixed(0)}% of avg [Threshold: ${atrThreshold*100}%]`, 'warning');
+                if (candleHistory.length < lookback) return signal;
+                
+                const recentCandles = candleHistory.slice(-lookback);
+                const ranges = recentCandles.map(c => c.high - c.low);
+                const avgRange = ranges.reduce((a, b) => a + b, 0) / ranges.length;
+                const lastRange = ranges[ranges.length - 1];
+                
+                // Require current candle to have strong range
+                if (lastRange < avgRange * (threshold / 100)) {
+                    addLog(`🛡️ Range Momentum BLOCKED: Current ${(lastRange/avgRange*100).toFixed(0)}% of avg [Need: ${threshold}%]`, 'warning');
                     return null;
                 } else {
-                    addLog(`✅ ATR Compression PASSED — volatility compressed! [${(atrRatio*100).toFixed(0)}% of avg]`, 'success');
+                    addLog(`✅ Range Momentum PASSED — strong movement! [${(lastRange/avgRange*100).toFixed(0)}%]`, 'success');
                 }
             }
 
@@ -2516,28 +2523,29 @@
                 }
             }
 
-            // PRICE ACCELERATION FILTER
+            // VOLUME SURGE FILTER (TICK COUNT PROXY)
             if (document.getElementById('filterAcceleration')?.checked) {
-                const accelCandles = parseInt(document.getElementById('accelCandles').value) || 3;
-                if (candleHistory.length < accelCandles) return null;
-                const recent = candleHistory.slice(-accelCandles);
-                const deltas = recent.map(c => c.close - c.open);
-                const atr = calculateATR(candleHistory, 10);
-                const sumDeltas = deltas.reduce((a, b) => a + b, 0);
+                const lookback = 10;
+                const threshold = parseInt(document.getElementById('volumeSurgeThreshold').value) || 150;
                 
-                // Check if each candle is larger than the previous
-                let isAccelerating = true;
-                for (let i = 1; i < deltas.length; i++) {
-                    if (Math.abs(deltas[i]) <= Math.abs(deltas[i-1])) {
-                        isAccelerating = false;
-                        break;
-                    }
-                }
+                if (candleHistory.length < lookback + 1) return signal;
                 
-                const correctDir = deltas.every(d => (signal === 'BUY' ? d > 0 : d < 0));
-                if (!isAccelerating || Math.abs(sumDeltas) < atr * 0.4 || !correctDir) {
-                    addLog(`🛡️ Acceleration Filter BLOCKED: Weak or non-accelerating [${accelCandles} candles]`, 'warning');
+                const recentCandles = candleHistory.slice(-lookback - 1);
+                const currentCandle = recentCandles[recentCandles.length - 1];
+                const previousCandles = recentCandles.slice(0, -1);
+                
+                // Calculate tick counts (using range as proxy for activity)
+                const currentActivity = currentCandle.high - currentCandle.low;
+                const avgActivity = previousCandles.reduce((sum, c) => sum + (c.high - c.low), 0) / previousCandles.length;
+                
+                // Require current activity to exceed threshold
+                const activityRatio = (currentActivity / avgActivity) * 100;
+                
+                if (activityRatio < threshold) {
+                    addLog(`🛡️ Volume Surge BLOCKED: Activity ${activityRatio.toFixed(0)}% of avg [Need: ${threshold}%]`, 'warning');
                     return null;
+                } else {
+                    addLog(`✅ Volume Surge PASSED — market active! [${activityRatio.toFixed(0)}%]`, 'success');
                 }
             }
 
