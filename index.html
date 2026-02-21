@@ -1097,28 +1097,32 @@
                         </div>
                     </div>
 
-                    <!-- CCI Filter -->
+                    <!-- Williams %R Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">CCI Oscillator Filter <span style="color:#10b981;">(Cycle Momentum)</span></div>
+                        <div class="toggle-label">Williams %R Filter <span style="color:#10b981;">(Overbought/Oversold)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterCCI">
+                            <input type="checkbox" id="filterWilliamsR">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Unbounded overbought/oversold with cycle detection; avoids persistence
+                        Fast-reacting momentum filter; blocks trades in exhausted conditions
                     </div>
 
-                    <!-- CCI Thresholds -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <!-- Williams %R Parameters -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="cciOverbought" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📈 Overbought</label>
-                            <input type="number" id="cciOverbought" value="100" min="50" max="200" step="10" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="willRPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Period</label>
+                            <input type="number" id="willRPeriod" value="14" min="5" max="30" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                        </div>
+                        <div>
+                            <label for="willROverbought" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📈 Overbought</label>
+                            <input type="number" id="willROverbought" value="-20" min="-40" max="-5" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                             <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block BUY above</div>
                         </div>
                         <div>
-                            <label for="cciOversold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📉 Oversold</label>
-                            <input type="number" id="cciOversold" value="-100" min="-200" max="-50" step="10" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="willROversold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📉 Oversold</label>
+                            <input type="number" id="willROversold" value="-80" min="-95" max="-60" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                             <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block SELL below</div>
                         </div>
                     </div>
@@ -1374,7 +1378,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterSupertrend', 'filterCCI'];
+            const filterIds = ['filterSupertrend', 'filterWilliamsR'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1388,11 +1392,14 @@
             const savedSupertrendMultiplier = localStorage.getItem('supertrendMultiplier') || '3.0';
             if (document.getElementById('supertrendMultiplier')) document.getElementById('supertrendMultiplier').value = savedSupertrendMultiplier;
 
-            const savedCciOverbought = localStorage.getItem('cciOverbought') || '100';
-            if (document.getElementById('cciOverbought')) document.getElementById('cciOverbought').value = savedCciOverbought;
+            const savedWillRPeriod = localStorage.getItem('willRPeriod') || '14';
+            if (document.getElementById('willRPeriod')) document.getElementById('willRPeriod').value = savedWillRPeriod;
 
-            const savedCciOversold = localStorage.getItem('cciOversold') || '-100';
-            if (document.getElementById('cciOversold')) document.getElementById('cciOversold').value = savedCciOversold;
+            const savedWillROverbought = localStorage.getItem('willROverbought') || '-20';
+            if (document.getElementById('willROverbought')) document.getElementById('willROverbought').value = savedWillROverbought;
+
+            const savedWillROversold = localStorage.getItem('willROversold') || '-80';
+            if (document.getElementById('willROversold')) document.getElementById('willROversold').value = savedWillROversold;
 
             updateActiveFiltersSummary();
 
@@ -1441,14 +1448,14 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterSupertrend', 'filterCCI'];
+            const filterIds = ['filterSupertrend', 'filterWilliamsR'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
 
             // Save thresholds
-            ['supertrendPeriod', 'supertrendMultiplier', 'cciOverbought', 'cciOversold'].forEach(id => {
+            ['supertrendPeriod', 'supertrendMultiplier', 'willRPeriod', 'willROverbought', 'willROversold'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
@@ -1480,7 +1487,7 @@
         }
 
         // New Filter Toggles
-        const newFilterIds = ['filterSupertrend', 'filterCCI'];
+        const newFilterIds = ['filterSupertrend', 'filterWilliamsR'];
         newFilterIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1495,7 +1502,7 @@
         });
 
         // New Threshold Listeners
-        ['supertrendPeriod', 'supertrendMultiplier', 'cciOverbought', 'cciOversold'].forEach(id => {
+        ['supertrendPeriod', 'supertrendMultiplier', 'willRPeriod', 'willROverbought', 'willROversold'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
@@ -1557,7 +1564,7 @@
 
             const filters = [
                 { id: 'filterSupertrend',   name: 'Supertrend',        color: '#667eea' },
-                { id: 'filterCCI',          name: 'CCI',               color: '#10b981' },
+                { id: 'filterWilliamsR',    name: 'Williams %R',       color: '#10b981' },
             ];
 
             let activeCount = 0;
@@ -2019,13 +2026,16 @@
             return results;
         }
 
-        // CCI Calculation
-        function calculateCCI(candles, period = 20) {
-            if (candles.length < period) return 0;
-            const typicalPrices = candles.slice(-period).map(c => (c.high + c.low + c.close) / 3);
-            const smaTp = calculateSMA(typicalPrices, period);
-            const meanDev = typicalPrices.reduce((sum, tp) => sum + Math.abs(tp - smaTp), 0) / period;
-            return meanDev > 0 ? (typicalPrices[typicalPrices.length - 1] - smaTp) / (0.015 * meanDev) : 0;
+        // Williams %R Calculation
+        // Returns value between -100 (most oversold) and 0 (most overbought)
+        function calculateWilliamsR(candles, period = 14) {
+            if (candles.length < period) return -50;
+            const slice = candles.slice(-period);
+            const highestHigh = Math.max(...slice.map(c => c.high));
+            const lowestLow   = Math.min(...slice.map(c => c.low));
+            const currentClose = slice[slice.length - 1].close;
+            const range = highestHigh - lowestLow;
+            return range > 0 ? ((highestHigh - currentClose) / range) * -100 : -50;
         }
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
@@ -2105,79 +2115,87 @@
 
         // ==================== PATCHED BOUNCE STRATEGY ====================
         function analyzeBounceStrategy() {
-            // Use selected timeframe
             const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
             const timeframeName = currentTimeframe === '1min' ? '1-min' : '30-sec';
-            const requiredCandles = 10; // Same for both timeframes - 30sec just gets signals faster!
-            
+
+            // Need at least 30 candles so EMA21 has real data to work with
+            const requiredCandles = 30;
             if (candleHistory.length < requiredCandles) {
                 return { signal: null, message: `Collecting ${timeframeName} candles... ${candleHistory.length}/${requiredCandles} needed` };
             }
 
-            const recentCandles = candleHistory.slice(-requiredCandles);
-            const lastCandle = recentCandles[recentCandles.length - 1];
-            const prevCandle = recentCandles[recentCandles.length - 2];
+            // Use full history for accurate EMAs, recent slice for levels
+            const allCloses   = candleHistory.map(c => c.close);
+            const recentCandles = candleHistory.slice(-20);
+            const lastCandle  = candleHistory[candleHistory.length - 1];
+            const prevCandle  = candleHistory[candleHistory.length - 2];
+            const prev2Candle = candleHistory[candleHistory.length - 3];
 
-            // === SIMPLIFIED TREND DETECTION (EMA only) ===
-            const closes = recentCandles.map(c => c.close);
-            const ema8  = calculateEMA(closes, 8);
-            const ema21 = calculateEMA(closes, 21);
-            
-            const isUptrend   = ema8 > ema21;  // Simplified - just EMA crossover
+            // === TREND DETECTION — uses full history so EMA21 is accurate ===
+            const ema8  = calculateEMA(allCloses, 8);
+            const ema21 = calculateEMA(allCloses, 21);
+            const isUptrend   = ema8 > ema21;
             const isDowntrend = ema8 < ema21;
 
-            // === DYNAMIC LEVELS ===
-            const atr = calculateATR(recentCandles, 10);
-            const support    = Math.min(...recentCandles.map(c => c.low));
-            const resistance = Math.max(...recentCandles.map(c => c.high));
-            const mid = (support + resistance) / 2;
+            // === ATR — measures typical candle range for this market ===
+            const atr = calculateATR(recentCandles, 14);
 
-            // More lenient - within 2 * ATR instead of 1.2 * ATR
-            const nearSupport    = lastCandle.close <= support + (atr * 2);
-            const nearResistance = lastCandle.close >= resistance - (atr * 2);
-            const nearMid = Math.abs(lastCandle.close - mid) < atr;
+            // === SUPPORT & RESISTANCE — built from last 20 candles, excluding current ===
+            const lookbackCandles = candleHistory.slice(-21, -1); // 20 candles before current
+            const support    = Math.min(...lookbackCandles.map(c => c.low));
+            const resistance = Math.max(...lookbackCandles.map(c => c.high));
 
-            // === SIMPLIFIED PATTERNS - Just check candle direction ===
-            const isBullishCandle = lastCandle.close > lastCandle.open;
-            const isBearishCandle = lastCandle.close < lastCandle.open;
-            
-            // Check if price is moving in the right direction
-            const movingUp = lastCandle.close > prevCandle.close;
-            const movingDown = lastCandle.close < prevCandle.close;
+            // === PROXIMITY — current close within 1 ATR of the level ===
+            // Tighter than before (was 2 ATR) so we only trade actual touches
+            const nearSupport    = lastCandle.close <= support + atr;
+            const nearResistance = lastCandle.close >= resistance - atr;
 
-            // === DISPLAY FOR DEBUGGING ===
-            const displayData = {
-                'Timeframe': currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
-                'Trend': isUptrend ? '📈 Uptrend (EMA8 > EMA21)' : isDowntrend ? '📉 Downtrend (EMA8 < EMA21)' : '➡️ Neutral',
-                'EMA8': ema8.toFixed(5),
-                'EMA21': ema21.toFixed(5),
-                'Support': support.toFixed(5),
-                'Resistance': resistance.toFixed(5),
-                'Current Price': lastCandle.close.toFixed(5),
-                'Near Support': nearSupport ? 'YES' : 'No',
-                'Near Resistance': nearResistance ? 'YES' : 'No',
-                'Candles': candleHistory.length
-            };
-            updateIndicatorDisplay(displayData);
+            // === BOUNCE CONFIRMATION — need 2 candles of evidence ===
+            // For BUY: previous candle moved down INTO support, current candle turns up
+            const droppedToSupport  = prevCandle.low <= support + atr;
+            const bouncingUp        = lastCandle.close > lastCandle.open          // current candle is bullish
+                                   && lastCandle.close > prevCandle.close;        // closing higher than prev
 
-            // === MORE GENEROUS SIGNALS ===
-            // BUY: Uptrend + near support + bullish movement
-            if (isUptrend && nearSupport && (isBullishCandle || movingUp)) {
-                return { signal: 'BUY', message: `✅ Uptrend bounce from support zone (${timeframeName})` };
+            // For SELL: previous candle moved up INTO resistance, current candle turns down
+            const roseToResistance  = prevCandle.high >= resistance - atr;
+            const bouncingDown      = lastCandle.close < lastCandle.open          // current candle is bearish
+                                   && lastCandle.close < prevCandle.close;        // closing lower than prev
+
+            // === CANDLE BODY STRENGTH — reject weak/indecision candles ===
+            const lastRange = lastCandle.high - lastCandle.low;
+            const lastBody  = Math.abs(lastCandle.close - lastCandle.open);
+            const strongBody = lastRange > 0 && (lastBody / lastRange) >= 0.4;   // body >= 40% of range
+
+            // === RSI — avoid buying into deeply oversold or selling into deeply overbought ===
+            const rsi = calculateRSI(allCloses, 14);
+            const rsiOk = signal => signal === 'BUY' ? rsi < 70 : rsi > 30;
+
+            // === DISPLAY ===
+            updateIndicatorDisplay({
+                'Timeframe':   currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
+                'Trend':       isUptrend ? '📈 Up (EMA8>EMA21)' : isDowntrend ? '📉 Down (EMA8<EMA21)' : '➡️ Neutral',
+                'EMA8':        ema8.toFixed(5),
+                'EMA21':       ema21.toFixed(5),
+                'RSI(14)':     rsi.toFixed(1),
+                'ATR(14)':     atr.toFixed(5),
+                'Support':     support.toFixed(5),
+                'Resistance':  resistance.toFixed(5),
+                'Near Support':    nearSupport    ? 'YES ✅' : 'No',
+                'Near Resistance': nearResistance ? 'YES ✅' : 'No',
+                'Strong Body': strongBody ? 'YES ✅' : 'No',
+                'Candles':     candleHistory.length
+            });
+
+            // === BUY SIGNAL ===
+            // Uptrend + price touched support + prev candle reached support + current candle bouncing up + strong body + RSI not overbought
+            if (isUptrend && nearSupport && droppedToSupport && bouncingUp && strongBody && rsiOk('BUY')) {
+                return { signal: 'BUY', message: `✅ Bounce BUY: Uptrend support touch confirmed (${timeframeName})` };
             }
 
-            // SELL: Downtrend + near resistance + bearish movement
-            if (isDowntrend && nearResistance && (isBearishCandle || movingDown)) {
-                return { signal: 'SELL', message: `✅ Downtrend bounce from resistance zone (${timeframeName})` };
-            }
-
-            // ALTERNATIVE: Trade the middle range in strong trends
-            if (isUptrend && nearMid && movingUp) {
-                return { signal: 'BUY', message: `✅ Mid-range BUY in uptrend (${timeframeName})` };
-            }
-            
-            if (isDowntrend && nearMid && movingDown) {
-                return { signal: 'SELL', message: `✅ Mid-range SELL in downtrend (${timeframeName})` };
+            // === SELL SIGNAL ===
+            // Downtrend + price touched resistance + prev candle reached resistance + current candle bouncing down + strong body + RSI not oversold
+            if (isDowntrend && nearResistance && roseToResistance && bouncingDown && strongBody && rsiOk('SELL')) {
+                return { signal: 'SELL', message: `✅ Bounce SELL: Downtrend resistance touch confirmed (${timeframeName})` };
             }
 
             return { signal: null, message: 'Scanning for bounce setup...' };
@@ -2316,25 +2334,27 @@
                 addLog(`✅ Supertrend PASSED: ${signal} on confirmed ${signal === 'BUY' ? 'bullish' : 'bearish'} flip`, 'success');
             }
 
-            // CCI Filter
-            if (document.getElementById('filterCCI')?.checked) {
-                const cci = calculateCCI(candleHistory, 20);
-                const prevCci = calculateCCI(candleHistory.slice(0, -1), 20);
-                const cciRising = cci > prevCci;
-                const overbought = parseInt(document.getElementById('cciOverbought').value) || 100;
-                const oversold = parseInt(document.getElementById('cciOversold').value) || -100;
-                if (signal === 'BUY' && cci > overbought) {
-                    addLog(`🛡️ CCI BLOCKED BUY: ${cci.toFixed(1)} > ${overbought}`, 'warning');
+            // Williams %R Filter
+            if (document.getElementById('filterWilliamsR')?.checked) {
+                const period     = parseInt(document.getElementById('willRPeriod').value)     || 14;
+                const overbought = parseFloat(document.getElementById('willROverbought').value) || -20;
+                const oversold   = parseFloat(document.getElementById('willROversold').value)   || -80;
+                const willR      = calculateWilliamsR(candleHistory, period);
+                const prevWillR  = calculateWilliamsR(candleHistory.slice(0, -1), period);
+                const rising     = willR > prevWillR;
+                if (signal === 'BUY' && willR >= overbought) {
+                    addLog(`🛡️ Williams %R BLOCKED BUY: ${willR.toFixed(1)} ≥ ${overbought} (overbought)`, 'warning');
                     return null;
                 }
-                if (signal === 'SELL' && cci < oversold) {
-                    addLog(`🛡️ CCI BLOCKED SELL: ${cci.toFixed(1)} < ${oversold}`, 'warning');
+                if (signal === 'SELL' && willR <= oversold) {
+                    addLog(`🛡️ Williams %R BLOCKED SELL: ${willR.toFixed(1)} ≤ ${oversold} (oversold)`, 'warning');
                     return null;
                 }
-                if ((signal === 'SELL' && cciRising) || (signal === 'BUY' && !cciRising)) {
-                    addLog(`🛡️ CCI Divergence BLOCKED`, 'warning');
+                if ((signal === 'BUY' && !rising) || (signal === 'SELL' && rising)) {
+                    addLog(`🛡️ Williams %R Direction BLOCKED: ${willR.toFixed(1)} (${rising ? 'rising' : 'falling'})`, 'warning');
                     return null;
                 }
+                addLog(`✅ Williams %R PASSED: ${willR.toFixed(1)} (${rising ? 'rising' : 'falling'})`, 'success');
             }
             return signal;
         }
