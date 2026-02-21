@@ -1097,33 +1097,24 @@
                         </div>
                     </div>
 
-                    <!-- Williams %R Filter -->
+                    <!-- NR7 Contraction Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Williams %R Filter <span style="color:#10b981;">(Overbought/Oversold)</span></div>
+                        <div class="toggle-label">NR7 Contraction Filter <span style="color:#10b981;">(Pre-Breakout Squeeze)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterWilliamsR">
+                            <input type="checkbox" id="filterNR7">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Fast-reacting momentum filter; blocks trades in exhausted conditions
+                        Only allows breakout trades when the current candle has the tightest range of the last N candles — confirming real compression before the move
                     </div>
 
-                    <!-- Williams %R Parameters -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <!-- NR7 Parameters -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="willRPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Period</label>
-                            <input type="number" id="willRPeriod" value="14" min="5" max="30" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                        </div>
-                        <div>
-                            <label for="willROverbought" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📈 Overbought</label>
-                            <input type="number" id="willROverbought" value="-20" min="-40" max="-5" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block BUY above</div>
-                        </div>
-                        <div>
-                            <label for="willROversold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📉 Oversold</label>
-                            <input type="number" id="willROversold" value="-80" min="-95" max="-60" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block SELL below</div>
+                            <label for="nr7Lookback" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Lookback Candles (N)</label>
+                            <input type="number" id="nr7Lookback" value="7" min="4" max="14" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Default 7 · Lower = more signals · Higher = stricter squeeze</div>
                         </div>
                     </div>
 
@@ -1378,7 +1369,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterSupertrend', 'filterWilliamsR'];
+            const filterIds = ['filterSupertrend', 'filterNR7'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1392,14 +1383,8 @@
             const savedSupertrendMultiplier = localStorage.getItem('supertrendMultiplier') || '3.0';
             if (document.getElementById('supertrendMultiplier')) document.getElementById('supertrendMultiplier').value = savedSupertrendMultiplier;
 
-            const savedWillRPeriod = localStorage.getItem('willRPeriod') || '14';
-            if (document.getElementById('willRPeriod')) document.getElementById('willRPeriod').value = savedWillRPeriod;
-
-            const savedWillROverbought = localStorage.getItem('willROverbought') || '-20';
-            if (document.getElementById('willROverbought')) document.getElementById('willROverbought').value = savedWillROverbought;
-
-            const savedWillROversold = localStorage.getItem('willROversold') || '-80';
-            if (document.getElementById('willROversold')) document.getElementById('willROversold').value = savedWillROversold;
+            const savedNr7Lookback = localStorage.getItem('nr7Lookback') || '7';
+            if (document.getElementById('nr7Lookback')) document.getElementById('nr7Lookback').value = savedNr7Lookback;
 
             updateActiveFiltersSummary();
 
@@ -1448,14 +1433,14 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterSupertrend', 'filterWilliamsR'];
+            const filterIds = ['filterSupertrend', 'filterNR7'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
 
             // Save thresholds
-            ['supertrendPeriod', 'supertrendMultiplier', 'willRPeriod', 'willROverbought', 'willROversold'].forEach(id => {
+            ['supertrendPeriod', 'supertrendMultiplier', 'nr7Lookback'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
@@ -1487,7 +1472,7 @@
         }
 
         // New Filter Toggles
-        const newFilterIds = ['filterSupertrend', 'filterWilliamsR'];
+        const newFilterIds = ['filterSupertrend', 'filterNR7'];
         newFilterIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1502,7 +1487,7 @@
         });
 
         // New Threshold Listeners
-        ['supertrendPeriod', 'supertrendMultiplier', 'willRPeriod', 'willROverbought', 'willROversold'].forEach(id => {
+        ['supertrendPeriod', 'supertrendMultiplier', 'nr7Lookback'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
@@ -1564,7 +1549,7 @@
 
             const filters = [
                 { id: 'filterSupertrend',   name: 'Supertrend',        color: '#667eea' },
-                { id: 'filterWilliamsR',    name: 'Williams %R',       color: '#10b981' },
+                { id: 'filterNR7',          name: 'NR7 Contraction',   color: '#10b981' },
             ];
 
             let activeCount = 0;
@@ -2026,16 +2011,14 @@
             return results;
         }
 
-        // Williams %R Calculation
-        // Returns value between -100 (most oversold) and 0 (most overbought)
-        function calculateWilliamsR(candles, period = 14) {
-            if (candles.length < period) return -50;
-            const slice = candles.slice(-period);
-            const highestHigh = Math.max(...slice.map(c => c.high));
-            const lowestLow   = Math.min(...slice.map(c => c.low));
-            const currentClose = slice[slice.length - 1].close;
-            const range = highestHigh - lowestLow;
-            return range > 0 ? ((highestHigh - currentClose) / range) * -100 : -50;
+        // NR7 Contraction Detection
+        // Returns true if the current candle has the narrowest range of the last N candles
+        function isNR7(candles, lookback = 7) {
+            if (candles.length < lookback) return false;
+            const slice = candles.slice(-lookback);
+            const currentRange = slice[slice.length - 1].high - slice[slice.length - 1].low;
+            const prevRanges   = slice.slice(0, -1).map(c => c.high - c.low);
+            return prevRanges.every(r => currentRange < r);
         }
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
@@ -2334,27 +2317,16 @@
                 addLog(`✅ Supertrend PASSED: ${signal} on confirmed ${signal === 'BUY' ? 'bullish' : 'bearish'} flip`, 'success');
             }
 
-            // Williams %R Filter
-            if (document.getElementById('filterWilliamsR')?.checked) {
-                const period     = parseInt(document.getElementById('willRPeriod').value)     || 14;
-                const overbought = parseFloat(document.getElementById('willROverbought').value) || -20;
-                const oversold   = parseFloat(document.getElementById('willROversold').value)   || -80;
-                const willR      = calculateWilliamsR(candleHistory, period);
-                const prevWillR  = calculateWilliamsR(candleHistory.slice(0, -1), period);
-                const rising     = willR > prevWillR;
-                if (signal === 'BUY' && willR >= overbought) {
-                    addLog(`🛡️ Williams %R BLOCKED BUY: ${willR.toFixed(1)} ≥ ${overbought} (overbought)`, 'warning');
+            // NR7 Contraction Filter
+            if (document.getElementById('filterNR7')?.checked) {
+                const lookback = parseInt(document.getElementById('nr7Lookback').value) || 7;
+                const nr7 = isNR7(candleHistory, lookback);
+                if (!nr7) {
+                    const currentRange = (candleHistory[candleHistory.length - 1].high - candleHistory[candleHistory.length - 1].low).toFixed(5);
+                    addLog(`🛡️ NR7 BLOCKED ${signal}: No compression — current range ${currentRange} is not the tightest of last ${lookback} candles`, 'warning');
                     return null;
                 }
-                if (signal === 'SELL' && willR <= oversold) {
-                    addLog(`🛡️ Williams %R BLOCKED SELL: ${willR.toFixed(1)} ≤ ${oversold} (oversold)`, 'warning');
-                    return null;
-                }
-                if ((signal === 'BUY' && !rising) || (signal === 'SELL' && rising)) {
-                    addLog(`🛡️ Williams %R Direction BLOCKED: ${willR.toFixed(1)} (${rising ? 'rising' : 'falling'})`, 'warning');
-                    return null;
-                }
-                addLog(`✅ Williams %R PASSED: ${willR.toFixed(1)} (${rising ? 'rising' : 'falling'})`, 'success');
+                addLog(`✅ NR7 PASSED: Narrowest range of last ${lookback} candles — breakout compression confirmed`, 'success');
             }
             return signal;
         }
