@@ -1073,44 +1073,27 @@
                 <!-- ===== ADVANCED FILTERS CARD ===== -->
                 <div class="card">
                     <h3>🛡️ Advanced Filters</h3>
-
-                    <!-- Preset Buttons (Updated for new filters) -->
-                    <div style="display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;">
-                        <button onclick="applyFilterPreset('aggressive')" class="btn btn-warning btn-sm" style="flex: 1; min-width: 110px;">⚡ Aggressive</button>
-                        <button onclick="applyFilterPreset('balanced')" class="btn btn-primary btn-sm" style="flex: 1; min-width: 110px;">⚖️ Balanced</button>
-                        <button onclick="applyFilterPreset('conservative')" class="btn btn-success btn-sm" style="flex: 1; min-width: 110px;">🛡️ Conservative</button>
-                        <button onclick="applyFilterPreset('reset')" class="btn btn-secondary btn-sm" style="flex: 1; min-width: 110px;">🔄 Reset All</button>
-                    </div>
-
-                    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 15px;">
-                        Presets are quick setups • All toggles remain fully independent
-                    </div>
-
-                    <!-- Parabolic SAR Filter -->
+                    <!-- Supertrend Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Parabolic SAR Filter <span style="color:#667eea;">(Momentum Flips)</span></div>
+                        <div class="toggle-label">Supertrend Filter <span style="color:#667eea;">(Trend Direction)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterParabolicSAR">
+                            <input type="checkbox" id="filterSupertrend">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Detects trend reversals with low lag; requires SAR flip for entry
+                        ATR-based trend filter; requires a bullish/bearish flip for entry
                     </div>
 
-                    <!-- Parabolic SAR Parameters -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <!-- Supertrend Parameters -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="psarAfStart" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Start AF</label>
-                            <input type="number" id="psarAfStart" value="0.02" min="0.01" max="0.05" step="0.01" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="supertrendPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">ATR Period</label>
+                            <input type="number" id="supertrendPeriod" value="10" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                         </div>
                         <div>
-                            <label for="psarAfStep" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Step AF</label>
-                            <input type="number" id="psarAfStep" value="0.02" min="0.01" max="0.05" step="0.01" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                        </div>
-                        <div>
-                            <label for="psarAfMax" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Max AF</label>
-                            <input type="number" id="psarAfMax" value="0.2" min="0.1" max="0.5" step="0.05" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="supertrendMultiplier" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Multiplier</label>
+                            <input type="number" id="supertrendMultiplier" value="3.0" min="1.0" max="6.0" step="0.5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                         </div>
                     </div>
 
@@ -1138,61 +1121,6 @@
                             <input type="number" id="cciOversold" value="-100" min="-200" max="-50" step="10" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                             <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block SELL below</div>
                         </div>
-                    </div>
-
-                    <!-- Keltner Channels Filter -->
-                    <div class="toggle-container">
-                        <div class="toggle-label">Keltner Channels Filter <span style="color:#f59e0b;">(Directional Volatility)</span></div>
-                        <label class="switch">
-                            <input type="checkbox" id="filterKeltner" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        ATR-based channels with EMA; requires breakout for strong moves
-                    </div>
-
-                    <!-- Keltner Parameters -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
-                        <div>
-                            <label for="keltnerEmaPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">EMA Period</label>
-                            <input type="number" id="keltnerEmaPeriod" value="20" min="10" max="50" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                        </div>
-                        <div>
-                            <label for="keltnerAtrPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">ATR Period</label>
-                            <input type="number" id="keltnerAtrPeriod" value="10" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                        </div>
-                        <div>
-                            <label for="keltnerMultiplier" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Multiplier</label>
-                            <input type="number" id="keltnerMultiplier" value="2.0" min="1.0" max="3.0" step="0.5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                        </div>
-                    </div>
-
-                    <!-- Donchian Channels Filter -->
-                    <div class="toggle-container">
-                        <div class="toggle-label">Donchian Channels Filter <span style="color:#8b5cf6;">(Pure Price Breakouts)</span></div>
-                        <label class="switch">
-                            <input type="checkbox" id="filterDonchian">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Low-lag channel breakouts; requires close beyond high/low
-                    </div>
-
-                    <!-- Donchian Lookback -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
-                        <div>
-                            <label for="donchianLookback" style="color: #cbd5e0; font-size: 13px; font-weight: 600;">📈 Lookback (bars)</label>
-                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Higher = stricter (default 20)</div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <input type="number" id="donchianLookback" value="20" min="10" max="50" step="5" style="width: 85px; padding: 9px 12px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 15px; text-align: center; font-weight: 700;">
-                        </div>
-                    </div>
-
-                    <div style="font-size: 11px; color: #9ca3af; margin-top: 12px; text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.08); border-radius: 8px;">
-                        💡 Separate adjustable controls • Higher multipliers/lookbacks = fewer but stronger signals
                     </div>
 
                     <!-- ===== LIVE ACTIVE FILTERS SUMMARY ===== -->
@@ -1446,7 +1374,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterParabolicSAR', 'filterCCI', 'filterKeltner', 'filterDonchian'];
+            const filterIds = ['filterSupertrend', 'filterCCI'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1454,32 +1382,17 @@
             });
 
             // Load thresholds
-            const savedPsarAfStart = localStorage.getItem('psarAfStart') || '0.02';
-            if (document.getElementById('psarAfStart')) document.getElementById('psarAfStart').value = savedPsarAfStart;
+            const savedSupertrendPeriod = localStorage.getItem('supertrendPeriod') || '10';
+            if (document.getElementById('supertrendPeriod')) document.getElementById('supertrendPeriod').value = savedSupertrendPeriod;
 
-            const savedPsarAfStep = localStorage.getItem('psarAfStep') || '0.02';
-            if (document.getElementById('psarAfStep')) document.getElementById('psarAfStep').value = savedPsarAfStep;
-
-            const savedPsarAfMax = localStorage.getItem('psarAfMax') || '0.2';
-            if (document.getElementById('psarAfMax')) document.getElementById('psarAfMax').value = savedPsarAfMax;
+            const savedSupertrendMultiplier = localStorage.getItem('supertrendMultiplier') || '3.0';
+            if (document.getElementById('supertrendMultiplier')) document.getElementById('supertrendMultiplier').value = savedSupertrendMultiplier;
 
             const savedCciOverbought = localStorage.getItem('cciOverbought') || '100';
             if (document.getElementById('cciOverbought')) document.getElementById('cciOverbought').value = savedCciOverbought;
 
             const savedCciOversold = localStorage.getItem('cciOversold') || '-100';
             if (document.getElementById('cciOversold')) document.getElementById('cciOversold').value = savedCciOversold;
-
-            const savedKeltnerEmaPeriod = localStorage.getItem('keltnerEmaPeriod') || '20';
-            if (document.getElementById('keltnerEmaPeriod')) document.getElementById('keltnerEmaPeriod').value = savedKeltnerEmaPeriod;
-
-            const savedKeltnerAtrPeriod = localStorage.getItem('keltnerAtrPeriod') || '10';
-            if (document.getElementById('keltnerAtrPeriod')) document.getElementById('keltnerAtrPeriod').value = savedKeltnerAtrPeriod;
-
-            const savedKeltnerMultiplier = localStorage.getItem('keltnerMultiplier') || '2.0';
-            if (document.getElementById('keltnerMultiplier')) document.getElementById('keltnerMultiplier').value = savedKeltnerMultiplier;
-
-            const savedDonchianLookback = localStorage.getItem('donchianLookback') || '20';
-            if (document.getElementById('donchianLookback')) document.getElementById('donchianLookback').value = savedDonchianLookback;
 
             updateActiveFiltersSummary();
 
@@ -1528,15 +1441,14 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterParabolicSAR', 'filterCCI', 'filterKeltner', 'filterDonchian'];
+            const filterIds = ['filterSupertrend', 'filterCCI'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
 
             // Save thresholds
-            ['psarAfStart', 'psarAfStep', 'psarAfMax', 'cciOverbought', 'cciOversold',
-             'keltnerEmaPeriod', 'keltnerAtrPeriod', 'keltnerMultiplier', 'donchianLookback'].forEach(id => {
+            ['supertrendPeriod', 'supertrendMultiplier', 'cciOverbought', 'cciOversold'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
@@ -1568,7 +1480,7 @@
         }
 
         // New Filter Toggles
-        const newFilterIds = ['filterParabolicSAR', 'filterCCI', 'filterKeltner', 'filterDonchian'];
+        const newFilterIds = ['filterSupertrend', 'filterCCI'];
         newFilterIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1583,8 +1495,7 @@
         });
 
         // New Threshold Listeners
-        ['psarAfStart', 'psarAfStep', 'psarAfMax', 'cciOverbought', 'cciOversold',
-         'keltnerEmaPeriod', 'keltnerAtrPeriod', 'keltnerMultiplier', 'donchianLookback'].forEach(id => {
+        ['supertrendPeriod', 'supertrendMultiplier', 'cciOverbought', 'cciOversold'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
@@ -1638,34 +1549,6 @@
         }
 
         // ==================== FILTER PRESET FUNCTION ====================
-        function applyFilterPreset(preset) {
-            const filterIds = ['filterParabolicSAR', 'filterCCI', 'filterKeltner', 'filterDonchian'];
-
-            switch(preset) {
-                case 'aggressive':
-                    filterIds.forEach(id => document.getElementById(id).checked = false);
-                    document.getElementById('filterParabolicSAR').checked = true;
-                    addLog('⚡ Aggressive preset: Parabolic SAR only', 'success');
-                    break;
-                case 'balanced':
-                    filterIds.forEach(id => document.getElementById(id).checked = false);
-                    document.getElementById('filterCCI').checked = true;
-                    document.getElementById('filterKeltner').checked = true;
-                    addLog('⚖️ Balanced preset: CCI + Keltner', 'success');
-                    break;
-                case 'conservative':
-                    filterIds.forEach(id => document.getElementById(id).checked = true);
-                    addLog('🛡️ Conservative preset: All filters', 'success');
-                    break;
-                case 'reset':
-                    filterIds.forEach(id => document.getElementById(id).checked = false);
-                    addLog('🔄 Reset: All off', 'warning');
-                    break;
-            }
-            saveSettings();
-            updateActiveFiltersSummary();
-        }
-
         // ==================== LIVE ACTIVE FILTERS SUMMARY ====================
         function updateActiveFiltersSummary() {
             const container = document.getElementById('activeFiltersList');
@@ -1673,10 +1556,8 @@
             container.innerHTML = '';
 
             const filters = [
-                { id: 'filterParabolicSAR', name: 'Parabolic SAR',     color: '#667eea' },
+                { id: 'filterSupertrend',   name: 'Supertrend',        color: '#667eea' },
                 { id: 'filterCCI',          name: 'CCI',               color: '#10b981' },
-                { id: 'filterKeltner',      name: 'Keltner Channels',  color: '#ec4899' },
-                { id: 'filterDonchian',     name: 'Donchian Channels', color: '#8b5cf6' }
             ];
 
             let activeCount = 0;
@@ -2084,32 +1965,58 @@
             return atrSum / period;
         }
 
-        // Parabolic SAR Calculation
-        function calculateParabolicSAR(candles, afStart = 0.02, afStep = 0.02, afMax = 0.2) {
-            if (candles.length < 2) return { sar: 0, isUptrend: false };
-            let sar = candles[0].low;
-            let ep = candles[0].high;
-            let af = afStart;
-            let isUptrend = candles[1].close > candles[0].close;
-            for (let i = 1; i < candles.length; i++) {
-                sar = sar + af * (ep - sar);
-                if (isUptrend) {
-                    if (candles[i].low < sar) {
-                        isUptrend = false; sar = ep; ep = candles[i].low; af = afStart;
-                    } else {
-                        if (candles[i].high > ep) { ep = candles[i].high; af = Math.min(af + afStep, afMax); }
-                        sar = Math.max(sar, candles[i-1].low, i > 1 ? candles[i-2].low : sar);
-                    }
+        // Supertrend Calculation
+        // Returns array of { supertrend, isBullish } for each candle
+        function calculateSupertrend(candles, period = 10, multiplier = 3.0) {
+            if (candles.length < period + 1) return [];
+            const results = [];
+            let prevSupertrend = null;
+            let prevIsBullish = true;
+
+            for (let i = period; i < candles.length; i++) {
+                const slice = candles.slice(i - period, i + 1);
+
+                // ATR for this window
+                let atrSum = 0;
+                for (let j = 1; j < slice.length; j++) {
+                    const tr = Math.max(
+                        slice[j].high - slice[j].low,
+                        Math.abs(slice[j].high - slice[j - 1].close),
+                        Math.abs(slice[j].low  - slice[j - 1].close)
+                    );
+                    atrSum += tr;
+                }
+                const atr = atrSum / period;
+
+                const hl2 = (slice[slice.length - 1].high + slice[slice.length - 1].low) / 2;
+                const upperBand = hl2 + multiplier * atr;
+                const lowerBand = hl2 - multiplier * atr;
+                const close     = slice[slice.length - 1].close;
+
+                let isBullish;
+                let supertrend;
+
+                if (prevSupertrend === null) {
+                    isBullish  = close > hl2;
+                    supertrend = isBullish ? lowerBand : upperBand;
                 } else {
-                    if (candles[i].high > sar) {
-                        isUptrend = true; sar = ep; ep = candles[i].high; af = afStart;
+                    if (prevIsBullish) {
+                        supertrend = Math.max(lowerBand, prevSupertrend);
+                        isBullish  = close >= supertrend;
                     } else {
-                        if (candles[i].low < ep) { ep = candles[i].low; af = Math.min(af + afStep, afMax); }
-                        sar = Math.min(sar, candles[i-1].high, i > 1 ? candles[i-2].high : sar);
+                        supertrend = Math.min(upperBand, prevSupertrend);
+                        isBullish  = close > supertrend;
+                    }
+                    if (isBullish !== prevIsBullish) {
+                        supertrend = isBullish ? lowerBand : upperBand;
                     }
                 }
+
+                prevSupertrend = supertrend;
+                prevIsBullish  = isBullish;
+                results.push({ supertrend, isBullish });
             }
-            return { sar, isUptrend };
+            return results;
         }
 
         // CCI Calculation
@@ -2120,28 +2027,6 @@
             const meanDev = typicalPrices.reduce((sum, tp) => sum + Math.abs(tp - smaTp), 0) / period;
             return meanDev > 0 ? (typicalPrices[typicalPrices.length - 1] - smaTp) / (0.015 * meanDev) : 0;
         }
-
-        // Keltner Channels
-        function calculateKeltnerChannels(candles, emaPeriod = 20, atrPeriod = 10, multiplier = 2.0) {
-            const ema = calculateEMA(candles.map(c => c.close), emaPeriod);
-            const atr = calculateATR(candles, atrPeriod);
-            return {
-                upper: ema + (multiplier * atr),
-                lower: ema - (multiplier * atr)
-            };
-        }
-
-        // Donchian Channels
-        function calculateDonchianChannels(candles, lookback = 20) {
-            if (candles.length < lookback) return { high: 0, low: 0 };
-            const historical = candles.slice(-lookback);
-            return {
-                high: Math.max(...historical.map(c => c.high)),
-                low: Math.min(...historical.map(c => c.low))
-            };
-        }
-
-
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
             const emaFast = calculateEMA(closes, fast);
@@ -2407,23 +2292,28 @@
 
             const lastCandle = candleHistory[candleHistory.length - 1];
 
-            // Parabolic SAR Filter
-            if (document.getElementById('filterParabolicSAR')?.checked) {
-                const afStart = parseFloat(document.getElementById('psarAfStart').value) || 0.02;
-                const afStep = parseFloat(document.getElementById('psarAfStep').value) || 0.02;
-                const afMax = parseFloat(document.getElementById('psarAfMax').value) || 0.2;
-                const psar = calculateParabolicSAR(candleHistory, afStart, afStep, afMax);
-                const prevPsar = calculateParabolicSAR(candleHistory.slice(0, -1), afStart, afStep, afMax);
-                const bullishFlip = !prevPsar.isUptrend && psar.isUptrend;
-                const bearishFlip = prevPsar.isUptrend && !psar.isUptrend;
+            // Supertrend Filter
+            if (document.getElementById('filterSupertrend')?.checked) {
+                const period     = parseInt(document.getElementById('supertrendPeriod').value)     || 10;
+                const multiplier = parseFloat(document.getElementById('supertrendMultiplier').value) || 3.0;
+                const stResults  = calculateSupertrend(candleHistory, period, multiplier);
+                if (stResults.length < 2) {
+                    addLog(`🛡️ Supertrend: Not enough candles yet`, 'warning');
+                    return null;
+                }
+                const curr = stResults[stResults.length - 1];
+                const prev = stResults[stResults.length - 2];
+                const bullishFlip = !prev.isBullish && curr.isBullish;
+                const bearishFlip =  prev.isBullish && !curr.isBullish;
                 if (signal === 'BUY' && !bullishFlip) {
-                    addLog(`🛡️ Parabolic SAR BLOCKED BUY: No bullish flip`, 'warning');
+                    addLog(`🛡️ Supertrend BLOCKED BUY: No bullish flip (trend=${curr.isBullish ? 'UP' : 'DOWN'})`, 'warning');
                     return null;
                 }
                 if (signal === 'SELL' && !bearishFlip) {
-                    addLog(`🛡️ Parabolic SAR BLOCKED SELL: No bearish flip`, 'warning');
+                    addLog(`🛡️ Supertrend BLOCKED SELL: No bearish flip (trend=${curr.isBullish ? 'UP' : 'DOWN'})`, 'warning');
                     return null;
                 }
+                addLog(`✅ Supertrend PASSED: ${signal} on confirmed ${signal === 'BUY' ? 'bullish' : 'bearish'} flip`, 'success');
             }
 
             // CCI Filter
@@ -2446,40 +2336,6 @@
                     return null;
                 }
             }
-
-            // Keltner Channels Filter
-            if (document.getElementById('filterKeltner')?.checked) {
-                const emaPeriod = parseInt(document.getElementById('keltnerEmaPeriod').value) || 20;
-                const atrPeriod = parseInt(document.getElementById('keltnerAtrPeriod').value) || 10;
-                const multiplier = parseFloat(document.getElementById('keltnerMultiplier').value) || 2.0;
-                const keltner = calculateKeltnerChannels(candleHistory, emaPeriod, atrPeriod, multiplier);
-                const lastClose = lastCandle.close;
-                if (signal === 'BUY' && lastClose <= keltner.upper) {
-                    addLog(`🛡️ Keltner BLOCKED BUY: No upper breakout`, 'warning');
-                    return null;
-                }
-                if (signal === 'SELL' && lastClose >= keltner.lower) {
-                    addLog(`🛡️ Keltner BLOCKED SELL: No lower breakout`, 'warning');
-                    return null;
-                }
-            }
-
-            // Donchian Channels Filter
-            if (document.getElementById('filterDonchian')?.checked) {
-                const lookback = parseInt(document.getElementById('donchianLookback').value) || 20;
-                if (candleHistory.length < lookback + 1) return signal;
-                const donchian = calculateDonchianChannels(candleHistory.slice(0, -1), lookback);
-                const lastClose = lastCandle.close;
-                if (signal === 'BUY' && lastClose <= donchian.high) {
-                    addLog(`🛡️ Donchian BLOCKED BUY: Not breaking high`, 'warning');
-                    return null;
-                }
-                if (signal === 'SELL' && lastClose >= donchian.low) {
-                    addLog(`🛡️ Donchian BLOCKED SELL: Not breaking low`, 'warning');
-                    return null;
-                }
-            }
-
             return signal;
         }
 
