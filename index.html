@@ -1073,48 +1073,55 @@
                 <!-- ===== ADVANCED FILTERS CARD ===== -->
                 <div class="card">
                     <h3>🛡️ Advanced Filters</h3>
-                    <!-- Supertrend Filter -->
+                    <!-- Awesome Oscillator Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Supertrend Filter <span style="color:#667eea;">(Trend Direction)</span></div>
+                        <div class="toggle-label">Awesome Oscillator Filter <span style="color:#667eea;">(Momentum + Saucer)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterSupertrend">
+                            <input type="checkbox" id="filterAO">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        ATR-based trend filter; requires a bullish/bearish flip for entry
+                        Smoothed momentum with saucer patterns for trend confirmation
                     </div>
 
-                    <!-- Supertrend Parameters -->
+                    <!-- AO Parameters -->
                     <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="supertrendPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">ATR Period</label>
-                            <input type="number" id="supertrendPeriod" value="10" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="aoShort" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Short Period</label>
+                            <input type="number" id="aoShort" value="5" min="3" max="10" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                         </div>
                         <div>
-                            <label for="supertrendMultiplier" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Multiplier</label>
-                            <input type="number" id="supertrendMultiplier" value="3.0" min="1.0" max="6.0" step="0.5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="aoLong" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Long Period</label>
+                            <input type="number" id="aoLong" value="34" min="20" max="50" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                         </div>
                     </div>
 
-                    <!-- NR7 Contraction Filter -->
+                    <!-- ATR Ratio Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">NR7 Contraction Filter <span style="color:#10b981;">(Pre-Breakout Squeeze)</span></div>
+                        <div class="toggle-label">ATR Ratio Filter <span style="color:#10b981;">(Adaptive Volatility)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterNR7">
+                            <input type="checkbox" id="filterATRRatio">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Only allows breakout trades when the current candle has the tightest range of the last N candles — confirming real compression before the move
+                        Detects volatility contractions relative to historical ATR
                     </div>
 
-                    <!-- NR7 Parameters -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <!-- ATR Ratio Parameters -->
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="nr7Lookback" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Lookback Candles (N)</label>
-                            <input type="number" id="nr7Lookback" value="7" min="4" max="14" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Default 7 · Lower = more signals · Higher = stricter squeeze</div>
+                            <label for="atrPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">ATR Period</label>
+                            <input type="number" id="atrPeriod" value="14" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                        </div>
+                        <div>
+                            <label for="emaAtrPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">EMA Period</label>
+                            <input type="number" id="emaAtrPeriod" value="10" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                        </div>
+                        <div>
+                            <label for="atrRatioThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Ratio Threshold</label>
+                            <input type="number" id="atrRatioThreshold" value="0.7" min="0.5" max="1.0" step="0.1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                         </div>
                     </div>
 
@@ -1369,7 +1376,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterSupertrend', 'filterNR7'];
+            const filterIds = ['filterAO', 'filterATRRatio'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1377,14 +1384,20 @@
             });
 
             // Load thresholds
-            const savedSupertrendPeriod = localStorage.getItem('supertrendPeriod') || '10';
-            if (document.getElementById('supertrendPeriod')) document.getElementById('supertrendPeriod').value = savedSupertrendPeriod;
+            const savedAoShort = localStorage.getItem('aoShort') || '5';
+            if (document.getElementById('aoShort')) document.getElementById('aoShort').value = savedAoShort;
 
-            const savedSupertrendMultiplier = localStorage.getItem('supertrendMultiplier') || '3.0';
-            if (document.getElementById('supertrendMultiplier')) document.getElementById('supertrendMultiplier').value = savedSupertrendMultiplier;
+            const savedAoLong = localStorage.getItem('aoLong') || '34';
+            if (document.getElementById('aoLong')) document.getElementById('aoLong').value = savedAoLong;
 
-            const savedNr7Lookback = localStorage.getItem('nr7Lookback') || '7';
-            if (document.getElementById('nr7Lookback')) document.getElementById('nr7Lookback').value = savedNr7Lookback;
+            const savedAtrPeriod = localStorage.getItem('atrPeriod') || '14';
+            if (document.getElementById('atrPeriod')) document.getElementById('atrPeriod').value = savedAtrPeriod;
+
+            const savedEmaAtrPeriod = localStorage.getItem('emaAtrPeriod') || '10';
+            if (document.getElementById('emaAtrPeriod')) document.getElementById('emaAtrPeriod').value = savedEmaAtrPeriod;
+
+            const savedAtrRatioThreshold = localStorage.getItem('atrRatioThreshold') || '0.7';
+            if (document.getElementById('atrRatioThreshold')) document.getElementById('atrRatioThreshold').value = savedAtrRatioThreshold;
 
             updateActiveFiltersSummary();
 
@@ -1433,14 +1446,14 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterSupertrend', 'filterNR7'];
+            const filterIds = ['filterAO', 'filterATRRatio'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
 
             // Save thresholds
-            ['supertrendPeriod', 'supertrendMultiplier', 'nr7Lookback'].forEach(id => {
+            ['aoShort', 'aoLong', 'atrPeriod', 'emaAtrPeriod', 'atrRatioThreshold'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
@@ -1472,7 +1485,7 @@
         }
 
         // New Filter Toggles
-        const newFilterIds = ['filterSupertrend', 'filterNR7'];
+        const newFilterIds = ['filterAO', 'filterATRRatio'];
         newFilterIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1487,7 +1500,7 @@
         });
 
         // New Threshold Listeners
-        ['supertrendPeriod', 'supertrendMultiplier', 'nr7Lookback'].forEach(id => {
+        ['aoShort', 'aoLong', 'atrPeriod', 'emaAtrPeriod', 'atrRatioThreshold'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
@@ -1548,8 +1561,8 @@
             container.innerHTML = '';
 
             const filters = [
-                { id: 'filterSupertrend',   name: 'Supertrend',        color: '#667eea' },
-                { id: 'filterNR7',          name: 'NR7 Contraction',   color: '#10b981' },
+                { id: 'filterAO',       name: 'Awesome Oscillator', color: '#667eea' },
+                { id: 'filterATRRatio', name: 'ATR Ratio',          color: '#10b981' },
             ];
 
             let activeCount = 0;
@@ -1957,68 +1970,14 @@
             return atrSum / period;
         }
 
-        // Supertrend Calculation
-        // Returns array of { supertrend, isBullish } for each candle
-        function calculateSupertrend(candles, period = 10, multiplier = 3.0) {
-            if (candles.length < period + 1) return [];
-            const results = [];
-            let prevSupertrend = null;
-            let prevIsBullish = true;
-
-            for (let i = period; i < candles.length; i++) {
-                const slice = candles.slice(i - period, i + 1);
-
-                // ATR for this window
-                let atrSum = 0;
-                for (let j = 1; j < slice.length; j++) {
-                    const tr = Math.max(
-                        slice[j].high - slice[j].low,
-                        Math.abs(slice[j].high - slice[j - 1].close),
-                        Math.abs(slice[j].low  - slice[j - 1].close)
-                    );
-                    atrSum += tr;
-                }
-                const atr = atrSum / period;
-
-                const hl2 = (slice[slice.length - 1].high + slice[slice.length - 1].low) / 2;
-                const upperBand = hl2 + multiplier * atr;
-                const lowerBand = hl2 - multiplier * atr;
-                const close     = slice[slice.length - 1].close;
-
-                let isBullish;
-                let supertrend;
-
-                if (prevSupertrend === null) {
-                    isBullish  = close > hl2;
-                    supertrend = isBullish ? lowerBand : upperBand;
-                } else {
-                    if (prevIsBullish) {
-                        supertrend = Math.max(lowerBand, prevSupertrend);
-                        isBullish  = close >= supertrend;
-                    } else {
-                        supertrend = Math.min(upperBand, prevSupertrend);
-                        isBullish  = close > supertrend;
-                    }
-                    if (isBullish !== prevIsBullish) {
-                        supertrend = isBullish ? lowerBand : upperBand;
-                    }
-                }
-
-                prevSupertrend = supertrend;
-                prevIsBullish  = isBullish;
-                results.push({ supertrend, isBullish });
-            }
-            return results;
-        }
-
-        // NR7 Contraction Detection
-        // Returns true if the current candle has the narrowest range of the last N candles
-        function isNR7(candles, lookback = 7) {
-            if (candles.length < lookback) return false;
-            const slice = candles.slice(-lookback);
-            const currentRange = slice[slice.length - 1].high - slice[slice.length - 1].low;
-            const prevRanges   = slice.slice(0, -1).map(c => c.high - c.low);
-            return prevRanges.every(r => currentRange < r);
+        // Awesome Oscillator Calculation
+        // Returns SMA(medianPrice, short) - SMA(medianPrice, long)
+        function calculateAO(candles, shortPeriod = 5, longPeriod = 34) {
+            if (candles.length < longPeriod) return 0;
+            const medians = candles.map(c => (c.high + c.low) / 2);
+            const shortSMA = calculateSMA(medians.slice(-shortPeriod), shortPeriod);
+            const longSMA  = calculateSMA(medians.slice(-longPeriod),  longPeriod);
+            return shortSMA - longSMA;
         }
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
@@ -2293,41 +2252,66 @@
 
             const lastCandle = candleHistory[candleHistory.length - 1];
 
-            // Supertrend Filter
-            if (document.getElementById('filterSupertrend')?.checked) {
-                const period     = parseInt(document.getElementById('supertrendPeriod').value)     || 10;
-                const multiplier = parseFloat(document.getElementById('supertrendMultiplier').value) || 3.0;
-                const stResults  = calculateSupertrend(candleHistory, period, multiplier);
-                if (stResults.length < 2) {
-                    addLog(`🛡️ Supertrend: Not enough candles yet`, 'warning');
+            // Awesome Oscillator Filter
+            if (document.getElementById('filterAO')?.checked) {
+                const shortPeriod = parseInt(document.getElementById('aoShort').value) || 5;
+                const longPeriod  = parseInt(document.getElementById('aoLong').value)  || 34;
+
+                if (candleHistory.length < longPeriod + 2) {
+                    addLog(`🛡️ AO: Not enough candles yet (need ${longPeriod + 2})`, 'warning');
                     return null;
                 }
-                const curr = stResults[stResults.length - 1];
-                const prev = stResults[stResults.length - 2];
-                const bullishFlip = !prev.isBullish && curr.isBullish;
-                const bearishFlip =  prev.isBullish && !curr.isBullish;
-                if (signal === 'BUY' && !bullishFlip) {
-                    addLog(`🛡️ Supertrend BLOCKED BUY: No bullish flip (trend=${curr.isBullish ? 'UP' : 'DOWN'})`, 'warning');
+
+                const ao      = calculateAO(candleHistory,            shortPeriod, longPeriod);
+                const prevAo  = calculateAO(candleHistory.slice(0,-1), shortPeriod, longPeriod);
+                const prev2Ao = calculateAO(candleHistory.slice(0,-2), shortPeriod, longPeriod);
+
+                const bullishCross  = ao > 0 && prevAo <= 0;
+                const bearishCross  = ao < 0 && prevAo >= 0;
+                const bullishSaucer = ao > 0 && prevAo < prev2Ao && ao > prevAo;
+                const bearishSaucer = ao < 0 && prevAo > prev2Ao && ao < prevAo;
+
+                if (signal === 'BUY' && !(bullishCross || bullishSaucer)) {
+                    addLog(`🛡️ AO BLOCKED BUY: No bullish saucer/cross (AO=${ao.toFixed(4)})`, 'warning');
                     return null;
                 }
-                if (signal === 'SELL' && !bearishFlip) {
-                    addLog(`🛡️ Supertrend BLOCKED SELL: No bearish flip (trend=${curr.isBullish ? 'UP' : 'DOWN'})`, 'warning');
+                if (signal === 'SELL' && !(bearishCross || bearishSaucer)) {
+                    addLog(`🛡️ AO BLOCKED SELL: No bearish saucer/cross (AO=${ao.toFixed(4)})`, 'warning');
                     return null;
                 }
-                addLog(`✅ Supertrend PASSED: ${signal} on confirmed ${signal === 'BUY' ? 'bullish' : 'bearish'} flip`, 'success');
+                addLog(`✅ AO PASSED: ${signal} confirmed (AO=${ao.toFixed(4)})`, 'success');
             }
 
-            // NR7 Contraction Filter
-            if (document.getElementById('filterNR7')?.checked) {
-                const lookback = parseInt(document.getElementById('nr7Lookback').value) || 7;
-                const nr7 = isNR7(candleHistory, lookback);
-                if (!nr7) {
-                    const currentRange = (candleHistory[candleHistory.length - 1].high - candleHistory[candleHistory.length - 1].low).toFixed(5);
-                    addLog(`🛡️ NR7 BLOCKED ${signal}: No compression — current range ${currentRange} is not the tightest of last ${lookback} candles`, 'warning');
+            // ATR Ratio Filter
+            if (document.getElementById('filterATRRatio')?.checked) {
+                const atrPeriod   = parseInt(document.getElementById('atrPeriod').value)        || 14;
+                const emaPeriod   = parseInt(document.getElementById('emaAtrPeriod').value)     || 10;
+                const threshold   = parseFloat(document.getElementById('atrRatioThreshold').value) || 0.7;
+
+                if (candleHistory.length < atrPeriod + emaPeriod) {
+                    addLog(`🛡️ ATR Ratio: Not enough candles yet`, 'warning');
                     return null;
                 }
-                addLog(`✅ NR7 PASSED: Narrowest range of last ${lookback} candles — breakout compression confirmed`, 'success');
+
+                const currentAtr = calculateATR(candleHistory, atrPeriod);
+
+                // Build array of past ATR values for EMA smoothing
+                const pastAtrs = [];
+                for (let i = emaPeriod; i >= 1; i--) {
+                    pastAtrs.push(calculateATR(candleHistory.slice(0, candleHistory.length - i + 1), atrPeriod));
+                }
+                const emaAtr = calculateEMA(pastAtrs, emaPeriod);
+
+                const ratio = emaAtr > 0 ? currentAtr / emaAtr : 1;
+                const isSqueeze = ratio < threshold;
+
+                if (!isSqueeze) {
+                    addLog(`🛡️ ATR Ratio BLOCKED ${signal}: No squeeze (ratio=${ratio.toFixed(2)} ≥ threshold ${threshold})`, 'warning');
+                    return null;
+                }
+                addLog(`✅ ATR Ratio PASSED: Squeeze confirmed (ratio=${ratio.toFixed(2)} < ${threshold})`, 'success');
             }
+
             return signal;
         }
 
