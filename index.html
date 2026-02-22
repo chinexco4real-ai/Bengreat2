@@ -1073,55 +1073,34 @@
                 <!-- ===== ADVANCED FILTERS CARD ===== -->
                 <div class="card">
                     <h3>🛡️ Advanced Filters</h3>
-                    <!-- Awesome Oscillator Filter -->
+                    <!-- CHOP Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Awesome Oscillator Filter <span style="color:#667eea;">(Momentum + Saucer)</span></div>
+                        <div class="toggle-label">Choppiness Index Filter <span style="color:#10b981;">(Consolidation Squeeze + Momentum)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterAO">
+                            <input type="checkbox" id="filterCHOP">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Smoothed momentum with saucer patterns for trend confirmation
+                        Detects market consolidation squeezes with momentum confirmation (robust for volatile indices)
                     </div>
 
-                    <!-- AO Parameters -->
+                    <!-- CHOP Parameters -->
                     <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="aoShort" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Short Period</label>
-                            <input type="number" id="aoShort" value="5" min="3" max="10" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="chopPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Period</label>
+                            <input type="number" id="chopPeriod" value="14" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                         </div>
                         <div>
-                            <label for="aoLong" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Long Period</label>
-                            <input type="number" id="aoLong" value="34" min="20" max="50" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                        </div>
-                    </div>
-
-                    <!-- ATR Ratio Filter -->
-                    <div class="toggle-container">
-                        <div class="toggle-label">ATR Ratio Filter <span style="color:#10b981;">(Adaptive Volatility)</span></div>
-                        <label class="switch">
-                            <input type="checkbox" id="filterATRRatio">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Detects volatility contractions relative to historical ATR
-                    </div>
-
-                    <!-- ATR Ratio Parameters -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
-                        <div>
-                            <label for="atrPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">ATR Period</label>
-                            <input type="number" id="atrPeriod" value="14" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="chopThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Squeeze Threshold</label>
+                            <input type="number" id="chopThreshold" value="61.8" min="50" max="70" step="0.1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                         </div>
                         <div>
-                            <label for="emaAtrPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">EMA Period</label>
-                            <input type="number" id="emaAtrPeriod" value="10" min="5" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                        </div>
-                        <div>
-                            <label for="atrRatioThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Ratio Threshold</label>
-                            <input type="number" id="atrRatioThreshold" value="0.7" min="0.5" max="1.0" step="0.1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <label for="chopMomentum" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Require Momentum</label>
+                            <label class="switch" style="display: block; margin-top: 10px;">
+                                <input type="checkbox" id="chopMomentum" checked>
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
 
@@ -1376,7 +1355,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterAO', 'filterATRRatio'];
+            const filterIds = ['filterCHOP'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1384,20 +1363,16 @@
             });
 
             // Load thresholds
-            const savedAoShort = localStorage.getItem('aoShort') || '5';
-            if (document.getElementById('aoShort')) document.getElementById('aoShort').value = savedAoShort;
+            const savedChopPeriod = localStorage.getItem('chopPeriod') || '14';
+            if (document.getElementById('chopPeriod')) document.getElementById('chopPeriod').value = savedChopPeriod;
 
-            const savedAoLong = localStorage.getItem('aoLong') || '34';
-            if (document.getElementById('aoLong')) document.getElementById('aoLong').value = savedAoLong;
+            const savedChopThreshold = localStorage.getItem('chopThreshold') || '61.8';
+            if (document.getElementById('chopThreshold')) document.getElementById('chopThreshold').value = savedChopThreshold;
 
-            const savedAtrPeriod = localStorage.getItem('atrPeriod') || '14';
-            if (document.getElementById('atrPeriod')) document.getElementById('atrPeriod').value = savedAtrPeriod;
-
-            const savedEmaAtrPeriod = localStorage.getItem('emaAtrPeriod') || '10';
-            if (document.getElementById('emaAtrPeriod')) document.getElementById('emaAtrPeriod').value = savedEmaAtrPeriod;
-
-            const savedAtrRatioThreshold = localStorage.getItem('atrRatioThreshold') || '0.7';
-            if (document.getElementById('atrRatioThreshold')) document.getElementById('atrRatioThreshold').value = savedAtrRatioThreshold;
+            const savedChopMomentum = localStorage.getItem('chopMomentum');
+            if (document.getElementById('chopMomentum') && savedChopMomentum !== null) {
+                document.getElementById('chopMomentum').checked = savedChopMomentum === 'true';
+            }
 
             updateActiveFiltersSummary();
 
@@ -1446,17 +1421,19 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterAO', 'filterATRRatio'];
+            const filterIds = ['filterCHOP'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
 
             // Save thresholds
-            ['aoShort', 'aoLong', 'atrPeriod', 'emaAtrPeriod', 'atrRatioThreshold'].forEach(id => {
+            ['chopPeriod', 'chopThreshold'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
+            const chopMomentumEl = document.getElementById('chopMomentum');
+            if (chopMomentumEl) localStorage.setItem('chopMomentum', chopMomentumEl.checked);
         }
 
         // Add event listeners for all settings
@@ -1485,22 +1462,19 @@
         }
 
         // New Filter Toggles
-        const newFilterIds = ['filterAO', 'filterATRRatio'];
-        newFilterIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', () => {
-                    const filterName = id.replace('filter', '');
-                    const status = el.checked ? 'ENABLED' : 'DISABLED';
-                    addLog(`🛡️ ${filterName} → ${status}`, el.checked ? 'success' : 'warning');
-                    saveSettings();
-                    updateActiveFiltersSummary();
-                });
-            }
-        });
+        // CHOP Filter Toggle
+        const chopFilterEl = document.getElementById('filterCHOP');
+        if (chopFilterEl) {
+            chopFilterEl.addEventListener('change', () => {
+                const status = chopFilterEl.checked ? 'ENABLED' : 'DISABLED';
+                addLog(`🛡️ Choppiness Index → ${status}`, chopFilterEl.checked ? 'success' : 'warning');
+                saveSettings();
+                updateActiveFiltersSummary();
+            });
+        }
 
-        // New Threshold Listeners
-        ['aoShort', 'aoLong', 'atrPeriod', 'emaAtrPeriod', 'atrRatioThreshold'].forEach(id => {
+        // CHOP Parameter Listeners
+        ['chopPeriod', 'chopThreshold'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
@@ -1511,6 +1485,14 @@
                 });
             }
         });
+
+        const chopMomentumEl = document.getElementById('chopMomentum');
+        if (chopMomentumEl) {
+            chopMomentumEl.addEventListener('change', () => {
+                saveSettings();
+                addLog(`📊 Momentum confirmation ${chopMomentumEl.checked ? 'ENABLED' : 'DISABLED'}`, 'info');
+            });
+        }
 
         // Market change listener for radio buttons
         document.addEventListener('change', function(e) {
@@ -1561,8 +1543,7 @@
             container.innerHTML = '';
 
             const filters = [
-                { id: 'filterAO',       name: 'Awesome Oscillator', color: '#667eea' },
-                { id: 'filterATRRatio', name: 'ATR Ratio',          color: '#10b981' },
+                { id: 'filterCHOP', name: 'Choppiness Index', color: '#10b981' },
             ];
 
             let activeCount = 0;
@@ -1970,14 +1951,53 @@
             return atrSum / period;
         }
 
-        // Awesome Oscillator Calculation
-        // Returns SMA(medianPrice, short) - SMA(medianPrice, long)
+        // Awesome Oscillator Calculation (used internally by CHOP)
         function calculateAO(candles, shortPeriod = 5, longPeriod = 34) {
             if (candles.length < longPeriod) return 0;
             const medians = candles.map(c => (c.high + c.low) / 2);
             const shortSMA = calculateSMA(medians.slice(-shortPeriod), shortPeriod);
             const longSMA  = calculateSMA(medians.slice(-longPeriod),  longPeriod);
             return shortSMA - longSMA;
+        }
+
+        // Choppiness Index Calculation
+        function calculateCHOP(candles) {
+            const period = parseInt(document.getElementById('chopPeriod')?.value) || 14;
+            if (candles.length < period + 1) {
+                return { isSqueeze: false, chop: 50, momentum: 0, direction: 'neutral' };
+            }
+
+            const slice = candles.slice(-period);
+
+            // Sum of True Ranges
+            let sumTR = 0;
+            for (let i = candles.length - period; i < candles.length; i++) {
+                const tr = i === 0
+                    ? candles[i].high - candles[i].low
+                    : Math.max(
+                        candles[i].high - candles[i].low,
+                        Math.abs(candles[i].high - candles[i - 1].close),
+                        Math.abs(candles[i].low  - candles[i - 1].close)
+                    );
+                sumTR += tr;
+            }
+
+            const maxHigh = Math.max(...slice.map(c => c.high));
+            const minLow  = Math.min(...slice.map(c => c.low));
+            const range   = maxHigh - minLow;
+
+            const chop = range > 0
+                ? 100 * (Math.log10(sumTR / range) / Math.log10(period))
+                : 50;
+
+            const threshold = parseFloat(document.getElementById('chopThreshold')?.value) || 61.8;
+            const isSqueeze = chop > threshold;
+
+            // AO-style momentum for direction confirmation
+            const momentum  = calculateAO(candles, 5, 34);
+            const direction = momentum > 0 ? 'bullish' : momentum < 0 ? 'bearish' : 'neutral';
+
+            return { isSqueeze, chop, momentum, direction };
         }
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
@@ -2252,64 +2272,29 @@
 
             const lastCandle = candleHistory[candleHistory.length - 1];
 
-            // Awesome Oscillator Filter
-            if (document.getElementById('filterAO')?.checked) {
-                const shortPeriod = parseInt(document.getElementById('aoShort').value) || 5;
-                const longPeriod  = parseInt(document.getElementById('aoLong').value)  || 34;
+            // Choppiness Index Filter
+            if (document.getElementById('filterCHOP')?.checked) {
+                const chopResult      = calculateCHOP(candleHistory);
+                const requireMomentum = document.getElementById('chopMomentum')?.checked;
 
-                if (candleHistory.length < longPeriod + 2) {
-                    addLog(`🛡️ AO: Not enough candles yet (need ${longPeriod + 2})`, 'warning');
+                if (!chopResult.isSqueeze) {
+                    addLog(`🛡️ CHOP BLOCKED ${signal}: No consolidation (CHOP=${chopResult.chop.toFixed(2)} < threshold)`, 'warning');
                     return null;
                 }
 
-                const ao      = calculateAO(candleHistory,            shortPeriod, longPeriod);
-                const prevAo  = calculateAO(candleHistory.slice(0,-1), shortPeriod, longPeriod);
-                const prev2Ao = calculateAO(candleHistory.slice(0,-2), shortPeriod, longPeriod);
-
-                const bullishCross  = ao > 0 && prevAo <= 0;
-                const bearishCross  = ao < 0 && prevAo >= 0;
-                const bullishSaucer = ao > 0 && prevAo < prev2Ao && ao > prevAo;
-                const bearishSaucer = ao < 0 && prevAo > prev2Ao && ao < prevAo;
-
-                if (signal === 'BUY' && !(bullishCross || bullishSaucer)) {
-                    addLog(`🛡️ AO BLOCKED BUY: No bullish saucer/cross (AO=${ao.toFixed(4)})`, 'warning');
-                    return null;
-                }
-                if (signal === 'SELL' && !(bearishCross || bearishSaucer)) {
-                    addLog(`🛡️ AO BLOCKED SELL: No bearish saucer/cross (AO=${ao.toFixed(4)})`, 'warning');
-                    return null;
-                }
-                addLog(`✅ AO PASSED: ${signal} confirmed (AO=${ao.toFixed(4)})`, 'success');
-            }
-
-            // ATR Ratio Filter
-            if (document.getElementById('filterATRRatio')?.checked) {
-                const atrPeriod   = parseInt(document.getElementById('atrPeriod').value)        || 14;
-                const emaPeriod   = parseInt(document.getElementById('emaAtrPeriod').value)     || 10;
-                const threshold   = parseFloat(document.getElementById('atrRatioThreshold').value) || 0.7;
-
-                if (candleHistory.length < atrPeriod + emaPeriod) {
-                    addLog(`🛡️ ATR Ratio: Not enough candles yet`, 'warning');
-                    return null;
+                if (requireMomentum) {
+                    if (signal === 'BUY' && chopResult.direction !== 'bullish') {
+                        addLog(`🛡️ CHOP Momentum BLOCKED BUY: Not bullish (Hist=${chopResult.momentum.toFixed(4)})`, 'warning');
+                        return null;
+                    }
+                    if (signal === 'SELL' && chopResult.direction !== 'bearish') {
+                        addLog(`🛡️ CHOP Momentum BLOCKED SELL: Not bearish (Hist=${chopResult.momentum.toFixed(4)})`, 'warning');
+                        return null;
+                    }
+                    addLog(`✅ CHOP Momentum PASSED: ${signal} confirmed (Hist=${chopResult.momentum.toFixed(4)})`, 'success');
                 }
 
-                const currentAtr = calculateATR(candleHistory, atrPeriod);
-
-                // Build array of past ATR values for EMA smoothing
-                const pastAtrs = [];
-                for (let i = emaPeriod; i >= 1; i--) {
-                    pastAtrs.push(calculateATR(candleHistory.slice(0, candleHistory.length - i + 1), atrPeriod));
-                }
-                const emaAtr = calculateEMA(pastAtrs, emaPeriod);
-
-                const ratio = emaAtr > 0 ? currentAtr / emaAtr : 1;
-                const isSqueeze = ratio < threshold;
-
-                if (!isSqueeze) {
-                    addLog(`🛡️ ATR Ratio BLOCKED ${signal}: No squeeze (ratio=${ratio.toFixed(2)} ≥ threshold ${threshold})`, 'warning');
-                    return null;
-                }
-                addLog(`✅ ATR Ratio PASSED: Squeeze confirmed (ratio=${ratio.toFixed(2)} < ${threshold})`, 'success');
+                addLog(`✅ CHOP PASSED: Consolidation squeeze confirmed (CHOP=${chopResult.chop.toFixed(2)})`, 'success');
             }
 
             return signal;
