@@ -1073,45 +1073,35 @@
                 <!-- ===== ADVANCED FILTERS CARD ===== -->
                 <div class="card">
                     <h3>🛡️ Advanced Filters</h3>
-                    <!-- RRI Filter -->
+
+                    <!-- Consecutive Inside Bars Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Relative Range Index <span style="color:#10b981;">(Adaptive Squeeze Detection)</span></div>
+                        <div class="toggle-label">Consecutive Inside Bars <span style="color:#10b981;">(Pure Price-Action Squeeze)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterRRI">
+                            <input type="checkbox" id="filterInsideBars" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Ranks the current candle's range as a percentile of the last N candles — fires only in extreme compression zones
+                        Fires only after X consecutive candles are completely inside the previous candle's range
                     </div>
 
-                    <!-- RRI Parameters -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 6px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748; margin-bottom: 18px;">
                         <div>
-                            <label for="rriPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Lookback Period</label>
-                            <input type="number" id="rriPeriod" value="20" min="10" max="50" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Candles to rank against (default 20)</div>
-                        </div>
-                    </div>
-                    <!-- RRI Mode: Below OR Above (mutually exclusive) -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
-                        <div>
-                            <label for="rriBelow" style="color: #10b981; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📉 Below % (Squeeze)</label>
-                            <input type="number" id="rriBelow" value="20" min="0" max="95" step="5"
-                                style="width: 100%; padding: 8px 10px; border: 2px solid #10b981; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;"
-                                oninput="if(this.value>0){document.getElementById('rriAbove').value=0;document.getElementById('rriAbove').style.borderColor='#2d3748';;this.style.borderColor='#10b981';}">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Pass when range is in bottom X% · Set to 0 to disable</div>
+                            <label for="insideBarsCount" style="color: #10b981; font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Required Consecutive Bars</label>
+                            <input type="number" id="insideBarsCount" value="3" min="1" max="10" step="1"
+                                style="width: 100%; padding: 9px; border: 2px solid #10b981; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; font-weight: 700; text-align: center;">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Min 1 · Default 3 · Higher = stricter</div>
                         </div>
                         <div>
-                            <label for="rriAbove" style="color: #667eea; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📈 Above % (Expansion)</label>
-                            <input type="number" id="rriAbove" value="0" min="0" max="95" step="5"
-                                style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;"
-                                oninput="if(this.value>0){document.getElementById('rriBelow').value=0;document.getElementById('rriBelow').style.borderColor='#2d3748';this.style.borderColor='#667eea';}">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Pass when range is in top X% · Set to 0 to disable</div>
+                            <label for="insideBarsLookback" style="color: #667eea; font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Lookback Window</label>
+                            <input type="number" id="insideBarsLookback" value="20" min="10" max="50" step="5"
+                                style="width: 100%; padding: 9px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; font-weight: 700; text-align: center;">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Candles to scan (default 20)</div>
                         </div>
                     </div>
 
-                    <!-- ===== LIVE ACTIVE FILTERS SUMMARY ===== -->
+                    <!-- LIVE ACTIVE FILTERS SUMMARY -->
                     <div id="activeFiltersSummary" style="margin-top: 20px; background: #0f1419; padding: 14px; border-radius: 10px; border: 1px solid #2d3748;">
                         <div style="font-size: 13px; color: #9ca3af; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
                             📊 <strong>Currently Active Filters</strong>
@@ -1247,6 +1237,7 @@
         let nextTradeType = 'BUY';
         let lastSetupDetectedTime = 0;
         let currentSetupId = null;
+        let currentInsideBarsStreak = 0;
         let stats = {
             total: 0,
             wins: 0,
@@ -1362,28 +1353,21 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterRRI'];
+            const filterIds = ['filterInsideBars'];
             filterIds.forEach(id => {
-                const saved = localStorage.getItem(id) === 'true';
+                const saved = localStorage.getItem(id);
                 const el = document.getElementById(id);
-                if (el) el.checked = saved;
+                if (el) {
+                    el.checked = saved !== null ? saved === 'true' : true; // default on
+                }
             });
 
             // Load thresholds
-            const savedRriPeriod = localStorage.getItem('rriPeriod') || '20';
-            if (document.getElementById('rriPeriod')) document.getElementById('rriPeriod').value = savedRriPeriod;
+            const savedInsideBarsCount = localStorage.getItem('insideBarsCount') || '3';
+            if (document.getElementById('insideBarsCount')) document.getElementById('insideBarsCount').value = savedInsideBarsCount;
 
-            const savedRriBelow = localStorage.getItem('rriBelow') || '20';
-            if (document.getElementById('rriBelow')) {
-                document.getElementById('rriBelow').value = savedRriBelow;
-                if (parseFloat(savedRriBelow) > 0) document.getElementById('rriBelow').style.borderColor = '#10b981';
-            }
-
-            const savedRriAbove = localStorage.getItem('rriAbove') || '0';
-            if (document.getElementById('rriAbove')) {
-                document.getElementById('rriAbove').value = savedRriAbove;
-                if (parseFloat(savedRriAbove) > 0) document.getElementById('rriAbove').style.borderColor = '#667eea';
-            }
+            const savedInsideBarsLookback = localStorage.getItem('insideBarsLookback') || '20';
+            if (document.getElementById('insideBarsLookback')) document.getElementById('insideBarsLookback').value = savedInsideBarsLookback;
 
             updateActiveFiltersSummary();
 
@@ -1432,14 +1416,13 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterRRI'];
-            filterIds.forEach(id => {
+            ['filterInsideBars'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
 
             // Save thresholds
-            ['rriPeriod', 'rriBelow', 'rriAbove'].forEach(id => {
+            ['insideBarsCount', 'insideBarsLookback'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
@@ -1470,27 +1453,24 @@
             });
         }
 
-        // New Filter Toggles
-        // RRI Filter Toggle
-        const rriFilterEl = document.getElementById('filterRRI');
-        if (rriFilterEl) {
-            rriFilterEl.addEventListener('change', () => {
-                const status = rriFilterEl.checked ? 'ENABLED' : 'DISABLED';
-                addLog(`🛡️ Relative Range Index → ${status}`, rriFilterEl.checked ? 'success' : 'warning');
+        // Inside Bars Filter Toggle
+        const insideBarsFilterEl = document.getElementById('filterInsideBars');
+        if (insideBarsFilterEl) {
+            insideBarsFilterEl.addEventListener('change', () => {
+                const status = insideBarsFilterEl.checked ? 'ENABLED' : 'DISABLED';
+                addLog(`🛡️ Consecutive Inside Bars → ${status}`, insideBarsFilterEl.checked ? 'success' : 'warning');
                 saveSettings();
                 updateActiveFiltersSummary();
             });
         }
 
-        // RRI Parameter Listeners
-        ['rriPeriod', 'rriBelow', 'rriAbove'].forEach(id => {
+        // Inside Bars Parameter Listeners
+        ['insideBarsCount', 'insideBarsLookback'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
-                    const val = parseFloat(e.target.value) || parseFloat(e.target.defaultValue);
                     saveSettings();
-                    addLog(`📊 ${id} changed to ${val}`, 'info');
-                    updateActiveFiltersSummary();
+                    addLog(`📊 ${id} changed to ${e.target.value}`, 'info');
                 });
             }
         });
@@ -1544,7 +1524,7 @@
             container.innerHTML = '';
 
             const filters = [
-                { id: 'filterRRI',  name: 'Relative Range Index', color: '#10b981' },
+                { id: 'filterInsideBars', name: 'Consecutive Inside Bars', color: '#10b981' },
             ];
 
             let activeCount = 0;
@@ -1961,43 +1941,33 @@
             return shortSMA - longSMA;
         }
 
-        // Relative Range Index (RRI)
-        // Ranks the current candle's range as a percentile of the last N candle ranges
-        // Squeeze confirmed when current range is in the bottom X percentile
-        function calculateRRI(candles) {
-            const period    = parseInt(document.getElementById('rriPeriod')?.value) || 20;
-            const belowPct  = parseFloat(document.getElementById('rriBelow')?.value) || 0;
-            const abovePct  = parseFloat(document.getElementById('rriAbove')?.value) || 0;
-
-            if (candles.length < period) {
-                return { passes: false, percentile: 50, currentRange: 0, mode: 'none' };
+        // ==================== CONSECUTIVE INSIDE BARS FILTER ====================
+        function calculateConsecutiveInsideBars(candles, lookback = 20) {
+            if (candles.length < 4) {
+                return { streak: 0, message: "Collecting candles..." };
             }
 
-            const slice        = candles.slice(-period);
-            const currentRange = slice[slice.length - 1].high - slice[slice.length - 1].low;
-            const allRanges    = slice.map(c => c.high - c.low).sort((a, b) => a - b);
+            const slice = candles.slice(-lookback);
+            let streak = 0;
 
-            // Percentile rank: what % of past candles have a smaller range than current
-            const rank       = allRanges.filter(r => r < currentRange).length;
-            const percentile = (rank / period) * 100;
-
-            // Determine active mode and pass condition
-            let passes = false;
-            let mode   = 'none';
-
-            if (belowPct > 0) {
-                // Squeeze mode: pass when current range is in the BOTTOM X%
-                mode   = 'below';
-                passes = percentile <= belowPct;
-            } else if (abovePct > 0) {
-                // Expansion mode: pass when current range is in the TOP X%
-                // Top X% means percentile >= (100 - abovePct)
-                mode   = 'above';
-                passes = percentile >= (100 - abovePct);
+            for (let i = slice.length - 1; i >= 1; i--) {
+                const curr = slice[i];
+                const prev = slice[i - 1];
+                const isInside = curr.high < prev.high && curr.low > prev.low;
+                if (isInside) {
+                    streak++;
+                } else {
+                    break;
+                }
             }
 
-            return { passes, percentile, currentRange, mode };
+            return {
+                streak: streak,
+                message: streak >= 3 ? `${streak} consecutive inside bars 🔥` : `${streak} inside bars`
+            };
         }
+
+
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
             const emaFast = calculateEMA(closes, fast);
@@ -2253,7 +2223,21 @@
         function updateIndicatorDisplay(indicators) {
             const display = document.getElementById('indicatorDisplay');
             display.innerHTML = '';
-            
+
+            // Live Inside Bars Streak (always shown first)
+            const streakColor = currentInsideBarsStreak >= 3 ? '#10b981' :
+                                currentInsideBarsStreak === 2 ? '#fbbf24' : '#9ca3af';
+            const insideItem = document.createElement('div');
+            insideItem.className = 'indicator-item';
+            insideItem.innerHTML = `
+                <span>Inside Bars Streak:</span>
+                <span class="indicator-value" style="color: ${streakColor}; font-size: 17px; font-weight: 700;">
+                    ${currentInsideBarsStreak} ${currentInsideBarsStreak >= 3 ? '🔥 READY' : ''}
+                </span>
+            `;
+            display.appendChild(insideItem);
+
+            // All other strategy indicators
             for (const [label, value] of Object.entries(indicators)) {
                 const item = document.createElement('div');
                 item.className = 'indicator-item';
@@ -2269,33 +2253,17 @@
         function applyAdvancedFilters(signal, candleHistory) {
             if (!signal || signal === null) return signal;
 
-            const lastCandle = candleHistory[candleHistory.length - 1];
+            // Inside Bars Filter
+            if (document.getElementById('filterInsideBars')?.checked) {
+                const required = parseInt(document.getElementById('insideBarsCount').value) || 3;
+                const lookback = parseInt(document.getElementById('insideBarsLookback').value) || 20;
+                const inside   = calculateConsecutiveInsideBars(candleHistory, lookback);
 
-            // Relative Range Index Filter
-            if (document.getElementById('filterRRI')?.checked) {
-                const rri     = calculateRRI(candleHistory);
-                const belowPct = parseFloat(document.getElementById('rriBelow')?.value) || 0;
-                const abovePct = parseFloat(document.getElementById('rriAbove')?.value) || 0;
-
-                if (rri.mode === 'none') {
-                    addLog(`🛡️ RRI: Both Below% and Above% are 0 — set one to activate`, 'warning');
+                if (inside.streak < required) {
+                    addLog(`🛡️ Inside Bars BLOCKED ${signal}: Only ${inside.streak} consecutive (need ${required})`, 'warning');
                     return null;
                 }
-
-                if (!rri.passes) {
-                    if (rri.mode === 'below') {
-                        addLog(`🛡️ RRI BLOCKED ${signal}: Range too large (${rri.percentile.toFixed(1)}th pct — need ≤ ${belowPct}%)`, 'warning');
-                    } else {
-                        addLog(`🛡️ RRI BLOCKED ${signal}: Range too small (${rri.percentile.toFixed(1)}th pct — need top ${abovePct}%)`, 'warning');
-                    }
-                    return null;
-                }
-
-                if (rri.mode === 'below') {
-                    addLog(`✅ RRI PASSED: Squeeze confirmed — range in ${rri.percentile.toFixed(1)}th percentile (bottom ${belowPct}%)`, 'success');
-                } else {
-                    addLog(`✅ RRI PASSED: Expansion confirmed — range in ${rri.percentile.toFixed(1)}th percentile (top ${abovePct}%)`, 'success');
-                }
+                addLog(`✅ Inside Bars PASSED: ${inside.message} → ${signal} allowed`, 'success');
             }
 
             return signal;
@@ -2502,6 +2470,13 @@
                     strategyIndicators.rsi = rsi;
                 }
                 
+                // === LIVE INSIDE BARS STREAK (updates every candle) ===
+                const candleHistoryLive = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
+                if (candleHistoryLive.length >= 4) {
+                    const insideResult = calculateConsecutiveInsideBars(candleHistoryLive, 20);
+                    currentInsideBarsStreak = insideResult.streak;
+                }
+
                 const signal = analyzeMarketSignals();
 
                 if (isAutoTrading && signal) {
