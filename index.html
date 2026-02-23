@@ -1086,16 +1086,28 @@
                     </div>
 
                     <!-- RRI Parameters -->
-                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
+                    <div class="threshold-group" style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 6px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
                             <label for="rriPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Lookback Period</label>
                             <input type="number" id="rriPeriod" value="20" min="10" max="50" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
                             <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Candles to rank against (default 20)</div>
                         </div>
+                    </div>
+                    <!-- RRI Mode: Below OR Above (mutually exclusive) -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="rriThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Squeeze Percentile</label>
-                            <input type="number" id="rriThreshold" value="20" min="5" max="40" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block unless range is in bottom X% · Lower = stricter</div>
+                            <label for="rriBelow" style="color: #10b981; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📉 Below % (Squeeze)</label>
+                            <input type="number" id="rriBelow" value="20" min="0" max="95" step="5"
+                                style="width: 100%; padding: 8px 10px; border: 2px solid #10b981; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;"
+                                oninput="if(this.value>0){document.getElementById('rriAbove').value=0;document.getElementById('rriAbove').style.borderColor='#2d3748';;this.style.borderColor='#10b981';}">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Pass when range is in bottom X% · Set to 0 to disable</div>
+                        </div>
+                        <div>
+                            <label for="rriAbove" style="color: #667eea; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">📈 Above % (Expansion)</label>
+                            <input type="number" id="rriAbove" value="0" min="0" max="95" step="5"
+                                style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;"
+                                oninput="if(this.value>0){document.getElementById('rriBelow').value=0;document.getElementById('rriBelow').style.borderColor='#2d3748';this.style.borderColor='#667eea';}">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Pass when range is in top X% · Set to 0 to disable</div>
                         </div>
                     </div>
 
@@ -1361,8 +1373,17 @@
             const savedRriPeriod = localStorage.getItem('rriPeriod') || '20';
             if (document.getElementById('rriPeriod')) document.getElementById('rriPeriod').value = savedRriPeriod;
 
-            const savedRriThreshold = localStorage.getItem('rriThreshold') || '20';
-            if (document.getElementById('rriThreshold')) document.getElementById('rriThreshold').value = savedRriThreshold;
+            const savedRriBelow = localStorage.getItem('rriBelow') || '20';
+            if (document.getElementById('rriBelow')) {
+                document.getElementById('rriBelow').value = savedRriBelow;
+                if (parseFloat(savedRriBelow) > 0) document.getElementById('rriBelow').style.borderColor = '#10b981';
+            }
+
+            const savedRriAbove = localStorage.getItem('rriAbove') || '0';
+            if (document.getElementById('rriAbove')) {
+                document.getElementById('rriAbove').value = savedRriAbove;
+                if (parseFloat(savedRriAbove) > 0) document.getElementById('rriAbove').style.borderColor = '#667eea';
+            }
 
             updateActiveFiltersSummary();
 
@@ -1418,7 +1439,7 @@
             });
 
             // Save thresholds
-            ['rriPeriod', 'rriThreshold'].forEach(id => {
+            ['rriPeriod', 'rriBelow', 'rriAbove'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
@@ -1462,7 +1483,7 @@
         }
 
         // RRI Parameter Listeners
-        ['rriPeriod', 'rriThreshold'].forEach(id => {
+        ['rriPeriod', 'rriBelow', 'rriAbove'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
@@ -1944,23 +1965,38 @@
         // Ranks the current candle's range as a percentile of the last N candle ranges
         // Squeeze confirmed when current range is in the bottom X percentile
         function calculateRRI(candles) {
-            const period    = parseInt(document.getElementById('rriPeriod')?.value)    || 20;
-            const threshold = parseFloat(document.getElementById('rriThreshold')?.value) || 20;
+            const period    = parseInt(document.getElementById('rriPeriod')?.value) || 20;
+            const belowPct  = parseFloat(document.getElementById('rriBelow')?.value) || 0;
+            const abovePct  = parseFloat(document.getElementById('rriAbove')?.value) || 0;
 
             if (candles.length < period) {
-                return { isSqueeze: false, percentile: 100, currentRange: 0 };
+                return { passes: false, percentile: 50, currentRange: 0, mode: 'none' };
             }
 
             const slice        = candles.slice(-period);
             const currentRange = slice[slice.length - 1].high - slice[slice.length - 1].low;
             const allRanges    = slice.map(c => c.high - c.low).sort((a, b) => a - b);
 
-            // Find rank of current range among all ranges (0 = smallest, period-1 = largest)
+            // Percentile rank: what % of past candles have a smaller range than current
             const rank       = allRanges.filter(r => r < currentRange).length;
             const percentile = (rank / period) * 100;
-            const isSqueeze  = percentile <= threshold;
 
-            return { isSqueeze, percentile, currentRange };
+            // Determine active mode and pass condition
+            let passes = false;
+            let mode   = 'none';
+
+            if (belowPct > 0) {
+                // Squeeze mode: pass when current range is in the BOTTOM X%
+                mode   = 'below';
+                passes = percentile <= belowPct;
+            } else if (abovePct > 0) {
+                // Expansion mode: pass when current range is in the TOP X%
+                // Top X% means percentile >= (100 - abovePct)
+                mode   = 'above';
+                passes = percentile >= (100 - abovePct);
+            }
+
+            return { passes, percentile, currentRange, mode };
         }
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
@@ -2237,14 +2273,29 @@
 
             // Relative Range Index Filter
             if (document.getElementById('filterRRI')?.checked) {
-                const rri = calculateRRI(candleHistory);
+                const rri     = calculateRRI(candleHistory);
+                const belowPct = parseFloat(document.getElementById('rriBelow')?.value) || 0;
+                const abovePct = parseFloat(document.getElementById('rriAbove')?.value) || 0;
 
-                if (!rri.isSqueeze) {
-                    addLog(`🛡️ RRI BLOCKED ${signal}: Range not compressed (percentile=${rri.percentile.toFixed(1)}% — not in squeeze zone)`, 'warning');
+                if (rri.mode === 'none') {
+                    addLog(`🛡️ RRI: Both Below% and Above% are 0 — set one to activate`, 'warning');
                     return null;
                 }
 
-                addLog(`✅ RRI PASSED: Extreme squeeze confirmed — current range in ${rri.percentile.toFixed(1)}th percentile`, 'success');
+                if (!rri.passes) {
+                    if (rri.mode === 'below') {
+                        addLog(`🛡️ RRI BLOCKED ${signal}: Range too large (${rri.percentile.toFixed(1)}th pct — need ≤ ${belowPct}%)`, 'warning');
+                    } else {
+                        addLog(`🛡️ RRI BLOCKED ${signal}: Range too small (${rri.percentile.toFixed(1)}th pct — need top ${abovePct}%)`, 'warning');
+                    }
+                    return null;
+                }
+
+                if (rri.mode === 'below') {
+                    addLog(`✅ RRI PASSED: Squeeze confirmed — range in ${rri.percentile.toFixed(1)}th percentile (bottom ${belowPct}%)`, 'success');
+                } else {
+                    addLog(`✅ RRI PASSED: Expansion confirmed — range in ${rri.percentile.toFixed(1)}th percentile (top ${abovePct}%)`, 'success');
+                }
             }
 
             return signal;
