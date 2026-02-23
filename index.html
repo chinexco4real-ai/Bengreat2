@@ -1073,34 +1073,29 @@
                 <!-- ===== ADVANCED FILTERS CARD ===== -->
                 <div class="card">
                     <h3>🛡️ Advanced Filters</h3>
-                    <!-- LWVC Filter -->
+                    <!-- RRI Filter -->
                     <div class="toggle-container">
-                        <div class="toggle-label">Larry Williams Volatility Cycle <span style="color:#10b981;">(Range Compression)</span></div>
+                        <div class="toggle-label">Relative Range Index <span style="color:#10b981;">(Adaptive Squeeze Detection)</span></div>
                         <label class="switch">
-                            <input type="checkbox" id="filterLWVC">
+                            <input type="checkbox" id="filterRRI">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Fires when short-term range drops below a set % of recent range — classic compression before explosive moves
+                        Ranks the current candle's range as a percentile of the last N candles — fires only in extreme compression zones
                     </div>
 
-                    <!-- LWVC Parameters -->
+                    <!-- RRI Parameters -->
                     <div class="threshold-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="lwvcShortPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Short Period</label>
-                            <input type="number" id="lwvcShortPeriod" value="3" min="2" max="7" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Recent candles (default 3)</div>
+                            <label for="rriPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Lookback Period</label>
+                            <input type="number" id="rriPeriod" value="20" min="10" max="50" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Candles to rank against (default 20)</div>
                         </div>
                         <div>
-                            <label for="lwvcLongPeriod" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Long Period</label>
-                            <input type="number" id="lwvcLongPeriod" value="10" min="8" max="20" step="1" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Historical candles (default 10)</div>
-                        </div>
-                        <div style="grid-column: span 2;">
-                            <label for="lwvcThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Compression Threshold %</label>
-                            <input type="number" id="lwvcThreshold" value="30" min="10" max="60" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Short range must be below this % of long range · Lower = stricter</div>
+                            <label for="rriThreshold" style="color: #cbd5e0; font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Squeeze Percentile</label>
+                            <input type="number" id="rriThreshold" value="20" min="5" max="40" step="5" style="width: 100%; padding: 8px 10px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; text-align: center; font-weight: 700;">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Block unless range is in bottom X% · Lower = stricter</div>
                         </div>
                     </div>
 
@@ -1355,7 +1350,7 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterLWVC'];
+            const filterIds = ['filterRRI'];
             filterIds.forEach(id => {
                 const saved = localStorage.getItem(id) === 'true';
                 const el = document.getElementById(id);
@@ -1363,14 +1358,11 @@
             });
 
             // Load thresholds
-            const savedLwvcShort = localStorage.getItem('lwvcShortPeriod') || '3';
-            if (document.getElementById('lwvcShortPeriod')) document.getElementById('lwvcShortPeriod').value = savedLwvcShort;
+            const savedRriPeriod = localStorage.getItem('rriPeriod') || '20';
+            if (document.getElementById('rriPeriod')) document.getElementById('rriPeriod').value = savedRriPeriod;
 
-            const savedLwvcLong = localStorage.getItem('lwvcLongPeriod') || '10';
-            if (document.getElementById('lwvcLongPeriod')) document.getElementById('lwvcLongPeriod').value = savedLwvcLong;
-
-            const savedLwvcThreshold = localStorage.getItem('lwvcThreshold') || '30';
-            if (document.getElementById('lwvcThreshold')) document.getElementById('lwvcThreshold').value = savedLwvcThreshold;
+            const savedRriThreshold = localStorage.getItem('rriThreshold') || '20';
+            if (document.getElementById('rriThreshold')) document.getElementById('rriThreshold').value = savedRriThreshold;
 
             updateActiveFiltersSummary();
 
@@ -1419,14 +1411,14 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            const filterIds = ['filterLWVC'];
+            const filterIds = ['filterRRI'];
             filterIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.checked);
             });
 
             // Save thresholds
-            ['lwvcShortPeriod', 'lwvcLongPeriod', 'lwvcThreshold'].forEach(id => {
+            ['rriPeriod', 'rriThreshold'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) localStorage.setItem(id, el.value);
             });
@@ -1458,19 +1450,19 @@
         }
 
         // New Filter Toggles
-        // LWVC Filter Toggle
-        const lwvcFilterEl = document.getElementById('filterLWVC');
-        if (lwvcFilterEl) {
-            lwvcFilterEl.addEventListener('change', () => {
-                const status = lwvcFilterEl.checked ? 'ENABLED' : 'DISABLED';
-                addLog(`🛡️ Larry Williams VC → ${status}`, lwvcFilterEl.checked ? 'success' : 'warning');
+        // RRI Filter Toggle
+        const rriFilterEl = document.getElementById('filterRRI');
+        if (rriFilterEl) {
+            rriFilterEl.addEventListener('change', () => {
+                const status = rriFilterEl.checked ? 'ENABLED' : 'DISABLED';
+                addLog(`🛡️ Relative Range Index → ${status}`, rriFilterEl.checked ? 'success' : 'warning');
                 saveSettings();
                 updateActiveFiltersSummary();
             });
         }
 
-        // LWVC Parameter Listeners
-        ['lwvcShortPeriod', 'lwvcLongPeriod', 'lwvcThreshold'].forEach(id => {
+        // RRI Parameter Listeners
+        ['rriPeriod', 'rriThreshold'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', (e) => {
@@ -1531,7 +1523,7 @@
             container.innerHTML = '';
 
             const filters = [
-                { id: 'filterLWVC', name: 'Larry Williams VC', color: '#10b981' },
+                { id: 'filterRRI',  name: 'Relative Range Index', color: '#10b981' },
             ];
 
             let activeCount = 0;
@@ -1948,32 +1940,27 @@
             return shortSMA - longSMA;
         }
 
-        // Larry Williams Volatility Cycle (LWVC)
-        // Compression confirmed when short-term range < threshold% of long-term range
-        function calculateLWVC(candles) {
-            const shortPeriod = parseInt(document.getElementById('lwvcShortPeriod')?.value) || 3;
-            const longPeriod  = parseInt(document.getElementById('lwvcLongPeriod')?.value)  || 10;
-            const threshold   = parseFloat(document.getElementById('lwvcThreshold')?.value) || 30;
+        // Relative Range Index (RRI)
+        // Ranks the current candle's range as a percentile of the last N candle ranges
+        // Squeeze confirmed when current range is in the bottom X percentile
+        function calculateRRI(candles) {
+            const period    = parseInt(document.getElementById('rriPeriod')?.value)    || 20;
+            const threshold = parseFloat(document.getElementById('rriThreshold')?.value) || 20;
 
-            if (candles.length < longPeriod) {
-                return { isSqueeze: false, ratio: 100, shortRange: 0, longRange: 0 };
+            if (candles.length < period) {
+                return { isSqueeze: false, percentile: 100, currentRange: 0 };
             }
 
-            const shortSlice = candles.slice(-shortPeriod);
-            const longSlice  = candles.slice(-longPeriod);
+            const slice        = candles.slice(-period);
+            const currentRange = slice[slice.length - 1].high - slice[slice.length - 1].low;
+            const allRanges    = slice.map(c => c.high - c.low).sort((a, b) => a - b);
 
-            const shortHigh = Math.max(...shortSlice.map(c => c.high));
-            const shortLow  = Math.min(...shortSlice.map(c => c.low));
-            const shortRange = shortHigh - shortLow;
+            // Find rank of current range among all ranges (0 = smallest, period-1 = largest)
+            const rank       = allRanges.filter(r => r < currentRange).length;
+            const percentile = (rank / period) * 100;
+            const isSqueeze  = percentile <= threshold;
 
-            const longHigh  = Math.max(...longSlice.map(c => c.high));
-            const longLow   = Math.min(...longSlice.map(c => c.low));
-            const longRange  = longHigh - longLow;
-
-            const ratio     = longRange > 0 ? (shortRange / longRange) * 100 : 100;
-            const isSqueeze = ratio < threshold;
-
-            return { isSqueeze, ratio, shortRange, longRange };
+            return { isSqueeze, percentile, currentRange };
         }
         function calculateMACD(closes, fast = 12, slow = 26, signal = 9) {
             if (closes.length < slow + signal - 1) return { macd: 0, signal: 0, histogram: 0 };
@@ -2248,16 +2235,16 @@
 
             const lastCandle = candleHistory[candleHistory.length - 1];
 
-            // Larry Williams Volatility Cycle Filter
-            if (document.getElementById('filterLWVC')?.checked) {
-                const lwvc = calculateLWVC(candleHistory);
+            // Relative Range Index Filter
+            if (document.getElementById('filterRRI')?.checked) {
+                const rri = calculateRRI(candleHistory);
 
-                if (!lwvc.isSqueeze) {
-                    addLog(`🛡️ LWVC BLOCKED ${signal}: No compression (ratio=${lwvc.ratio.toFixed(1)}% ≥ threshold)`, 'warning');
+                if (!rri.isSqueeze) {
+                    addLog(`🛡️ RRI BLOCKED ${signal}: Range not compressed (percentile=${rri.percentile.toFixed(1)}% — not in squeeze zone)`, 'warning');
                     return null;
                 }
 
-                addLog(`✅ LWVC PASSED: Compression confirmed — short range ${lwvc.ratio.toFixed(1)}% of long range`, 'success');
+                addLog(`✅ RRI PASSED: Extreme squeeze confirmed — current range in ${rri.percentile.toFixed(1)}th percentile`, 'success');
             }
 
             return signal;
