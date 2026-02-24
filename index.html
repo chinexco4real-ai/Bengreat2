@@ -1070,41 +1070,42 @@
                     </div>
                 </div>
 
-                <!-- ===== ADVANCED FILTERS CARD ===== -->
+                <!-- ===== ADVANCED FILTERS CARD – RRI REMOVED, ONLY INSIDE BARS ===== -->
                 <div class="card">
                     <h3>🛡️ Advanced Filters</h3>
 
-                    <!-- Consecutive Inside Bars Filter -->
-                    <div class="toggle-container">
-                        <div class="toggle-label">Consecutive Inside Bars <span style="color:#10b981;">(Pure Price-Action Squeeze)</span></div>
+                    <!-- ===== CONSECUTIVE INSIDE BARS (Only filter left) ===== -->
+                    <div class="toggle-container" style="margin-top: 8px;">
+                        <div class="toggle-label">Consecutive Inside Bars <span style="color:#10b981; font-weight:700;">(Pure Price-Action Squeeze)</span></div>
                         <label class="switch">
                             <input type="checkbox" id="filterInsideBars" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;">
-                        Fires only after X consecutive candles are completely inside the previous candle's range
+                    <div style="font-size: 11px; color: #9ca3af; margin-bottom: 12px; line-height:1.4;">
+                        Allows trade only if there is a streak of X inside bars in the last N candles<br>
+                        <strong>Best for Volatility &amp; Step Indices on 30s/1m</strong>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748; margin-bottom: 18px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; background: #0f1419; border-radius: 10px; border: 1px solid #2d3748;">
                         <div>
-                            <label for="insideBarsCount" style="color: #10b981; font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Required Consecutive Bars</label>
-                            <input type="number" id="insideBarsCount" value="3" min="1" max="10" step="1"
+                            <label for="insideBarsCount" style="color: #10b981; font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Required Streak</label>
+                            <input type="number" id="insideBarsCount" value="2" min="1" max="10" step="1"
                                 style="width: 100%; padding: 9px; border: 2px solid #10b981; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; font-weight: 700; text-align: center;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Min 1 · Default 3 · Higher = stricter</div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Min 1 · Default 2 · Higher = stricter</div>
                         </div>
                         <div>
                             <label for="insideBarsLookback" style="color: #667eea; font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Lookback Window</label>
-                            <input type="number" id="insideBarsLookback" value="20" min="10" max="50" step="5"
-                                style="width: 100%; padding: 9px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-size: 14px; font-weight: 700; text-align: center;">
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Candles to scan (default 20)</div>
+                            <input type="number" id="insideBarsLookback" value="20" min="10" max="100" step="5"
+                                style="width: 100%; padding: 9px; border: 2px solid #2d3748; border-radius: 6px; background: #0a0e14; color: #e2e8f0; font-weight: 700; text-align: center;">
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">Search last N candles for pattern</div>
                         </div>
                     </div>
 
                     <!-- LIVE ACTIVE FILTERS SUMMARY -->
                     <div id="activeFiltersSummary" style="margin-top: 20px; background: #0f1419; padding: 14px; border-radius: 10px; border: 1px solid #2d3748;">
                         <div style="font-size: 13px; color: #9ca3af; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                            📊 <strong>Currently Active Filters</strong>
+                            📊 <strong>Active Filters</strong>
                         </div>
                         <div id="activeFiltersList" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px;"></div>
                     </div>
@@ -1238,6 +1239,7 @@
         let lastSetupDetectedTime = 0;
         let currentSetupId = null;
         let currentInsideBarsStreak = 0;
+        let currentInsideBarsLookback = 20;
         let stats = {
             total: 0,
             wins: 0,
@@ -1353,21 +1355,9 @@
             nextTradeType = savedNextTradeType;
 
             // Load filter settings
-            const filterIds = ['filterInsideBars'];
-            filterIds.forEach(id => {
-                const saved = localStorage.getItem(id);
-                const el = document.getElementById(id);
-                if (el) {
-                    el.checked = saved !== null ? saved === 'true' : true; // default on
-                }
-            });
-
-            // Load thresholds
-            const savedInsideBarsCount = localStorage.getItem('insideBarsCount') || '3';
-            if (document.getElementById('insideBarsCount')) document.getElementById('insideBarsCount').value = savedInsideBarsCount;
-
-            const savedInsideBarsLookback = localStorage.getItem('insideBarsLookback') || '20';
-            if (document.getElementById('insideBarsLookback')) document.getElementById('insideBarsLookback').value = savedInsideBarsLookback;
+            document.getElementById('filterInsideBars').checked = localStorage.getItem('filterInsideBars') !== 'false';
+            document.getElementById('insideBarsCount').value    = localStorage.getItem('insideBarsCount')    || '2';
+            document.getElementById('insideBarsLookback').value = localStorage.getItem('insideBarsLookback') || '20';
 
             updateActiveFiltersSummary();
 
@@ -1416,16 +1406,9 @@
             localStorage.setItem('nextTradeType', nextTradeType);
 
             // Save filter settings
-            ['filterInsideBars'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) localStorage.setItem(id, el.checked);
-            });
-
-            // Save thresholds
-            ['insideBarsCount', 'insideBarsLookback'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) localStorage.setItem(id, el.value);
-            });
+            localStorage.setItem('filterInsideBars', document.getElementById('filterInsideBars').checked);
+            localStorage.setItem('insideBarsCount',   document.getElementById('insideBarsCount').value);
+            localStorage.setItem('insideBarsLookback', document.getElementById('insideBarsLookback').value);
         }
 
         // Add event listeners for all settings
@@ -1453,26 +1436,19 @@
             });
         }
 
-        // Inside Bars Filter Toggle
-        const insideBarsFilterEl = document.getElementById('filterInsideBars');
-        if (insideBarsFilterEl) {
-            insideBarsFilterEl.addEventListener('change', () => {
-                const status = insideBarsFilterEl.checked ? 'ENABLED' : 'DISABLED';
-                addLog(`🛡️ Consecutive Inside Bars → ${status}`, insideBarsFilterEl.checked ? 'success' : 'warning');
-                saveSettings();
-                updateActiveFiltersSummary();
-            });
-        }
+        // Inside Bars Filter Toggle + Parameters
+        document.getElementById('filterInsideBars').addEventListener('change', () => {
+            updateActiveFiltersSummary();
+            saveSettings();
+            addLog(`🛡️ Inside Bars Filter ${document.getElementById('filterInsideBars').checked ? 'ENABLED' : 'DISABLED'}`, 'success');
+        });
 
-        // Inside Bars Parameter Listeners
         ['insideBarsCount', 'insideBarsLookback'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', (e) => {
-                    saveSettings();
-                    addLog(`📊 ${id} changed to ${e.target.value}`, 'info');
-                });
-            }
+            if (el) el.addEventListener('change', (e) => {
+                saveSettings();
+                addLog(`📊 ${id} changed to ${e.target.value}`, 'info');
+            });
         });
 
         // Market change listener for radio buttons
@@ -1523,26 +1499,17 @@
             if (!container) return;
             container.innerHTML = '';
 
-            const filters = [
-                { id: 'filterInsideBars', name: 'Consecutive Inside Bars', color: '#10b981' },
-            ];
+            const isEnabled = document.getElementById('filterInsideBars')?.checked;
 
-            let activeCount = 0;
-            filters.forEach(f => {
-                const el = document.getElementById(f.id);
-                if (el && el.checked) {
-                    const badge = document.createElement('div');
-                    badge.style.cssText = `background: rgba(102, 126, 234, 0.12); color: ${f.color}; padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; border: 1px solid ${f.color}33; display: inline-flex; align-items: center; gap: 4px;`;
-                    badge.innerHTML = `✅ ${f.name}`;
-                    container.appendChild(badge);
-                    activeCount++;
-                }
-            });
-
-            if (activeCount === 0) {
+            if (isEnabled) {
+                const badge = document.createElement('div');
+                badge.style.cssText = `background: rgba(16,185,129,0.15); color: #10b981; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; border: 1px solid #10b98133;`;
+                badge.innerHTML = `✅ Consecutive Inside Bars`;
+                container.appendChild(badge);
+            } else {
                 const none = document.createElement('div');
                 none.style.cssText = 'color: #6b7280; font-style: italic; padding: 6px 0; font-size: 13px;';
-                none.textContent = 'No filters active — all strategy signals are allowed';
+                none.textContent = 'No filters active — trading all raw signals';
                 container.appendChild(none);
             }
         }
@@ -1941,29 +1908,34 @@
             return shortSMA - longSMA;
         }
 
-        // ==================== CONSECUTIVE INSIDE BARS FILTER ====================
-        function calculateConsecutiveInsideBars(candles, lookback = 20) {
-            if (candles.length < 4) {
-                return { streak: 0, message: "Collecting candles..." };
+        // ==================== CONSECUTIVE INSIDE BARS (Clean & Fast) ====================
+        function calculateConsecutiveInsideBars(candles, required = 2, lookback = 20) {
+            if (candles.length < required + 1) {
+                return { passes: false, maxStreak: 0, message: "Collecting candles..." };
             }
 
             const slice = candles.slice(-lookback);
-            let streak = 0;
+            let maxStreak = 0;
+            let currentStreak = 0;
 
-            for (let i = slice.length - 1; i >= 1; i--) {
-                const curr = slice[i];
+            for (let i = 1; i < slice.length; i++) {
                 const prev = slice[i - 1];
-                const isInside = curr.high < prev.high && curr.low > prev.low;
+                const curr = slice[i];
+                const isInside = (curr.high <= prev.high) && (curr.low >= prev.low);
+
                 if (isInside) {
-                    streak++;
+                    currentStreak++;
+                    maxStreak = Math.max(maxStreak, currentStreak);
                 } else {
-                    break;
+                    currentStreak = 0;
                 }
             }
 
+            const passes = maxStreak >= required;
             return {
-                streak: streak,
-                message: streak >= 3 ? `${streak} consecutive inside bars 🔥` : `${streak} inside bars`
+                passes,
+                maxStreak,
+                message: passes ? `Streak of ${maxStreak} inside bars` : `Max streak only ${maxStreak}`
             };
         }
 
@@ -2224,27 +2196,23 @@
             const display = document.getElementById('indicatorDisplay');
             display.innerHTML = '';
 
-            // Live Inside Bars Streak (always shown first)
-            const streakColor = currentInsideBarsStreak >= 3 ? '#10b981' :
-                                currentInsideBarsStreak === 2 ? '#fbbf24' : '#9ca3af';
+            const color = currentInsideBarsStreak >= 3 ? '#10b981' :
+                          currentInsideBarsStreak === 2 ? '#fbbf24' : '#9ca3af';
+
             const insideItem = document.createElement('div');
             insideItem.className = 'indicator-item';
             insideItem.innerHTML = `
-                <span>Inside Bars Streak:</span>
-                <span class="indicator-value" style="color: ${streakColor}; font-size: 17px; font-weight: 700;">
-                    ${currentInsideBarsStreak} ${currentInsideBarsStreak >= 3 ? '🔥 READY' : ''}
+                <span>Inside Bars Streak (last ${currentInsideBarsLookback}):</span>
+                <span class="indicator-value" style="color: ${color}; font-size: 17px; font-weight: 700;">
+                    ${currentInsideBarsStreak} ${currentInsideBarsStreak >= 2 ? '🔥' : ''}
                 </span>
             `;
             display.appendChild(insideItem);
 
-            // All other strategy indicators
             for (const [label, value] of Object.entries(indicators)) {
                 const item = document.createElement('div');
                 item.className = 'indicator-item';
-                item.innerHTML = `
-                    <span>${label}:</span>
-                    <span class="indicator-value">${value}</span>
-                `;
+                item.innerHTML = `<span>${label}:</span><span class="indicator-value">${value}</span>`;
                 display.appendChild(item);
             }
         }
@@ -2253,17 +2221,17 @@
         function applyAdvancedFilters(signal, candleHistory) {
             if (!signal || signal === null) return signal;
 
-            // Inside Bars Filter
+            // Only Inside Bars filter remains
             if (document.getElementById('filterInsideBars')?.checked) {
-                const required = parseInt(document.getElementById('insideBarsCount').value) || 3;
+                const required = parseInt(document.getElementById('insideBarsCount').value) || 2;
                 const lookback = parseInt(document.getElementById('insideBarsLookback').value) || 20;
-                const inside   = calculateConsecutiveInsideBars(candleHistory, lookback);
+                const inside   = calculateConsecutiveInsideBars(candleHistory, required, lookback);
 
-                if (inside.streak < required) {
-                    addLog(`🛡️ Inside Bars BLOCKED ${signal}: Only ${inside.streak} consecutive (need ${required})`, 'warning');
+                if (!inside.passes) {
+                    addLog(`🛡️ Inside Bars BLOCKED ${signal}: ${inside.message}`, 'warning');
                     return null;
                 }
-                addLog(`✅ Inside Bars PASSED: ${inside.message} → ${signal} allowed`, 'success');
+                addLog(`✅ Inside Bars PASSED → ${signal} allowed (${inside.message})`, 'success');
             }
 
             return signal;
@@ -2470,11 +2438,14 @@
                     strategyIndicators.rsi = rsi;
                 }
                 
-                // === LIVE INSIDE BARS STREAK (updates every candle) ===
+                // === LIVE INSIDE BARS STREAK ===
                 const candleHistoryLive = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
                 if (candleHistoryLive.length >= 4) {
-                    const insideResult = calculateConsecutiveInsideBars(candleHistoryLive, 20);
-                    currentInsideBarsStreak = insideResult.streak;
+                    const req = parseInt(document.getElementById('insideBarsCount').value) || 2;
+                    const lb  = parseInt(document.getElementById('insideBarsLookback').value) || 20;
+                    const result = calculateConsecutiveInsideBars(candleHistoryLive, req, lb);
+                    currentInsideBarsStreak  = result.maxStreak;
+                    currentInsideBarsLookback = lb;
                 }
 
                 const signal = analyzeMarketSignals();
