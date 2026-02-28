@@ -910,7 +910,7 @@
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" id="strategyBounce" name="strategy" value="bounce" checked>
-                            <label for="strategyBounce">The Bounce Strategy</label>
+                            <label for="strategyBounce">Momentum Continuation Strategy</label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" id="strategyBreakout" name="strategy" value="breakout">
@@ -919,9 +919,9 @@
                     </div>
                 </div>
                 <div class="strategy-description" id="strategyDescription">
-                    <strong>The Bounce Strategy - Trend Continuation (1m Candles)</strong><br>
-                    <strong>BUY (Long):</strong> Uptrend - Price touches trendline support + Bullish candlestick pattern (Hammer, Bullish Engulfing)<br>
-                    <strong>SELL (Short):</strong> Downtrend - Price touches trendline resistance + Bearish candlestick pattern (Shooting Star, Bearish Engulfing)
+                    <strong>Momentum Continuation Strategy (1m Candles)</strong><br>
+                    <strong>BUY:</strong> Strong bullish candle detected → 1–2 small weak red pullback candles → Enter BUY resuming upward momentum<br>
+                    <strong>SELL:</strong> Strong bearish candle detected → 1–2 small weak green pullback candles → Enter SELL resuming downward momentum
                 </div>
 
                 <!-- Timeframe Selector -->
@@ -1066,7 +1066,7 @@
                     </div>
                     <div style="padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; margin-top: 15px; border: 1px solid #2d3748;">
                         <div style="font-size: 12px; color: #10b981; margin-bottom: 5px;">💡 Active Strategy</div>
-                        <div style="font-size: 11px; color: #6ee7b7;" id="activeStrategyDisplay">The Bounce Strategy</div>
+                        <div style="font-size: 11px; color: #6ee7b7;" id="activeStrategyDisplay">Momentum Continuation Strategy</div>
                     </div>
                 </div>
 
@@ -1481,9 +1481,9 @@
             const timeframeDisplay = currentTimeframe === '1min' ? '1m' : '30s';
             
             const descriptions = {
-                bounce: `<strong>The Bounce Strategy - Trend Continuation (${timeframeDisplay} Candles)</strong><br>
-                    <strong>BUY (Long):</strong> Uptrend - Price touches trendline support + Bullish candlestick pattern (Hammer, Bullish Engulfing)<br>
-                    <strong>SELL (Short):</strong> Downtrend - Price touches trendline resistance + Bearish candlestick pattern (Shooting Star, Bearish Engulfing)`,
+                bounce: `<strong>Momentum Continuation Strategy (${timeframeDisplay} Candles)</strong><br>
+                    <strong>BUY:</strong> Strong bullish candle → 1–2 small weak red pullbacks → Enter BUY resuming upward momentum<br>
+                    <strong>SELL:</strong> Strong bearish candle → 1–2 small weak green pullbacks → Enter SELL resuming downward momentum`,
                 breakout: `<strong>The Breakout Strategy - Trend Reversal (${timeframeDisplay} Candles)</strong><br>
                     <strong>BUY (Long):</strong> Downtrend ends - Price closes above resistance line + High volume confirmation<br>
                     <strong>SELL (Short):</strong> Uptrend ends - Price closes below support line + High volume confirmation`
@@ -2016,92 +2016,126 @@
 
         // --- Strategy Analysis Functions ---
 
-        // ==================== PATCHED BOUNCE STRATEGY ====================
+        // ==================== MOMENTUM CONTINUATION STRATEGY ====================
         function analyzeBounceStrategy() {
             const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
             const timeframeName = currentTimeframe === '1min' ? '1-min' : '30-sec';
 
-            // Need at least 30 candles so EMA21 has real data to work with
-            const requiredCandles = 30;
+            // Need at least 8 candles: 1 momentum candle + up to 2 pullback + reference candles
+            const requiredCandles = 8;
             if (candleHistory.length < requiredCandles) {
                 return { signal: null, message: `Collecting ${timeframeName} candles... ${candleHistory.length}/${requiredCandles} needed` };
             }
 
-            // Use full history for accurate EMAs, recent slice for levels
-            const allCloses   = candleHistory.map(c => c.close);
-            const recentCandles = candleHistory.slice(-20);
-            const lastCandle  = candleHistory[candleHistory.length - 1];
-            const prevCandle  = candleHistory[candleHistory.length - 2];
-            const prev2Candle = candleHistory[candleHistory.length - 3];
+            const lastCandle  = candleHistory[candleHistory.length - 1]; // potential pullback candle
+            const prev1       = candleHistory[candleHistory.length - 2]; // 1 candle before last
+            const prev2       = candleHistory[candleHistory.length - 3]; // 2 candles before last
+            const prev3       = candleHistory[candleHistory.length - 4]; // 3 candles before last (momentum reference)
 
-            // === TREND DETECTION — uses full history so EMA21 is accurate ===
-            const ema8  = calculateEMA(allCloses, 8);
-            const ema21 = calculateEMA(allCloses, 21);
-            const isUptrend   = ema8 > ema21;
-            const isDowntrend = ema8 < ema21;
+            // ============================================================
+            // STEP 1 — Find a STRONG MOMENTUM candle in recent history
+            // We look for the momentum candle among prev1, prev2, prev3
+            // (i.e. 1–3 candles back from the current candle)
+            // ============================================================
 
-            // === ATR — measures typical candle range for this market ===
-            const atr = calculateATR(recentCandles, 14);
+            // Helper: body size and range of a candle
+            function candleBody(c)  { return Math.abs(c.close - c.open); }
+            function candleRange(c) { return c.high - c.low; }
+            function bodyRatio(c)   { return candleRange(c) > 0 ? candleBody(c) / candleRange(c) : 0; }
 
-            // === SUPPORT & RESISTANCE — built from last 20 candles, excluding current ===
-            const lookbackCandles = candleHistory.slice(-21, -1); // 20 candles before current
-            const support    = Math.min(...lookbackCandles.map(c => c.low));
-            const resistance = Math.max(...lookbackCandles.map(c => c.high));
+            // Reference candles for "clearly bigger than last 3–5" comparison
+            const refCandles = candleHistory.slice(-8, -1); // up to 7 preceding candles
+            const avgRefBody = refCandles.reduce((s, c) => s + candleBody(c), 0) / refCandles.length;
 
-            // === PROXIMITY — current close within 1 ATR of the level ===
-            // Tighter than before (was 2 ATR) so we only trade actual touches
-            const nearSupport    = lastCandle.close <= support + atr;
-            const nearResistance = lastCandle.close >= resistance - atr;
+            // A candle qualifies as a momentum candle if:
+            //  1. Full body (body ratio >= 0.65 — no long wicks)
+            //  2. Body is clearly bigger than the average of reference candles (>= 1.8x)
+            function isMomentumCandle(c) {
+                return bodyRatio(c) >= 0.65 && candleBody(c) >= avgRefBody * 1.8;
+            }
 
-            // === BOUNCE CONFIRMATION — need 2 candles of evidence ===
-            // For BUY: previous candle moved down INTO support, current candle turns up
-            const droppedToSupport  = prevCandle.low <= support + atr;
-            const bouncingUp        = lastCandle.close > lastCandle.open          // current candle is bullish
-                                   && lastCandle.close > prevCandle.close;        // closing higher than prev
+            // We look for the momentum candle at prev2 or prev3
+            // (prev1 or prev2 would be the first pullback candle after it)
+            let momentumCandle  = null;
+            let pullbackCandles = [];
 
-            // For SELL: previous candle moved up INTO resistance, current candle turns down
-            const roseToResistance  = prevCandle.high >= resistance - atr;
-            const bouncingDown      = lastCandle.close < lastCandle.open          // current candle is bearish
-                                   && lastCandle.close < prevCandle.close;        // closing lower than prev
+            // Case A: momentum at prev2, pullback at prev1, entry at lastCandle
+            if (isMomentumCandle(prev2)) {
+                momentumCandle  = prev2;
+                pullbackCandles = [prev1];
+            }
+            // Case B: momentum at prev3, pullbacks at prev2 & prev1, entry at lastCandle
+            else if (isMomentumCandle(prev3)) {
+                momentumCandle  = prev3;
+                pullbackCandles = [prev2, prev1];
+            }
 
-            // === CANDLE BODY STRENGTH — reject weak/indecision candles ===
-            const lastRange = lastCandle.high - lastCandle.low;
-            const lastBody  = Math.abs(lastCandle.close - lastCandle.open);
-            const strongBody = lastRange > 0 && (lastBody / lastRange) >= 0.4;   // body >= 40% of range
+            if (!momentumCandle) {
+                updateIndicatorDisplay({
+                    'Timeframe':        currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
+                    'Last Body':        candleBody(lastCandle).toFixed(5),
+                    'Avg Ref Body':     avgRefBody.toFixed(5),
+                    'Body Ratio (last)':bodyRatio(lastCandle).toFixed(2),
+                    'Status':           'Waiting for momentum candle...',
+                    'Candles':          candleHistory.length
+                });
+                return { signal: null, message: 'Waiting for strong momentum candle...' };
+            }
 
-            // === RSI — avoid buying into deeply oversold or selling into deeply overbought ===
-            const rsi = calculateRSI(allCloses, 14);
-            const rsiOk = signal => signal === 'BUY' ? rsi < 70 : rsi > 30;
+            const momentumBullish = momentumCandle.close > momentumCandle.open;
+            const momentumBearish = momentumCandle.close < momentumCandle.open;
+
+            // ============================================================
+            // STEP 2 — Verify pullback candles are WEAK & OPPOSITE direction
+            // ============================================================
+            function isWeakPullback(c, againstBullish) {
+                const isOpposite = againstBullish
+                    ? c.close < c.open   // red candle after bullish momentum
+                    : c.close > c.open;  // green candle after bearish momentum
+                const isSmallBody = candleBody(c) < candleBody(momentumCandle) * 0.5; // clearly smaller
+                return isOpposite && isSmallBody;
+            }
+
+            const pullbacksValid = pullbackCandles.every(c =>
+                isWeakPullback(c, momentumBullish)
+            );
+
+            // ============================================================
+            // STEP 3 — Entry: current candle resumes momentum direction
+            // ============================================================
+            const entryBUY  = momentumBullish && lastCandle.close > lastCandle.open;  // green resumption
+            const entrySELL = momentumBearish && lastCandle.close < lastCandle.open;  // red resumption
 
             // === DISPLAY ===
             updateIndicatorDisplay({
-                'Timeframe':   currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
-                'Trend':       isUptrend ? '📈 Up (EMA8>EMA21)' : isDowntrend ? '📉 Down (EMA8<EMA21)' : '➡️ Neutral',
-                'EMA8':        ema8.toFixed(5),
-                'EMA21':       ema21.toFixed(5),
-                'RSI(14)':     rsi.toFixed(1),
-                'ATR(14)':     atr.toFixed(5),
-                'Support':     support.toFixed(5),
-                'Resistance':  resistance.toFixed(5),
-                'Near Support':    nearSupport    ? 'YES ✅' : 'No',
-                'Near Resistance': nearResistance ? 'YES ✅' : 'No',
-                'Strong Body': strongBody ? 'YES ✅' : 'No',
-                'Candles':     candleHistory.length
+                'Timeframe':            currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
+                'Momentum Direction':   momentumBullish ? '📈 Bullish' : '📉 Bearish',
+                'Momentum Body':        candleBody(momentumCandle).toFixed(5),
+                'Avg Ref Body':         avgRefBody.toFixed(5),
+                'Body Ratio (mom.)':    bodyRatio(momentumCandle).toFixed(2),
+                'Pullbacks Found':      pullbackCandles.length,
+                'Pullbacks Valid':       pullbacksValid ? 'YES ✅' : 'No ❌',
+                'Entry Candle Dir':     lastCandle.close > lastCandle.open ? '🟢 Bullish' : '🔴 Bearish',
+                'Candles':              candleHistory.length
             });
 
             // === BUY SIGNAL ===
-            // Uptrend + price touched support + prev candle reached support + current candle bouncing up + strong body + RSI not overbought
-            if (isUptrend && nearSupport && droppedToSupport && bouncingUp && strongBody && rsiOk('BUY')) {
-                return { signal: 'BUY', message: `✅ Bounce BUY: Uptrend support touch confirmed (${timeframeName})` };
+            if (momentumBullish && pullbacksValid && entryBUY) {
+                return {
+                    signal: 'BUY',
+                    message: `✅ Momentum BUY: Strong bullish candle → ${pullbackCandles.length} weak pullback(s) → resuming up (${timeframeName})`
+                };
             }
 
             // === SELL SIGNAL ===
-            // Downtrend + price touched resistance + prev candle reached resistance + current candle bouncing down + strong body + RSI not oversold
-            if (isDowntrend && nearResistance && roseToResistance && bouncingDown && strongBody && rsiOk('SELL')) {
-                return { signal: 'SELL', message: `✅ Bounce SELL: Downtrend resistance touch confirmed (${timeframeName})` };
+            if (momentumBearish && pullbacksValid && entrySELL) {
+                return {
+                    signal: 'SELL',
+                    message: `✅ Momentum SELL: Strong bearish candle → ${pullbackCandles.length} weak pullback(s) → resuming down (${timeframeName})`
+                };
             }
 
-            return { signal: null, message: 'Scanning for bounce setup...' };
+            return { signal: null, message: 'Scanning for momentum continuation setup...' };
         }
 
         // ==================== PATCHED BREAKOUT STRATEGY ====================
@@ -2872,7 +2906,7 @@
             const checks = [];
             
             // Check strategy selector
-            checks.push(`✓ Strategies: 2 available - Bounce, Breakout (Current: ${currentStrategy})`);
+            checks.push(`✓ Strategies: 2 available - Momentum Continuation, Breakout (Current: ${currentStrategy})`);
 
             // Check critical settings
             const criticalSettings = [
@@ -2917,7 +2951,7 @@
             checks.push(`✓ Last Trade Type: ${lastExecutedTradeType || 'None'}`);
             checks.push(`✓ Fast Candle Collection: ACTIVE (Real-time tick processing)`);
             checks.push(`✓ Signal Status Display: ENHANCED (Bright & Readable)`);
-            checks.push(`✓ Active Strategies: Bounce, Breakout`);
+            checks.push(`✓ Active Strategies: Momentum Continuation, Breakout`);
             checks.push(`✓ Double-Click Protection: Enabled for Logout & Clear History`);
 
             console.log('=== INTEGRITY CHECK ===');
@@ -3104,7 +3138,7 @@
             addLog('✅ Timeout Protection: 90 seconds', 'info');
             addLog('✅ Portfolio Fallback Checks: Every 30 seconds', 'info');
             addLog('✅ 2 Professional Trading Strategies loaded', 'success');
-            addLog('  1. The Bounce Strategy (Trend Continuation)', 'info');
+            addLog('  1. Momentum Continuation Strategy', 'info');
             addLog('  2. The Breakout Strategy (Trend Reversal)', 'info');
             addLog('✅ Timeframe Selection: 1-Minute or 30-Second candles', 'success');
             addLog('📊 Memory-Managed Candle Storage: 200 candles max per timeframe', 'info');
@@ -3135,7 +3169,7 @@
                 addLog('=== INTEGRITY CHECK COMPLETE ===', 'success');
                 addLog(`Total checks: ${checks.length}`, 'info');
                 addLog(`Strategy: ${currentStrategy}`, 'info');
-                addLog(`Available Strategies: 2 (Bounce, Breakout)`, 'info');
+                addLog(`Available Strategies: 2 (Momentum Continuation, Breakout)`, 'info');
                 addLog(`Markets configured: ${availableMarkets.length}`, 'info');
                 addLog(`Alternator Mode: ${document.getElementById('alternatorMode').checked ? 'ON' : 'OFF'}`, 'info');
                 addLog(`Reverse Mode: ${document.getElementById('reverseMode').checked ? 'ON' : 'OFF'}`, 'info');
@@ -3156,7 +3190,7 @@
         // Final initialization log
         addLog('=== BOT CONFIGURATION ===', 'success');
         addLog('Strategy System: 2 Strategies Available', 'info');
-        addLog('  • The Bounce Strategy (Trend Continuation)', 'info');
+        addLog('  • Momentum Continuation Strategy', 'info');
         addLog('  • The Breakout Strategy (Trend Reversal)', 'info');
         addLog('Risk Management: Enabled', 'info');
         addLog('Alternator Mode: Available', 'info');
