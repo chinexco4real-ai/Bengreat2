@@ -1484,9 +1484,10 @@
                 bounce: `<strong>Momentum Continuation Strategy (${timeframeDisplay} Candles)</strong><br>
                     <strong>BUY:</strong> Strong bullish candle → 1–2 small weak red pullbacks → Enter BUY resuming upward momentum<br>
                     <strong>SELL:</strong> Strong bearish candle → 1–2 small weak green pullbacks → Enter SELL resuming downward momentum`,
-                breakout: `<strong>The Breakout Strategy - Trend Reversal (${timeframeDisplay} Candles)</strong><br>
-                    <strong>BUY (Long):</strong> Downtrend ends - Price closes above resistance line + High volume confirmation<br>
-                    <strong>SELL (Short):</strong> Uptrend ends - Price closes below support line + High volume confirmation`
+                breakout: `<strong>The Breakout Strategy - Volume-Confirmed Breakout (${timeframeDisplay} Candles)</strong><br>
+                    <strong>BUY (Long):</strong> Price_close &gt; Resistance_level AND Volume &gt; Average(Volume, 10)<br>
+                    <strong>SELL (Short):</strong> Price_close &lt; Support_level AND Volume &gt; Average(Volume, 10)<br>
+                    <strong>Confirmation:</strong> Breakout candle volume must exceed the 10-period average`
             };
             
             document.getElementById('strategyDescription').innerHTML = descriptions[currentStrategy] || descriptions.bounce;
@@ -2138,91 +2139,81 @@
             return { signal: null, message: 'Scanning for momentum continuation setup...' };
         }
 
-        // ==================== PATCHED BREAKOUT STRATEGY ====================
+        // ==================== VOLUME-CONFIRMED BREAKOUT STRATEGY ====================
         function analyzeBreakoutStrategy() {
             // Use selected timeframe
             const candleHistory = currentTimeframe === '1min' ? candle1MinHistory : candle30SecHistory;
             const timeframeName = currentTimeframe === '1min' ? '1-min' : '30-sec';
-            const requiredCandles = 12; // Same for both timeframes - 30sec just gets signals faster!
-            
+            const requiredCandles = 12; // Need at least 11 prev + 1 breakout candle
+
             if (candleHistory.length < requiredCandles) {
                 return { signal: null, message: `Collecting ${timeframeName} candles... ${candleHistory.length}/${requiredCandles} needed` };
             }
 
             const recentCandles = candleHistory.slice(-requiredCandles);
-            const lastCandle = recentCandles[recentCandles.length - 1];
-            const prevCandles = recentCandles.slice(0, -1);
+            const lastCandle    = recentCandles[recentCandles.length - 1];
+            const prevCandles   = recentCandles.slice(0, -1); // Previous 11 candles
 
-            // === SIMPLIFIED TREND DETECTION ===
-            const closes = prevCandles.map(c => c.close);
-            const ema8 = calculateEMA(closes, 8);
-            const ema21 = calculateEMA(closes, 21);
-            
-            const wasDowntrend = ema8 < ema21;  // Simplified
-            const wasUptrend   = ema8 > ema21;
-
-            // === DYNAMIC RANGE ===
+            // === SUPPORT & RESISTANCE LEVELS ===
+            // Resistance = highest high of previous candles
+            // Support    = lowest low of previous candles
             const resistance = Math.max(...prevCandles.map(c => c.high));
             const support    = Math.min(...prevCandles.map(c => c.low));
-            const range = resistance - support;
-            const atr = calculateATR(recentCandles, 10);
+            const range      = resistance - support;
 
-            // === BREAKOUT DETECTION (more lenient) ===
-            const breakoutAbove = lastCandle.close > resistance && lastCandle.close > lastCandle.open;
-            const breakoutBelow = lastCandle.close < support && lastCandle.close < lastCandle.open;
-            
-            // Check momentum
-            const priceChange = lastCandle.close - prevCandles[prevCandles.length - 1].close;
-            const strongMomentum = Math.abs(priceChange) > atr * 0.5;
+            // === VOLUME CONFIRMATION ===
+            // Average volume over the previous 10 candles (10-period average)
+            const last10Candles = prevCandles.slice(-10);
+            const avgVolume10   = last10Candles.reduce((sum, c) => sum + (c.ticks || 1), 0) / last10Candles.length;
+            const currentVolume = lastCandle.ticks || 1;
+            const volumeConfirmed = currentVolume > avgVolume10; // Breakout candle must exceed 10-period avg
 
-            // === VOLUME (optional confirmation) ===
-            const avgTicks = prevCandles.reduce((sum, c) => sum + (c.ticks || 1), 0) / prevCandles.length;
-            const highVolume = lastCandle.ticks > avgTicks * 1.3;  // Lowered from 1.6
+            // === ENTRY CONDITIONS ===
+            // LONG:  Close > Resistance AND Volume > Avg(Volume, 10)
+            const longCondition  = lastCandle.close > resistance && volumeConfirmed;
+            // SHORT: Close < Support  AND Volume > Avg(Volume, 10)
+            const shortCondition = lastCandle.close < support    && volumeConfirmed;
 
             // === DISPLAY ===
             const displayData = {
-                'Timeframe': currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
-                'Previous Trend': wasDowntrend ? '📉 Downtrend' : wasUptrend ? '📈 Uptrend' : '➡️ Neutral',
-                'Resistance': resistance.toFixed(5),
-                'Support': support.toFixed(5),
-                'Current Close': lastCandle.close.toFixed(5),
-                'Range': range.toFixed(5),
-                'Strong Momentum': strongMomentum ? 'YES' : 'No',
-                'Volume': highVolume ? 'High 🔥' : 'Normal',
-                'Candles': candleHistory.length
+                'Timeframe':       currentTimeframe === '1min' ? '⏱️ 1 Minute' : '⚡ 30 Seconds',
+                'Resistance':      resistance.toFixed(5),
+                'Support':         support.toFixed(5),
+                'Current Close':   lastCandle.close.toFixed(5),
+                'Range':           range.toFixed(5),
+                'Avg Volume (10)': avgVolume10.toFixed(2),
+                'Current Volume':  currentVolume.toFixed(2),
+                'Vol Confirmed':   volumeConfirmed ? '✅ YES 🔥' : '❌ No',
+                'Candles':         candleHistory.length
             };
             updateIndicatorDisplay(displayData);
 
-            // === MORE GENEROUS SIGNALS ===
-            // BUY: Price breaks above resistance (trend reversal or continuation)
-            if (breakoutAbove && (wasDowntrend || strongMomentum)) {
-                return { 
-                    signal: 'BUY', 
-                    message: `✅ Bullish breakout above ${resistance.toFixed(5)} ${highVolume ? '(volume!)' : ''} (${timeframeName})` 
+            // === SIGNAL GENERATION ===
+            // LONG: Price closes above resistance with volume confirmation
+            if (longCondition) {
+                return {
+                    signal: 'BUY',
+                    message: `✅ LONG: Close ${lastCandle.close.toFixed(5)} > Resistance ${resistance.toFixed(5)} | Vol ${currentVolume.toFixed(2)} > Avg ${avgVolume10.toFixed(2)} ✔️ (${timeframeName})`
                 };
             }
 
-            // SELL: Price breaks below support (trend reversal or continuation)
-            if (breakoutBelow && (wasUptrend || strongMomentum)) {
-                return { 
-                    signal: 'SELL', 
-                    message: `✅ Bearish breakdown below ${support.toFixed(5)} ${highVolume ? '(volume!)' : ''} (${timeframeName})` 
+            // SHORT: Price closes below support with volume confirmation
+            if (shortCondition) {
+                return {
+                    signal: 'SELL',
+                    message: `✅ SHORT: Close ${lastCandle.close.toFixed(5)} < Support ${support.toFixed(5)} | Vol ${currentVolume.toFixed(2)} > Avg ${avgVolume10.toFixed(2)} ✔️ (${timeframeName})`
                 };
             }
 
-            // ALTERNATIVE: Trade near breakout levels (anticipation)
-            const nearResistance = lastCandle.close >= resistance - (atr * 0.5) && lastCandle.close < resistance;
-            const nearSupport = lastCandle.close <= support + (atr * 0.5) && lastCandle.close > support;
-            
-            if (nearResistance && lastCandle.close > lastCandle.open && strongMomentum) {
-                return { signal: 'BUY', message: `✅ Approaching resistance with momentum (${timeframeName})` };
+            // No signal — volume not confirmed or no breakout
+            if (lastCandle.close > resistance && !volumeConfirmed) {
+                return { signal: null, message: `⚠️ Price above resistance but volume insufficient (${currentVolume.toFixed(2)} ≤ avg ${avgVolume10.toFixed(2)}) — waiting...` };
             }
-            
-            if (nearSupport && lastCandle.close < lastCandle.open && strongMomentum) {
-                return { signal: 'SELL', message: `✅ Approaching support with momentum (${timeframeName})` };
+            if (lastCandle.close < support && !volumeConfirmed) {
+                return { signal: null, message: `⚠️ Price below support but volume insufficient (${currentVolume.toFixed(2)} ≤ avg ${avgVolume10.toFixed(2)}) — waiting...` };
             }
 
-            return { signal: null, message: 'Waiting for breakout...' };
+            return { signal: null, message: `Waiting for breakout... (R: ${resistance.toFixed(5)} | S: ${support.toFixed(5)})` };
         }
 
 
